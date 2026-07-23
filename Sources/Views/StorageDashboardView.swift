@@ -65,7 +65,7 @@ struct StorageDashboardView: View {
                     tintB: Color(red: 0.32, green: 0.44, blue: 0.86),
                     title: "清理",
                     subtitle: "移除不需要的垃圾",
-                    value: viewModel.cleanCategory?.cleanableSizeInBytes.byteString ?? "--",
+                    value: viewModel.snapshot?.cleanableSizeInBytes.byteString ?? "--",
                     footnote: "可清理空间",
                     buttonTitle: viewModel.dashboardStage == .scannedSummary ? "查看详情…" : nil,
                     isHovered: viewModel.hoveredCard == .cleaning,
@@ -232,28 +232,29 @@ struct StorageDashboardView: View {
     private var detailSummaryCard: some View {
         switch viewModel.detailKind {
         case .cleaning:
-            if let category = viewModel.selectedCategory {
-                HStack(spacing: 18) {
-                    ZStack {
-                        Circle()
-                            .fill(LinearGradient(colors: [Color(red: 0.98, green: 0.42, blue: 0.65), Color(red: 0.80, green: 0.19, blue: 0.47)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .frame(width: 68, height: 68)
-                        Image(systemName: category.section.icon)
-                            .font(.system(size: 30, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(category.title)
-                            .font(.system(size: 26, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                        Text(category.cleanableSizeInBytes.byteString)
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.96))
-                    }
-                    Spacer()
+            VStack(alignment: .leading, spacing: 18) {
+                Button(viewModel.areAllCategoriesSelected ? "取消全选" : "全选") {
+                    viewModel.toggleCategorySelection()
                 }
-                .padding(26)
-                .background(.black.opacity(0.14), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.7))
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
+                .background(.black.opacity(0.16), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .buttonStyle(.plain)
+
+                VStack(spacing: 12) {
+                    ForEach(viewModel.visibleCleaningCategories) { category in
+                        CleaningSidebarCategoryCard(
+                            category: category,
+                            selected: viewModel.selectedCategoryIDs.contains(category.id),
+                            focused: viewModel.selectedCategory?.id == category.id,
+                            isBulkCleaning: viewModel.isBulkCleaning
+                        ) {
+                            viewModel.selectCategory(category)
+                        }
+                    }
+                }
             }
         case .protection, .speed:
             EmptyView()
@@ -323,15 +324,33 @@ struct StorageDashboardView: View {
             }
             Spacer()
             if viewModel.detailKind == .cleaning {
-                Button(viewModel.isCleaning ? "清理中…" : "一键清理") {
+                Button {
                     Task { await viewModel.cleanSelectedCategory() }
+                } label: {
+                    HStack(spacing: 8) {
+                        if viewModel.isBulkCleaning {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(.white)
+                        }
+                        Text(viewModel.isBulkCleaning ? "清理中…" : "一键清理")
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.white.opacity(0.18))
-                .disabled((viewModel.selectedCategory?.cleanableSizeInBytes ?? 0) == 0 || viewModel.isCleaning || viewModel.isScanning)
+                .disabled(viewModel.selectedCleanableSizeInBytes == 0 || viewModel.isCleaning || viewModel.isScanning)
             } else if viewModel.detailKind == .protection {
-                Button(viewModel.isCleaning ? "清理中…" : "一键清理") {
+                Button {
                     Task { await viewModel.cleanSelectedThreatGroup() }
+                } label: {
+                    HStack(spacing: 8) {
+                        if viewModel.isBulkCleaning {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(.white)
+                        }
+                        Text(viewModel.isBulkCleaning ? "清理中…" : "一键清理")
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.white.opacity(0.18))
@@ -359,9 +378,16 @@ struct StorageDashboardView: View {
             switch viewModel.detailKind {
             case .cleaning:
                 VStack(spacing: 14) {
-                    ForEach(viewModel.orderedCategories.filter { !viewModel.visibleItems(for: $0).isEmpty }) { category in
-                        CleanableCategoryGroup(category: category, items: viewModel.visibleItems(for: category), selected: category.id == viewModel.selectedCategory?.id) {
-                            viewModel.selectedCategory = category
+                    ForEach(viewModel.visibleCleaningCategories) { category in
+                        CleanableCategoryGroup(
+                            category: category,
+                            items: viewModel.visibleItems(for: category),
+                            selected: viewModel.selectedCategoryIDs.contains(category.id),
+                            focused: category.id == viewModel.selectedCategory?.id
+                            ,activeCleaningItemIDs: viewModel.activeCleaningItemIDs
+                            ,isBulkCleaning: viewModel.isBulkCleaning
+                        ) {
+                            viewModel.selectCategory(category)
                         } cleanAction: { item in
                             Task { await viewModel.clean(item) }
                         }
@@ -438,9 +464,13 @@ struct StorageDashboardView: View {
 
                 VStack(spacing: 14) {
                     ForEach(group.items) { item in
-                        ProtectionThreatItemRow(item: item) {
-                            Task {
-                                await viewModel.cleanThreatItem(item)
+                        ProtectionThreatItemRow(item: item, isLoading: viewModel.activeCleaningThreatItemIDs.contains(item.id)) {
+                            if item.item != nil && item.item?.isCleanable == true {
+                                Task {
+                                    await viewModel.cleanThreatItem(item)
+                                }
+                            } else {
+                                viewModel.revealThreatItem(item)
                             }
                         }
                     }
@@ -735,6 +765,7 @@ private struct ProtectionThreatSidebarCard: View {
 
 private struct ProtectionThreatItemRow: View {
     let item: ProtectionThreatItem
+    let isLoading: Bool
     let deleteAction: () -> Void
 
     var body: some View {
@@ -744,18 +775,56 @@ private struct ProtectionThreatItemRow: View {
                 Image(systemName: item.symbolName).font(.system(size: 24, weight: .bold)).foregroundStyle(.white)
             }
             VStack(alignment: .leading, spacing: 6) {
-                Text(item.name).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                HStack(spacing: 10) {
+                    Text(item.name).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                    Text(item.severity.title)
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(severityColor.opacity(0.9), in: Capsule())
+                }
                 Text(item.path).font(.system(size: 13, weight: .medium, design: .rounded)).foregroundStyle(.white.opacity(0.52)).lineLimit(1)
+                if let evidence = item.evidences.first {
+                    Text("\(evidence.title)：\(evidence.detail)")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.72))
+                        .lineLimit(2)
+                }
+                if item.evidences.count > 1, let secondaryEvidence = item.evidences.dropFirst().first {
+                    Text("\(secondaryEvidence.title)：\(secondaryEvidence.detail)")
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.58))
+                        .lineLimit(2)
+                }
             }
             Spacer()
-            Button(item.item != nil && item.item?.isCleanable == true ? "删除" : "查看") {
+            Button {
                 deleteAction()
+            } label: {
+                HStack(spacing: 8) {
+                    if isLoading {
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(.white)
+                    }
+                    Text(isLoading ? "清理中…" : (item.item != nil && item.item?.isCleanable == true ? "删除" : "查看"))
+                }
             }
             .buttonStyle(.borderedProminent)
             .tint(item.item != nil && item.item?.isCleanable == true ? .red.opacity(0.82) : .white.opacity(0.18))
+            .disabled(isLoading)
         }
         .padding(18)
         .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+
+    private var severityColor: Color {
+        switch item.severity {
+        case .low: return .blue
+        case .medium: return .orange
+        case .high: return .red
+        }
     }
 }
 
@@ -774,6 +843,9 @@ private struct CleanableCategoryGroup: View {
     let category: StorageCategory
     let items: [StorageItem]
     let selected: Bool
+    let focused: Bool
+    let activeCleaningItemIDs: Set<StorageItem.ID>
+    let isBulkCleaning: Bool
     let selectAction: () -> Void
     let cleanAction: (StorageItem) -> Void
     var body: some View {
@@ -781,7 +853,9 @@ private struct CleanableCategoryGroup: View {
             HStack(spacing: 16) {
                 Button(action: selectAction) {
                     HStack(spacing: 14) {
-                        Image(systemName: "checkmark.circle.fill").font(.system(size: 28, weight: .bold)).foregroundStyle(.cyan)
+                        Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundStyle(selected ? .cyan : .white.opacity(0.55))
                         ZStack {
                             Circle().fill(category.section.tint.gradient).frame(width: 56, height: 56)
                             Image(systemName: category.section.icon).font(.system(size: 24, weight: .bold)).foregroundStyle(.white)
@@ -791,7 +865,16 @@ private struct CleanableCategoryGroup: View {
                 }
                 .buttonStyle(.plain)
                 Spacer()
-                Text(category.cleanableSizeInBytes.byteString).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                HStack(spacing: 8) {
+                    if isBulkCleaning && selected {
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(.white)
+                    }
+                    Text(isBulkCleaning && selected ? "清理中…" : category.cleanableSizeInBytes.byteString)
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
             }
 
             ForEach(items) { item in
@@ -803,16 +886,94 @@ private struct CleanableCategoryGroup: View {
                     }
                     Spacer()
                     Text(item.sizeInBytes.byteString).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
-                    Button("清理") { cleanAction(item) }
+                    Button {
+                        cleanAction(item)
+                    } label: {
+                        HStack(spacing: 8) {
+                            if activeCleaningItemIDs.contains(item.id) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .tint(.white)
+                            }
+                            Text(activeCleaningItemIDs.contains(item.id) ? "清理中…" : "清理")
+                        }
+                    }
                         .buttonStyle(.borderedProminent)
                         .tint(.red.opacity(0.82))
+                        .disabled(activeCleaningItemIDs.contains(item.id))
                 }
                 .padding(16)
                 .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
         }
         .padding(22)
-        .background(selected ? .white.opacity(0.12) : .white.opacity(0.06), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-        .overlay { RoundedRectangle(cornerRadius: 28, style: .continuous).stroke(selected ? .white.opacity(0.14) : .clear, lineWidth: 1) }
+        .background((selected ? .white.opacity(0.12) : .white.opacity(0.06)), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke((focused || selected) ? .white.opacity(0.16) : .clear, lineWidth: 1)
+        }
+    }
+}
+
+private struct CleaningSidebarCategoryCard: View {
+    let category: StorageCategory
+    let selected: Bool
+    let focused: Bool
+    let isBulkCleaning: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(selected ? .cyan : .white.opacity(0.55))
+
+                ZStack {
+                    Circle()
+                        .fill(category.section.tint.gradient)
+                        .frame(width: 54, height: 54)
+                    Image(systemName: category.section.icon)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(category.title)
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                    Text(viewModelText(for: category))
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.66))
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                HStack(spacing: 8) {
+                    if isBulkCleaning && selected {
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(.white)
+                    }
+
+                    Text(isBulkCleaning && selected ? "清理中…" : category.cleanableSizeInBytes.byteString)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.95))
+                }
+            }
+            .padding(20)
+            .background(.black.opacity(focused ? 0.18 : 0.12), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke((focused || selected) ? .white.opacity(0.16) : .clear, lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(isBulkCleaning)
+    }
+
+    private func viewModelText(for category: StorageCategory) -> String {
+        category.subtitle
     }
 }

@@ -17,6 +17,27 @@ enum ScanAccessMode {
     case privileged
 }
 
+/// 家目录顶层隐藏项的清理白名单。只有这些目录里的内容由对应工具在需要时自动重建，
+/// 整目录清理仅影响缓存/临时数据；名单外的 dotfile/dotfolder 一律只列出、不代删，
+/// 以免误删 .ssh、.gitconfig、.aws、.zshrc 等配置。
+enum HiddenDotWhitelist {
+    static let cleanableNames: Set<String> = [
+        ".cache",
+        ".npm",
+        ".yarn",
+        ".pnpm-store",
+        ".expo",
+        ".dartServer",
+        ".pub-cache",
+        ".electron",
+        ".node-gyp"
+    ]
+
+    static func isCleanable(name: String) -> Bool {
+        cleanableNames.contains(name)
+    }
+}
+
 enum StorageCleanError: LocalizedError {
     case permissionDenied(itemName: String, path: String)
     case itemBusy(itemName: String, path: String)
@@ -66,7 +87,9 @@ struct StorageScanner {
             makeHiddenCategory(home: home)
         ]
 
-        return StorageSnapshot(scannedAt: Date(), totalCapacity: total, freeSpace: free, categories: categories)
+        let threatRecords = ThreatScanner().scan(categories: categories) + SecurityAuditScanner().scan()
+
+        return StorageSnapshot(scannedAt: Date(), totalCapacity: total, freeSpace: free, categories: categories, threatRecords: threatRecords)
     }
 
     func clean(_ item: StorageItem) throws {
@@ -299,13 +322,82 @@ struct StorageScanner {
             ("Spotlight", "/System/Volumes/Data/.Spotlight-V100", "magnifyingglass.circle.fill", false),
             ("Trash", home.appendingPathComponent(".Trash").path, "trash.fill", true)
         ]
-        return StorageCategory(section: .hidden, items: defs.map { name, path, icon, cleanable in
+        var items = defs.map { name, path, icon, cleanable in
             StorageItem(name: name, path: path, sizeInBytes: directorySize(atPath: path, countAsCleanable: cleanable), symbolName: icon, isCleanable: cleanable)
-        }.filter { $0.sizeInBytes > 0 })
+        }
+        items.append(contentsOf: makeHiddenDotItems(home: home))
+        return StorageCategory(section: .hidden, items: items.filter { $0.sizeInBytes > 0 })
+    }
+
+    /// 家目录下的隐藏 dotfile / dotfolder（如 ~/.cache、~/.android、~/.npm）。
+    /// 出于安全考虑，只有位于可再生缓存白名单中的目录才标记为可清理；
+    /// 其余（.ssh、.gitconfig、.zshrc、.aws 等配置类）仅列出供用户查看，绝不代删。
+    private func makeHiddenDotItems(home: URL) -> [StorageItem] {
+        guard let entries = try? fileManager.contentsOfDirectory(
+            at: home,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: []
+        ) else {
+            return []
+        }
+
+        return entries.compactMap { url -> StorageItem? in
+            let name = url.lastPathComponent
+            // 仅处理点开头，且排除系统/元数据项。
+            guard name.hasPrefix("."),
+                  name != ".",
+                  name != "..",
+                  name != ".Trash",           // 已单独作为 Trash 处理
+                  name != ".DS_Store",
+                  name != ".localized",
+                  name != ".CFUserTextEncoding" else {
+                return nil
+            }
+
+            let size = boundedDirectorySize(at: url)
+            guard size > 0 else { return nil }
+
+            let cleanable = HiddenDotWhitelist.isCleanable(name: name)
+            return StorageItem(
+                name: name,
+                path: url.path,
+                sizeInBytes: size,
+                symbolName: cleanable ? "shippingbox.fill" : "eye.slash.circle.fill",
+                isCleanable: cleanable
+            )
+        }
     }
 
     private func directorySize(at url: URL, countAsCleanable: Bool) -> Int64 {
         directorySize(atPath: url.path, countAsCleanable: countAsCleanable)
+    }
+
+    /// 递归计算目录体积，但**不触发进度回调**，并对遍历文件数设上限。
+    /// 用于家目录隐藏项：像 ~/.cocoapods/repos 这类含几十万小文件的 git 镜像，
+    /// 若逐文件派发进度到主线程会直接冻结 UI，这里以近似值换取有界耗时。
+    private func boundedDirectorySize(at url: URL, fileLimit: Int = 20_000) -> Int64 {
+        guard fileManager.fileExists(atPath: url.path) else { return 0 }
+        guard let enumerator = fileManager.enumerator(
+            at: url,
+            includingPropertiesForKeys: [.isRegularFileKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey],
+            options: [.skipsPackageDescendants],
+            errorHandler: { _, _ in true }
+        ) else {
+            return 0
+        }
+
+        var total: Int64 = 0
+        var visited = 0
+        for case let fileURL as URL in enumerator {
+            visited += 1
+            if visited > fileLimit { break }
+            guard let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey]),
+                  values.isRegularFile == true else {
+                continue
+            }
+            total += Int64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? 0)
+        }
+        return total
     }
 
     private func categoryDirectorySize(at url: URL) -> Int64 {
@@ -322,7 +414,7 @@ struct StorageScanner {
         guard let childURLs = try? fileManager.contentsOfDirectory(
             at: url,
             includingPropertiesForKeys: [.isRegularFileKey, .fileAllocatedSizeKey, .totalFileAllocatedSizeKey],
-            options: [.skipsPackageDescendants]
+            options: [.skipsPackageDescendants, .skipsHiddenFiles]
         ) else {
             return 0
         }
@@ -341,10 +433,14 @@ struct StorageScanner {
     private func directorySize(atPath path: String, countAsCleanable: Bool) -> Int64 {
         guard fileManager.fileExists(atPath: path) else { return 0 }
         let url = URL(fileURLWithPath: path)
+        let useLightweight = shouldUseLightweightEnumeration(for: path)
+        if useLightweight {
+            return lightweightDirectorySize(at: url)
+        }
         guard let enumerator = fileManager.enumerator(
             at: url,
             includingPropertiesForKeys: [.isRegularFileKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey],
-            options: [.skipsPackageDescendants],
+            options: [.skipsPackageDescendants, .skipsHiddenFiles],
             errorHandler: { _, _ in true }
         ) else {
             return 0
@@ -364,6 +460,22 @@ struct StorageScanner {
             progress?(ScanProgress(currentPath: fileURL.path, discoveredCleanableBytes: progressState.cleanableAccumulator))
         }
         return total
+    }
+
+    private func shouldUseLightweightEnumeration(for path: String) -> Bool {
+        let loweredPath = path.lowercased()
+        let heavyPrefixes = [
+            "/applications",
+            "/opt/homebrew",
+            "/system/volumes/data/.spotlight-v100",
+            "/private/var/log",
+            "/users/zyb/library/group containers",
+            "/users/zyb/library/application support",
+            "/users/zyb/library/containers",
+            "/users/zyb/library/mail"
+        ]
+
+        return heavyPrefixes.contains(where: loweredPath.hasPrefix)
     }
 }
 

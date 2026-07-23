@@ -83,6 +83,8 @@ enum ProtectionThreatKind: String, CaseIterable, Identifiable {
     case trojan
     case adware
     case trackers
+    case systemHardening
+    case configProfile
 
     var id: String { rawValue }
 
@@ -91,6 +93,8 @@ enum ProtectionThreatKind: String, CaseIterable, Identifiable {
         case .trojan: return "木马病毒"
         case .adware: return "广告软件"
         case .trackers: return "隐私追踪项"
+        case .systemHardening: return "系统安全配置"
+        case .configProfile: return "配置描述文件"
         }
     }
 
@@ -99,6 +103,8 @@ enum ProtectionThreatKind: String, CaseIterable, Identifiable {
         case .trojan: return "发现伪装程序与下载残留，建议立即处理。"
         case .adware: return "发现可能影响浏览与启动行为的可疑项目。"
         case .trackers: return "发现可采集使用行为的追踪文件与缓存。"
+        case .systemHardening: return "发现被关闭或削弱的系统安全防护，建议尽快恢复。"
+        case .configProfile: return "发现已安装的配置描述文件，可能被用于篡改系统或浏览器设置。"
         }
     }
 
@@ -110,6 +116,10 @@ enum ProtectionThreatKind: String, CaseIterable, Identifiable {
             return "“广告软件”通常会通过启动项、浏览器扩展或缓存残留影响系统体验，造成弹窗、重定向或后台资源占用。建议移除来源不明的残留与相关缓存。"
         case .trackers:
             return "“隐私追踪项”会记录使用行为、浏览信息或应用活动，虽然不一定直接破坏系统，但会增加隐私暴露风险。建议清理相关日志、容器与追踪缓存。"
+        case .systemHardening:
+            return "“系统安全配置”检查 Gatekeeper、系统完整性保护(SIP)、FileVault 全盘加密、应用防火墙与自动登录等系统级防护状态。这些防护被关闭会显著扩大攻击面。请前往系统设置逐项恢复。"
+        case .configProfile:
+            return "“配置描述文件”(Configuration Profile) 可强制修改浏览器主页、搜索引擎、DNS 或安装根证书，是广告软件与劫持程序常见的持久化手段。请在系统设置中核对来源并移除可疑描述文件。"
         }
     }
 
@@ -118,6 +128,8 @@ enum ProtectionThreatKind: String, CaseIterable, Identifiable {
         case .trojan: return "exclamationmark.shield.fill"
         case .adware: return "sparkles.rectangle.stack.fill"
         case .trackers: return "eye.trianglebadge.exclamationmark"
+        case .systemHardening: return "lock.shield.fill"
+        case .configProfile: return "doc.badge.gearshape.fill"
         }
     }
 }
@@ -129,6 +141,9 @@ struct ProtectionThreatItem: Identifiable, Hashable {
     let symbolName: String
     let item: StorageItem?
     let isExactMatch: Bool
+    let severity: ThreatSeverity
+    let evidences: [ThreatEvidence]
+    var settingsURLString: String? = nil
 }
 
 struct ProtectionThreatGroup: Identifiable, Hashable {
@@ -183,6 +198,7 @@ struct DashboardPopoverRow: Identifiable {
     let value: String?
 }
 
+
 struct StorageItem: Identifiable, Hashable {
     let id = UUID()
     let name: String
@@ -196,7 +212,7 @@ struct StorageItem: Identifiable, Hashable {
 
         let home = FileManager.default.homeDirectoryForCurrentUser.path
 
-        let safePrefixes = [
+        var safePrefixes = [
             home + "/.Trash",
             home + "/Library/Caches",
             home + "/Library/Logs",
@@ -208,6 +224,8 @@ struct StorageItem: Identifiable, Hashable {
             "/private/tmp",
             "/tmp"
         ]
+        // 家目录顶层可再生缓存类隐藏目录（白名单）。
+        safePrefixes.append(contentsOf: HiddenDotWhitelist.cleanableNames.map { home + "/" + $0 })
 
         return safePrefixes.contains { path == $0 || path.hasPrefix($0 + "/") }
     }
@@ -260,10 +278,11 @@ struct StorageSnapshot {
     let totalCapacity: Int64
     let freeSpace: Int64
     let categories: [StorageCategory]
+    let threatRecords: [ThreatScanRecord]
 
     var usedSpace: Int64 { max(totalCapacity - freeSpace, 0) }
     var cleanableSizeInBytes: Int64 { categories.reduce(0) { $0 + $1.cleanableSizeInBytes } }
-    var protectionIssueCount: Int { categories.filter { $0.section == .hidden || $0.section == .system }.count }
+    var protectionIssueCount: Int { threatRecords.count }
 
     var speedTasks: [OptimizationTask] {
         var tasks: [OptimizationTask] = [
@@ -288,57 +307,24 @@ struct StorageSnapshot {
     }
 
     var protectionThreatGroups: [ProtectionThreatGroup] {
-        let hiddenItems = categories.first(where: { $0.section == .hidden })?.items ?? []
-        let systemItems = categories.first(where: { $0.section == .system })?.items ?? []
-        let applicationItems = categories.first(where: { $0.section == .applications })?.items ?? []
+        let grouped = Dictionary(grouping: threatRecords, by: \.kind)
 
-        func threatItem(
-            name: String,
-            symbolName: String,
-            exactItem: StorageItem? = nil,
-            fallbackPath: String,
-            item: StorageItem? = nil
-        ) -> ProtectionThreatItem {
-            ProtectionThreatItem(
-                name: name,
-                path: exactItem?.path ?? fallbackPath,
-                symbolName: symbolName,
-                item: item ?? exactItem,
-                isExactMatch: exactItem != nil
-            )
-        }
-
-        let installHPGApp = applicationItems.first {
-            $0.path.localizedCaseInsensitiveContains("installhpg.app")
-                || $0.name.localizedCaseInsensitiveContains("installhpg")
-        }
-        let hpgDiskImage = categories
-            .flatMap(\ .items)
-            .first {
-                $0.path.localizedCaseInsensitiveContains("hpg.dmg")
-                    || $0.name.localizedCaseInsensitiveContains("hpg.dmg")
+        return ProtectionThreatKind.allCases.compactMap { kind in
+            guard let records = grouped[kind], !records.isEmpty else { return nil }
+            let items = records.map { record in
+                ProtectionThreatItem(
+                    name: record.displayName,
+                    path: record.path,
+                    symbolName: record.symbolName,
+                    item: record.relatedItem,
+                    isExactMatch: true,
+                    severity: record.severity,
+                    evidences: record.evidences,
+                    settingsURLString: record.settingsURLString
+                )
             }
-
-        let trojanItems = [
-            threatItem(name: "Installhpg.app", symbolName: "app.fill", exactItem: installHPGApp, fallbackPath: "建议检查：/Applications/Installhpg.app"),
-            threatItem(name: "hpg.dmg", symbolName: "doc.fill", exactItem: hpgDiskImage, fallbackPath: "建议检查：~/Downloads/hpg.dmg")
-        ]
-
-        let adwareItems = [
-            threatItem(name: "启动残留缓存", symbolName: "powerplug.fill", fallbackPath: "/Library/Caches", item: systemItems.first),
-            threatItem(name: "容器广告脚本", symbolName: "shippingbox.fill", fallbackPath: "~/Library/Containers", item: hiddenItems.dropFirst().first)
-        ]
-
-        let trackerItems = [
-            threatItem(name: "使用痕迹日志", symbolName: "list.bullet.rectangle.fill", fallbackPath: "~/Library/Logs", item: systemItems.dropFirst().first),
-            threatItem(name: "索引追踪缓存", symbolName: "magnifyingglass.circle.fill", fallbackPath: "~/Library/Application Support", item: hiddenItems.last)
-        ]
-
-        return [
-            ProtectionThreatGroup(kind: .trojan, items: trojanItems),
-            ProtectionThreatGroup(kind: .adware, items: adwareItems),
-            ProtectionThreatGroup(kind: .trackers, items: trackerItems)
-        ].filter { !$0.items.isEmpty }
+            return ProtectionThreatGroup(kind: kind, items: items)
+        }
     }
 }
 

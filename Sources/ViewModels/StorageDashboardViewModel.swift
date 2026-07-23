@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import SwiftUI
 
 @MainActor
@@ -38,12 +39,16 @@ final class StorageDashboardViewModel: ObservableObject {
     @Published var sortOption: CategorySortOption = .sizeDescending
     @Published var lastErrorMessage: String?
     @Published var isCleaning = false
+    @Published var isBulkCleaning = false
+    @Published var activeCleaningItemIDs: Set<StorageItem.ID> = []
+    @Published var activeCleaningThreatItemIDs: Set<ProtectionThreatItem.ID> = []
     @Published var toastMessage: String?
     @Published var dashboardStage: DashboardStage = .ready
     @Published var scanRotation = 0.0
     @Published var hasPromptedForFullDiskAccess = DiskAuthorizationManager.shared.hasPromptedForFullDiskAccess
     @Published var selectedThreatKind: ProtectionThreatKind?
     @Published var selectedThreatKinds: Set<ProtectionThreatKind> = []
+    @Published var selectedCategoryIDs: Set<StorageCategory.ID> = []
     @Published var activePopover: DashboardPopoverContent?
     @Published var hoveredCard: DashboardCardKind?
     @Published var lastSpeedExecutionResult: SpeedExecutionResult?
@@ -68,6 +73,25 @@ final class StorageDashboardViewModel: ObservableObject {
 
     var cleanCategory: StorageCategory? {
         orderedCategories.max(by: { $0.cleanableSizeInBytes < $1.cleanableSizeInBytes })
+    }
+
+    var visibleCleaningCategories: [StorageCategory] {
+        orderedCategories.filter { !visibleItems(for: $0).isEmpty }
+    }
+
+    var areAllCategoriesSelected: Bool {
+        let ids = Set(visibleCleaningCategories.map(\.id))
+        return !ids.isEmpty && selectedCategoryIDs == ids
+    }
+
+    var selectedCategories: [StorageCategory] {
+        visibleCleaningCategories.filter { selectedCategoryIDs.contains($0.id) }
+    }
+
+    var selectedCleanableSizeInBytes: Int64 {
+        selectedCategories.reduce(0) { result, category in
+            result + visibleItems(for: category).reduce(0) { $0 + $1.sizeInBytes }
+        }
     }
 
     var protectionCount: Int {
@@ -166,8 +190,10 @@ final class StorageDashboardViewModel: ObservableObject {
 
         self.snapshot = snapshot
         self.selectedCategory = orderedCategories.first(where: { !$0.items.filter(\.isCleanable).isEmpty }) ?? orderedCategories.first
+        self.selectedCategoryIDs = Set(visibleCleaningCategories.map(\.id))
         self.selectedThreatKind = snapshot.protectionThreatGroups.first?.kind
         self.selectedThreatKinds = Set(snapshot.protectionThreatGroups.map(\.kind))
+
         self.detailKind = .cleaning
         self.dashboardStage = .scannedSummary
         self.lastSpeedExecutionResult = nil
@@ -194,6 +220,9 @@ final class StorageDashboardViewModel: ObservableObject {
     func openDetails(for kind: DashboardDetailKind) {
         detailKind = kind
         selectedCategory = preferredCategory(for: kind)
+        if kind == .cleaning, selectedCategoryIDs.isEmpty {
+            selectedCategoryIDs = Set(visibleCleaningCategories.map(\.id))
+        }
         if kind == .protection {
             selectedThreatKind = protectionThreatGroups.first?.kind
             if selectedThreatKinds.isEmpty {
@@ -214,6 +243,7 @@ final class StorageDashboardViewModel: ObservableObject {
         selectedCategory = nil
         selectedThreatKind = nil
         selectedThreatKinds = []
+        selectedCategoryIDs = []
         detailKind = .cleaning
         dashboardStage = .ready
         activePopover = nil
@@ -278,9 +308,40 @@ final class StorageDashboardViewModel: ObservableObject {
         hasPromptedForFullDiskAccess = true
     }
 
+    func revealThreatItem(_ threatItem: ProtectionThreatItem) {
+        // Audit findings (system hardening / config profiles) have no file to reveal;
+        // deep-link into the relevant System Settings pane for remediation instead.
+        if threatItem.item == nil, let settingsURLString = threatItem.settingsURLString,
+           let url = URL(string: settingsURLString) {
+            NSWorkspace.shared.open(url)
+            return
+        }
+
+        let rawPath = NSString(string: threatItem.item?.path ?? threatItem.path).expandingTildeInPath
+        let fileURL = URL(fileURLWithPath: rawPath)
+        let fileManager = FileManager.default
+
+        if fileManager.fileExists(atPath: rawPath) {
+            NSWorkspace.shared.activateFileViewerSelecting([fileURL])
+            return
+        }
+
+        let parentURL = fileURL.deletingLastPathComponent()
+        if fileManager.fileExists(atPath: parentURL.path) {
+            NSWorkspace.shared.open(parentURL)
+            return
+        }
+
+        lastErrorMessage = "无法打开路径：\(threatItem.path)"
+    }
+
     func clean(_ item: StorageItem) async {
         isCleaning = true
-        defer { isCleaning = false }
+        activeCleaningItemIDs.insert(item.id)
+        defer {
+            activeCleaningItemIDs.remove(item.id)
+            isCleaning = isBulkCleaning || !activeCleaningItemIDs.isEmpty || !activeCleaningThreatItemIDs.isEmpty
+        }
 
         do {
             try await Task.detached(priority: .userInitiated) {
@@ -293,8 +354,10 @@ final class StorageDashboardViewModel: ObservableObject {
     }
 
     func cleanSelectedCategory() async {
-        guard let category = selectedCategory else { return }
-        let cleanableItems = visibleItems(for: category)
+        let categories = selectedCategories
+        guard !categories.isEmpty else { return }
+
+        let cleanableItems = categories.flatMap { visibleItems(for: $0) }
         guard !cleanableItems.isEmpty else { return }
 
         let executableItems = cleanableItems.filter(\.isSafeForOneClickCleanup)
@@ -306,19 +369,41 @@ final class StorageDashboardViewModel: ObservableObject {
         }
 
         isCleaning = true
-        defer { isCleaning = false }
+        isBulkCleaning = true
+        defer {
+            isBulkCleaning = false
+            isCleaning = isBulkCleaning || !activeCleaningItemIDs.isEmpty || !activeCleaningThreatItemIDs.isEmpty
+        }
 
         do {
+            let categoryName = categories.count == 1 ? categories[0].title : "选中分类"
             let summary = try await Task.detached(priority: .userInitiated) {
-                try StorageScanner().clean(items: executableItems, categoryName: category.title)
+                try StorageScanner().clean(items: executableItems, categoryName: categoryName)
             }.value
             let totalSkippedCount = skippedCount + summary.skippedCount
             let message = totalSkippedCount > 0
                 ? "已清理 \(summary.succeededCount) 项，跳过 \(totalSkippedCount) 项，可在详情中手动处理"
-                : "已完成 \(category.title) 清理"
+                : "已完成\(categoryName)清理"
             await refreshAfterCleaning(message: message)
         } catch {
             lastErrorMessage = error.localizedDescription
+        }
+    }
+
+    func toggleCategorySelection() {
+        if areAllCategoriesSelected {
+            selectedCategoryIDs = []
+        } else {
+            selectedCategoryIDs = Set(visibleCleaningCategories.map(\.id))
+        }
+    }
+
+    func selectCategory(_ category: StorageCategory) {
+        selectedCategory = category
+        if selectedCategoryIDs.contains(category.id) {
+            selectedCategoryIDs.remove(category.id)
+        } else {
+            selectedCategoryIDs.insert(category.id)
         }
     }
 
@@ -333,7 +418,11 @@ final class StorageDashboardViewModel: ObservableObject {
         }
 
         isCleaning = true
-        defer { isCleaning = false }
+        isBulkCleaning = true
+        defer {
+            isBulkCleaning = false
+            isCleaning = isBulkCleaning || !activeCleaningItemIDs.isEmpty || !activeCleaningThreatItemIDs.isEmpty
+        }
 
         do {
             let summary = try await Task.detached(priority: .userInitiated) {
@@ -360,7 +449,11 @@ final class StorageDashboardViewModel: ObservableObject {
         }
 
         isCleaning = true
-        defer { isCleaning = false }
+        activeCleaningThreatItemIDs.insert(threatItem.id)
+        defer {
+            activeCleaningThreatItemIDs.remove(threatItem.id)
+            isCleaning = isBulkCleaning || !activeCleaningItemIDs.isEmpty || !activeCleaningThreatItemIDs.isEmpty
+        }
 
         do {
             try await Task.detached(priority: .userInitiated) {

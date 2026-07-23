@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodebuild -project CleanMac.xcodeproj -scheme CleanMac -configuration Debug build CODE_SIGNING_ALLOWED=NO -destination 'platform=macOS')",
+      "Bash(xcodebuild -list -project CleanMac.xcodeproj)",
+      "Bash(xcodebuild -project CleanMac.xcodeproj -scheme CleanMac -configuration Release -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build)"
+    ]
+  }
+}
