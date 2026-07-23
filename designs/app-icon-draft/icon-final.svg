@@ -1,0 +1,111 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- squircle 背景圆角 -->
+    <clipPath id="squircle">
+      <path d="M0,512 C0,120 120,0 512,0 C904,0 1024,120 1024,512 C1024,904 904,1024 512,1024 C120,1024 0,904 0,512 Z"/>
+    </clipPath>
+
+    <!-- 屏幕左右分屏渐变(左绿右红) -->
+    <linearGradient id="greenSide" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3ddc84"/>
+      <stop offset="1" stop-color="#1faf63"/>
+    </linearGradient>
+    <linearGradient id="redSide" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5a5f"/>
+      <stop offset="1" stop-color="#e0353b"/>
+    </linearGradient>
+
+    <!-- 从左往右的扫描阴影(在雨刮器左侧,越靠近刮片越深) -->
+    <linearGradient id="scanShadow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"   stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.8" stop-color="#000000" stop-opacity="0.04"/>
+      <stop offset="1"   stop-color="#000000" stop-opacity="0.18"/>
+    </linearGradient>
+
+    <!-- 蓝色摆臂渐变 -->
+    <linearGradient id="wiperBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2b8bff"/>
+      <stop offset="1" stop-color="#1666e0"/>
+    </linearGradient>
+    <radialGradient id="pivotRed" cx="0.4" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#ff5a5f"/>
+      <stop offset="1" stop-color="#d61f26"/>
+    </radialGradient>
+    <filter id="wiperShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="3" dy="5" stdDeviation="6" flood-color="#0b2d66" flood-opacity="0.30"/>
+    </filter>
+
+    <!-- 机身金属边框渐变 -->
+    <linearGradient id="bezel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4f5f7"/>
+      <stop offset="1" stop-color="#d3d6dc"/>
+    </linearGradient>
+    <linearGradient id="stand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e3e6ea"/>
+      <stop offset="1" stop-color="#c2c6cd"/>
+    </linearGradient>
+
+    <!-- 屏幕玻璃高光 -->
+    <linearGradient id="glassGloss" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="imacShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="26" flood-color="#8a94a6" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <g clip-path="url(#squircle)">
+    <rect width="1024" height="1024" fill="#ffffff"/>
+    <rect width="1024" height="1024" fill="url(#glassGloss)" opacity="0.15"/>
+  </g>
+
+  <!-- iMac 整体(放大至约占 icon 85%,并整体居中) -->
+  <g filter="url(#imacShadow)" transform="translate(512 512) scale(1.24) translate(-512 -563)">
+    <!-- 支架底座 -->
+    <path d="M462 792 h100 l26 96 h-152 z" fill="url(#stand)"/>
+    <ellipse cx="512" cy="892" rx="118" ry="20" fill="#c8ccd3"/>
+
+    <!-- 机身外壳 -->
+    <rect x="214" y="214" width="596" height="512" rx="46" fill="url(#bezel)"/>
+    <!-- 机身细边高光 -->
+    <rect x="214" y="214" width="596" height="512" rx="46" fill="none" stroke="#ffffff" stroke-opacity="0.7" stroke-width="3"/>
+
+    <!-- 屏幕区域 -->
+    <g>
+      <clipPath id="screenClip">
+        <rect x="252" y="252" width="520" height="400" rx="20"/>
+      </clipPath>
+      <g clip-path="url(#screenClip)">
+        <!-- 左侧绿色(沿雨刮器折线左边) -->
+        <polygon points="252,252 526,252 498,442 655,652 252,652" fill="url(#greenSide)"/>
+        <!-- 右侧红色(沿雨刮器折线右边) -->
+        <polygon points="526,252 772,252 772,652 655,652 498,442" fill="url(#redSide)"/>
+        <!-- 扫描阴影:沿雨刮器左侧的拖影 -->
+        <polygon points="252,252 526,252 498,442 655,652 252,652" fill="url(#scanShadow)"/>
+        <!-- 玻璃反光 -->
+        <rect x="252" y="252" width="520" height="400" fill="url(#glassGloss)"/>
+      </g>
+      <!-- 屏幕内边框 -->
+      <rect x="252" y="252" width="520" height="400" rx="20" fill="none" stroke="#00000022" stroke-width="2"/>
+    </g>
+
+    <!-- 雨刮器:红色转轴 + 黑色弯折摆臂,停在屏幕正中 -->
+    <g filter="url(#wiperShadow)">
+      <!-- 弯折摆臂 -->
+      <polyline points="522,278 498,442 640,632"
+                fill="none" stroke="#1a1d22"
+                stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- 摆臂高光 -->
+      <polyline points="522,278 498,442 640,632"
+                fill="none" stroke="#5a5f68" stroke-opacity="0.55"
+                stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- 顶部红色转轴 -->
+    <circle cx="522" cy="276" r="15" fill="url(#pivotRed)"/>
+    <circle cx="517" cy="271" r="4.5" fill="#ffffff" fill-opacity="0.6"/>
+  </g>
+</svg>

@@ -1,0 +1,29 @@
+name: DiskSense
+options:
+  minimumXcodeGenVersion: 2.38.0
+  deploymentTarget:
+    macOS: '14.0'
+settings:
+  base:
+    PRODUCT_BUNDLE_IDENTIFIER: com.zyb.DiskSense
+    SWIFT_VERSION: 5.10
+    MARKETING_VERSION: 1.0.0
+    CURRENT_PROJECT_VERSION: 1
+    GENERATE_INFOPLIST_FILE: YES
+    ENABLE_APP_SANDBOX: NO
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+targets:
+  DiskSense:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources
+      - path: Resources
+    settings:
+      base:
+        PRODUCT_NAME: DiskSense
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        INFOPLIST_KEY_NSHumanReadableCopyright: ""
+        CODE_SIGN_STYLE: Automatic
+    scheme:
+      testTargets: []

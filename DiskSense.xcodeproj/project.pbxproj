@@ -1,0 +1,376 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		142E1B695601FB590ABCB685 /* StorageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3553DBCD2FAB2DBACD616AC0 /* StorageModels.swift */; };
+		1DEECB73264C7C457DF73BD2 /* StorageScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC646813F558A9FAE3EF363 /* StorageScanner.swift */; };
+		1F38DAB34E1D4AF18E63B0A1 /* DiskAuthorizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C239E13A8A548D58D857710 /* DiskAuthorizationManager.swift */; };
+		4A2B3D4C5E6F708192A3B4C5 /* SpeedOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6C7D8E9F00112233445566 /* SpeedOptimizer.swift */; };
+		1E22370A710A245265016770 /* StorageDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84A2AC6CBAEC815CF65B0793 /* StorageDashboardView.swift */; };
+		2DE4D5A08AFD779AF4BBEB77 /* DiskSenseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117B0873E9A552BA57DFA864 /* DiskSenseApp.swift */; };
+		88C8824E81004231F1F5A54D /* StorageDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE5420F895A7CA3B30030AE /* StorageDashboardViewModel.swift */; };
+		F0991A8CD11DBAF02499532F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 704B5F37B742A1A2AEE85DF4 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		02878A0B514EC273C753762F /* DiskSense.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DiskSense.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		117B0873E9A552BA57DFA864 /* DiskSenseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskSenseApp.swift; sourceTree = "<group>"; };
+		3553DBCD2FAB2DBACD616AC0 /* StorageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageModels.swift; sourceTree = "<group>"; };
+		5B6C7D8E9F00112233445566 /* SpeedOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedOptimizer.swift; sourceTree = "<group>"; };
+		7C239E13A8A548D58D857710 /* DiskAuthorizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskAuthorizationManager.swift; sourceTree = "<group>"; };
+		704B5F37B742A1A2AEE85DF4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		84A2AC6CBAEC815CF65B0793 /* StorageDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageDashboardView.swift; sourceTree = "<group>"; };
+		CCC646813F558A9FAE3EF363 /* StorageScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageScanner.swift; sourceTree = "<group>"; };
+		EFE5420F895A7CA3B30030AE /* StorageDashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageDashboardViewModel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		35B6D550843862A882EBB435 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				02878A0B514EC273C753762F /* DiskSense.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		45BE51DAF82BFC607D9C4DB5 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				704B5F37B742A1A2AEE85DF4 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		5B84A48297D538B0E30C5677 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				EFE5420F895A7CA3B30030AE /* StorageDashboardViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		A95F1D046A10353C2B51A1D9 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				84A2AC6CBAEC815CF65B0793 /* StorageDashboardView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E10E09C5A5633DE4151F85BE = {
+			isa = PBXGroup;
+			children = (
+				45BE51DAF82BFC607D9C4DB5 /* Resources */,
+				F4543F19D39EA1FF49EC6A36 /* Sources */,
+				35B6D550843862A882EBB435 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E9D168C008F054F28536128A /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				7C239E13A8A548D58D857710 /* DiskAuthorizationManager.swift */,
+				5B6C7D8E9F00112233445566 /* SpeedOptimizer.swift */,
+				CCC646813F558A9FAE3EF363 /* StorageScanner.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		F4543F19D39EA1FF49EC6A36 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				117B0873E9A552BA57DFA864 /* DiskSenseApp.swift */,
+				FB1E76F4299A8314BC44B3B5 /* Models */,
+				E9D168C008F054F28536128A /* Services */,
+				5B84A48297D538B0E30C5677 /* ViewModels */,
+				A95F1D046A10353C2B51A1D9 /* Views */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		FB1E76F4299A8314BC44B3B5 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3553DBCD2FAB2DBACD616AC0 /* StorageModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AFCDC24824E0F97402C9F6DC /* DiskSense */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C767CA25EC30CDBC04A69B7E /* Build configuration list for PBXNativeTarget "DiskSense" */;
+			buildPhases = (
+				928BF7F410E0927774802119 /* Sources */,
+				1601563D9B08F3F3E107245A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DiskSense;
+			packageProductDependencies = (
+			);
+			productName = DiskSense;
+			productReference = 02878A0B514EC273C753762F /* DiskSense.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		52B8E848A294734B9ED732E1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					AFCDC24824E0F97402C9F6DC = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 66A742841B0176B7E2D26A79 /* Build configuration list for PBXProject "DiskSense" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E10E09C5A5633DE4151F85BE;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 35B6D550843862A882EBB435 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AFCDC24824E0F97402C9F6DC /* DiskSense */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1601563D9B08F3F3E107245A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0991A8CD11DBAF02499532F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		928BF7F410E0927774802119 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2DE4D5A08AFD779AF4BBEB77 /* DiskSenseApp.swift in Sources */,
+				1F38DAB34E1D4AF18E63B0A1 /* DiskAuthorizationManager.swift in Sources */,
+				4A2B3D4C5E6F708192A3B4C5 /* SpeedOptimizer.swift in Sources */,
+				1E22370A710A245265016770 /* StorageDashboardView.swift in Sources */,
+				88C8824E81004231F1F5A54D /* StorageDashboardViewModel.swift in Sources */,
+				142E1B695601FB590ABCB685 /* StorageModels.swift in Sources */,
+				1DEECB73264C7C457DF73BD2 /* StorageScanner.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1313A6D8D0B803AD50162A4B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zyb.DiskSense;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.1;
+			};
+			name = Release;
+		};
+		136C4053A2BAD76A17BFE35B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zyb.DiskSense;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.1;
+			};
+			name = Debug;
+		};
+		20CFB453429C9F4DD9293B4B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_NAME = DiskSense;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		405B298E1063742244D4FFA3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_NAME = DiskSense;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		66A742841B0176B7E2D26A79 /* Build configuration list for PBXProject "DiskSense" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				136C4053A2BAD76A17BFE35B /* Debug */,
+				1313A6D8D0B803AD50162A4B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C767CA25EC30CDBC04A69B7E /* Build configuration list for PBXNativeTarget "DiskSense" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				20CFB453429C9F4DD9293B4B /* Debug */,
+				405B298E1063742244D4FFA3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 52B8E848A294734B9ED732E1 /* Project object */;
+}

@@ -1,0 +1,92 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGlow" x1="512" y1="64" x2="512" y2="960" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F7F7FB"/>
+    </linearGradient>
+    <linearGradient id="bezel" x1="220" y1="188" x2="804" y2="700" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EEF4FF"/>
+      <stop offset="0.45" stop-color="#D7E0F1"/>
+      <stop offset="1" stop-color="#BCC8DB"/>
+    </linearGradient>
+    <linearGradient id="innerBezel" x1="240" y1="210" x2="784" y2="672" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FBFCFF"/>
+      <stop offset="1" stop-color="#DDE5F1"/>
+    </linearGradient>
+    <linearGradient id="screenLeft" x1="232" y1="248" x2="468" y2="648" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A6F2B3"/>
+      <stop offset="1" stop-color="#2CCB63"/>
+    </linearGradient>
+    <linearGradient id="screenRight" x1="554" y1="248" x2="792" y2="648" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF8C86"/>
+      <stop offset="1" stop-color="#FF4D43"/>
+    </linearGradient>
+    <linearGradient id="screenGloss" x1="252" y1="228" x2="726" y2="632" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.50"/>
+      <stop offset="0.25" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.00"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.10"/>
+    </linearGradient>
+    <linearGradient id="scanSweep" x1="328" y1="282" x2="628" y2="652" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.00"/>
+      <stop offset="0.38" stop-color="#FFFFFF" stop-opacity="0.00"/>
+      <stop offset="0.50" stop-color="#FFFFFF" stop-opacity="0.32"/>
+      <stop offset="0.60" stop-color="#FFFFFF" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.00"/>
+    </linearGradient>
+    <linearGradient id="chin" x1="404" y1="712" x2="620" y2="792" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E8EDF5"/>
+      <stop offset="1" stop-color="#C7D0DE"/>
+    </linearGradient>
+    <linearGradient id="stand" x1="512" y1="712" x2="512" y2="848" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E6ECF5"/>
+      <stop offset="1" stop-color="#BFC8D7"/>
+    </linearGradient>
+    <filter id="outerShadow" x="126" y="134" width="772" height="728" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="28" stdDeviation="28" flood-color="#667085" flood-opacity="0.18"/>
+    </filter>
+    <filter id="screenShadow" x="214" y="228" width="612" height="438" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+    <filter id="wiperShadow" x="318" y="280" width="388" height="328" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.22"/>
+    </filter>
+    <clipPath id="screenClip">
+      <rect x="232" y="248" width="560" height="388" rx="30"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1024" height="1024" rx="230" fill="url(#bgGlow)"/>
+  <rect x="38" y="38" width="948" height="948" rx="192" stroke="#FFFFFF" stroke-opacity="0.82" stroke-width="6"/>
+
+  <g filter="url(#outerShadow)">
+    <rect x="162" y="166" width="700" height="548" rx="48" fill="url(#bezel)"/>
+    <rect x="182" y="184" width="660" height="512" rx="40" fill="url(#innerBezel)"/>
+
+    <g filter="url(#screenShadow)">
+      <rect x="232" y="248" width="560" height="388" rx="30" fill="#F4F7FB"/>
+      <g clip-path="url(#screenClip)">
+        <rect x="232" y="248" width="280" height="388" fill="url(#screenLeft)"/>
+        <rect x="512" y="248" width="280" height="388" fill="url(#screenRight)"/>
+        <path d="M250 270C338 240 454 244 548 280C614 305 710 314 792 280V248H232V636H792V592C714 622 606 610 534 580C440 541 338 548 250 584V270Z" fill="url(#screenGloss)"/>
+        <path d="M224 248H792V636H232L224 248Z" fill="url(#scanSweep)"/>
+      </g>
+      <rect x="232" y="248" width="560" height="388" rx="30" stroke="#FFFFFF" stroke-opacity="0.50" stroke-width="4"/>
+    </g>
+
+    <path d="M432 696H592L646 790H378L432 696Z" fill="url(#stand)"/>
+    <path d="M374 790H650C660 790 668 798 668 808C668 818 660 826 650 826H374C364 826 356 818 356 808C356 798 364 790 374 790Z" fill="url(#chin)"/>
+    <ellipse cx="512" cy="718" rx="98" ry="10" fill="#A9B6C8" fill-opacity="0.38"/>
+  </g>
+
+  <g filter="url(#wiperShadow)">
+    <circle cx="512" cy="442" r="17" fill="#20242C"/>
+    <circle cx="512" cy="442" r="7" fill="#6F7885"/>
+    <path d="M512 442L397 341" stroke="#1E222A" stroke-width="16" stroke-linecap="round"/>
+    <path d="M512 442L631 548" stroke="#1E222A" stroke-width="16" stroke-linecap="round"/>
+    <path d="M399 341L361 313" stroke="#2A2F39" stroke-width="8" stroke-linecap="round"/>
+    <path d="M633 548L669 577" stroke="#2A2F39" stroke-width="8" stroke-linecap="round"/>
+    <path d="M501 432L388 334" stroke="#4B5563" stroke-opacity="0.30" stroke-width="5" stroke-linecap="round"/>
+    <path d="M523 452L640 555" stroke="#4B5563" stroke-opacity="0.24" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,99 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="512" y1="40" x2="512" y2="984" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F6F6FB"/>
+    </linearGradient>
+    <linearGradient id="shellOuter" x1="134" y1="128" x2="890" y2="752" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#DCE9FF"/>
+      <stop offset="0.36" stop-color="#C5D3EE"/>
+      <stop offset="0.74" stop-color="#B4C2DD"/>
+      <stop offset="1" stop-color="#A5B3CC"/>
+    </linearGradient>
+    <linearGradient id="shellInner" x1="158" y1="146" x2="854" y2="716" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FBFF"/>
+      <stop offset="0.48" stop-color="#DDE6F3"/>
+      <stop offset="1" stop-color="#CBD4E2"/>
+    </linearGradient>
+    <linearGradient id="screenBase" x1="246" y1="214" x2="778" y2="644" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF93D4"/>
+      <stop offset="1" stop-color="#EF4AA2"/>
+    </linearGradient>
+    <linearGradient id="screenGreen" x1="232" y1="230" x2="498" y2="628" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C0F7C2"/>
+      <stop offset="1" stop-color="#58CF64"/>
+    </linearGradient>
+    <linearGradient id="screenRed" x1="526" y1="228" x2="790" y2="626" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF8F8B"/>
+      <stop offset="1" stop-color="#FF594C"/>
+    </linearGradient>
+    <linearGradient id="topGloss" x1="230" y1="202" x2="766" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.60"/>
+      <stop offset="0.2" stop-color="#FFFFFF" stop-opacity="0.20"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.00"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.10"/>
+    </linearGradient>
+    <linearGradient id="scan" x1="408" y1="290" x2="660" y2="494" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.00"/>
+      <stop offset="0.40" stop-color="#FFFFFF" stop-opacity="0.00"/>
+      <stop offset="0.52" stop-color="#FFFFFF" stop-opacity="0.36"/>
+      <stop offset="0.64" stop-color="#FFFFFF" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.00"/>
+    </linearGradient>
+    <linearGradient id="neck" x1="512" y1="734" x2="512" y2="856" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E8ECF4"/>
+      <stop offset="1" stop-color="#C3CAD8"/>
+    </linearGradient>
+    <linearGradient id="foot" x1="360" y1="870" x2="664" y2="870" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#CDD4E0"/>
+      <stop offset="0.5" stop-color="#F1F4F8"/>
+      <stop offset="1" stop-color="#C8CFDB"/>
+    </linearGradient>
+    <linearGradient id="wiperBody" x1="472" y1="412" x2="616" y2="548" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#232933"/>
+      <stop offset="1" stop-color="#0F141C"/>
+    </linearGradient>
+    <linearGradient id="wiperEdge" x1="452" y1="356" x2="602" y2="504" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#444D5A"/>
+      <stop offset="1" stop-color="#1A202B"/>
+    </linearGradient>
+    <filter id="outerShadow" x="84" y="92" width="856" height="864" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="22" stdDeviation="28" flood-color="#64748B" flood-opacity="0.18"/>
+    </filter>
+    <filter id="wiperShadow" x="404" y="292" width="256" height="332" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#111827" flood-opacity="0.28"/>
+    </filter>
+    <clipPath id="screenClip">
+      <path d="M220 250C220 226.804 238.804 208 262 208H762C785.196 208 804 226.804 804 250V600C804 623.196 785.196 642 762 642H262C238.804 642 220 623.196 220 600V250Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+
+  <g filter="url(#outerShadow)">
+    <rect x="118" y="116" width="788" height="652" rx="156" fill="#FFFFFF"/>
+    <rect x="134" y="132" width="756" height="620" rx="146" fill="url(#shellOuter)"/>
+    <rect x="156" y="150" width="712" height="586" rx="132" fill="url(#shellInner)"/>
+
+    <g clip-path="url(#screenClip)">
+      <path d="M220 250C220 226.804 238.804 208 262 208H762C785.196 208 804 226.804 804 250V600C804 623.196 785.196 642 762 642H262C238.804 642 220 623.196 220 600V250Z" fill="url(#screenBase)"/>
+      <rect x="220" y="208" width="292" height="434" fill="url(#screenGreen)" opacity="0.95"/>
+      <rect x="512" y="208" width="292" height="434" fill="url(#screenRed)" opacity="0.84"/>
+      <path d="M246 246C322 196 546 194 684 248C742 270 782 272 804 260V208H220V642H804V602C742 622 660 606 566 568C430 514 318 522 246 576V246Z" fill="url(#topGloss)"/>
+      <rect x="220" y="208" width="584" height="434" fill="url(#scan)"/>
+    </g>
+
+    <path d="M220 250C220 226.804 238.804 208 262 208H762C785.196 208 804 226.804 804 250" stroke="#FFFFFF" stroke-opacity="0.64" stroke-width="5" stroke-linecap="round"/>
+
+    <path d="M468 746H556L594 854H430L468 746Z" fill="url(#neck)"/>
+    <path d="M360 868C360 854.745 370.745 844 384 844H640C653.255 844 664 854.745 664 868C664 881.255 653.255 892 640 892H384C370.745 892 360 881.255 360 868Z" fill="url(#foot)"/>
+  </g>
+
+  <g filter="url(#wiperShadow)">
+    <circle cx="512" cy="408" r="13" fill="#171C24"/>
+    <path d="M515 414L596 533" stroke="url(#wiperEdge)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M548 462L614 557" stroke="url(#wiperBody)" stroke-width="28" stroke-linecap="round"/>
+    <path d="M546 462L611 555" stroke="#5A6270" stroke-opacity="0.24" stroke-width="4" stroke-linecap="round"/>
+    <path d="M498 396L474 364" stroke="#262C36" stroke-width="10" stroke-linecap="round"/>
+  </g>
+</svg>
