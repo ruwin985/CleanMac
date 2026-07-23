@@ -183,7 +183,7 @@ final class StorageDashboardViewModel: ObservableObject {
         }
 
         guard hasFullDiskAccess else {
-            lastErrorMessage = "运行前可先开启完全磁盘访问，以便统一处理需要权限的目录。\n\nDiskSense 无法替您一键授权所有文件夹；macOS 仅允许跳转到系统设置，由您手动为 DiskSense 开启“完全磁盘访问”。开启后可返回继续运行。"
+            lastErrorMessage = "运行前可先开启完全磁盘访问，以便统一处理需要权限的目录。\n\nCleanMac 当前没有访问该目录的权限。请前往系统设置 > 隐私与安全性 > 完全磁盘访问，并为 CleanMac 开启权限后重试。"
             openFullDiskAccessSettings()
             return
         }
@@ -343,6 +343,30 @@ final class StorageDashboardViewModel: ObservableObject {
                 ? "已处理 \(summary.succeededCount) 项风险，跳过 \(summary.skippedCount) 项，可在详情中手动处理"
                 : "已清理 \(groups.count) 项选中风险"
             await refreshAfterCleaning(message: message)
+        } catch {
+            lastErrorMessage = error.localizedDescription
+        }
+    }
+
+    func cleanThreatItem(_ threatItem: ProtectionThreatItem) async {
+        guard let item = threatItem.item else {
+            showToast(threatItem.isExactMatch ? "该项目当前不可直接删除" : "这是建议检查位置，未扫描到可直接删除的实际文件")
+            return
+        }
+
+        guard item.isCleanable else {
+            showToast("该项目需要手动处理或额外权限")
+            return
+        }
+
+        isCleaning = true
+        defer { isCleaning = false }
+
+        do {
+            try await Task.detached(priority: .userInitiated) {
+                try StorageScanner().clean(item)
+            }.value
+            await refreshAfterCleaning(message: "已删除 \(threatItem.name)")
         } catch {
             lastErrorMessage = error.localizedDescription
         }

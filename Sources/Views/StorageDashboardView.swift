@@ -290,7 +290,7 @@ struct StorageDashboardView: View {
                 Text("通过全部磁盘访问清理更多内容")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                Text(viewModel.hasPromptedForFullDiskAccess ? "完全磁盘访问只需开启一次；开启后，后续扫描会直接复用，无需重复授权。" : "首次开启完全磁盘访问后，DiskSense 后续扫描会直接复用权限，无需每次重复授权。")
+                Text(viewModel.hasPromptedForFullDiskAccess ? "完全磁盘访问只需开启一次；开启后，后续扫描会直接复用，无需重复授权。" : "首次开启完全磁盘访问后，CleanMac 后续扫描会直接复用权限，无需每次重复授权。")
                     .font(.system(size: 17, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.55))
                     .fixedSize(horizontal: false, vertical: true)
@@ -438,7 +438,11 @@ struct StorageDashboardView: View {
 
                 VStack(spacing: 14) {
                     ForEach(group.items) { item in
-                        ProtectionThreatItemRow(item: item)
+                        ProtectionThreatItemRow(item: item) {
+                            Task {
+                                await viewModel.cleanThreatItem(item)
+                            }
+                        }
                     }
                 }
             }
@@ -731,6 +735,8 @@ private struct ProtectionThreatSidebarCard: View {
 
 private struct ProtectionThreatItemRow: View {
     let item: ProtectionThreatItem
+    let deleteAction: () -> Void
+
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
@@ -742,6 +748,11 @@ private struct ProtectionThreatItemRow: View {
                 Text(item.path).font(.system(size: 13, weight: .medium, design: .rounded)).foregroundStyle(.white.opacity(0.52)).lineLimit(1)
             }
             Spacer()
+            Button(item.item != nil && item.item?.isCleanable == true ? "删除" : "查看") {
+                deleteAction()
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(item.item != nil && item.item?.isCleanable == true ? .red.opacity(0.82) : .white.opacity(0.18))
         }
         .padding(18)
         .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 22, style: .continuous))

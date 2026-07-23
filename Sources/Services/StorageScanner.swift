@@ -27,11 +27,11 @@ enum StorageCleanError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case let .permissionDenied(itemName, path):
-            return "无法清理“\(itemName)”。DiskSense 当前没有访问该目录的权限。请前往系统设置 > 隐私与安全性 > 完全磁盘访问，并为 DiskSense 开启权限后重试。\n\n路径：\(path)"
+            return "无法清理“\(itemName)”。CleanMac 当前没有访问该目录的权限。请前往系统设置 > 隐私与安全性 > 完全磁盘访问，并为 CleanMac 开启权限后重试。\n\n路径：\(path)"
         case let .itemBusy(itemName, path):
             return "无法清理“\(itemName)”，因为它正被系统或其他 App 占用。请先退出相关应用后重试。\n\n路径：\(path)"
         case let .manualCleanupRecommended(itemName, path):
-            return "“\(itemName)”建议手动清理。这个目录里的内容可能仍被系统或其他 App 使用，为避免误删，DiskSense 不会直接代删。\n\n建议：打开 Finder 前往该路径，自行检查后删除不需要的内容。\n\n路径：\(path)"
+            return "“\(itemName)”建议手动清理。这个目录里的内容可能仍被系统或其他 App 使用，为避免误删，CleanMac 不会直接代删。\n\n建议：打开 Finder 前往该路径，自行检查后删除不需要的内容。\n\n路径：\(path)"
         case let .partialFailure(itemName, succeeded, failed):
             return "“\(itemName)”已部分清理完成，成功清理 \(succeeded) 项，仍有 \(failed) 项因权限或占用未能处理。"
         case let .cleanupFailed(itemName, path, reason):

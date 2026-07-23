@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct DiskSenseApp: App {
+struct CleanMacApp: App {
     @StateObject private var viewModel = StorageDashboardViewModel()
 
     var body: some Scene {

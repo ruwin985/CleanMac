@@ -2,16 +2,16 @@
 import PackageDescription
 
 let package = Package(
-    name: "DiskSense",
+    name: "CleanMac",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "DiskSense", targets: ["DiskSense"])
+        .executable(name: "CleanMac", targets: ["CleanMac"])
     ],
     targets: [
         .executableTarget(
-            name: "DiskSense",
+            name: "CleanMac",
             path: "Sources"
         )
     ]

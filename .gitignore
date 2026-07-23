@@ -6,12 +6,18 @@
 .swiftpm/
 Package.resolved
 
-# Xcode
+# Xcode user data
 DerivedData/
 *.xcworkspace/xcuserdata/
 *.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 *.xcuserstate
 
-# App bundles
+# Local build outputs
+build/
+
+# App bundles and archives
 *.app
+*.dSYM
+*.dmg
+*.xcarchive

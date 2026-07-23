@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT="DiskSense.xcodeproj"
-SCHEME="DiskSense"
+PROJECT="CleanMac.xcodeproj"
+SCHEME="CleanMac"
 CONFIGURATION="Release"
-APP_NAME="DiskSense"
-BUNDLE_ID="com.zyb.DiskSense"
+APP_NAME="CleanMac"
+BUNDLE_ID="com.zyb.CleanMac"
 VERSION="${VERSION:-1.0.0}"
 BUILD_DIR="${BUILD_DIR:-build/universal}"
 ARCHIVE_PATH="$BUILD_DIR/$APP_NAME.xcarchive"
