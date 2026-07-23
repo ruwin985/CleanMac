@@ -319,8 +319,7 @@ struct StorageScanner {
             ("Application Support", home.appendingPathComponent("Library/Application Support").path, "square.stack.3d.up.fill", false),
             ("Group Containers", home.appendingPathComponent("Library/Group Containers").path, "square.3.layers.3d.down.right", false),
             ("Mail", home.appendingPathComponent("Library/Mail").path, "envelope.fill", false),
-            ("Spotlight", "/System/Volumes/Data/.Spotlight-V100", "magnifyingglass.circle.fill", false),
-            ("Trash", home.appendingPathComponent(".Trash").path, "trash.fill", true)
+            ("Spotlight", "/System/Volumes/Data/.Spotlight-V100", "magnifyingglass.circle.fill", false)
         ]
         var items = defs.map { name, path, icon, cleanable in
             StorageItem(name: name, path: path, sizeInBytes: directorySize(atPath: path, countAsCleanable: cleanable), symbolName: icon, isCleanable: cleanable)
@@ -347,7 +346,6 @@ struct StorageScanner {
             guard name.hasPrefix("."),
                   name != ".",
                   name != "..",
-                  name != ".Trash",           // 已单独作为 Trash 处理
                   name != ".DS_Store",
                   name != ".localized",
                   name != ".CFUserTextEncoding" else {
@@ -464,15 +462,16 @@ struct StorageScanner {
 
     private func shouldUseLightweightEnumeration(for path: String) -> Bool {
         let loweredPath = path.lowercased()
+        let homePath = fileManager.homeDirectoryForCurrentUser.path.lowercased()
         let heavyPrefixes = [
             "/applications",
             "/opt/homebrew",
             "/system/volumes/data/.spotlight-v100",
             "/private/var/log",
-            "/users/zyb/library/group containers",
-            "/users/zyb/library/application support",
-            "/users/zyb/library/containers",
-            "/users/zyb/library/mail"
+            homePath + "/library/group containers",
+            homePath + "/library/application support",
+            homePath + "/library/containers",
+            homePath + "/library/mail"
         ]
 
         return heavyPrefixes.contains(where: loweredPath.hasPrefix)

@@ -4,6 +4,13 @@ import SwiftUI
 
 @MainActor
 final class StorageDashboardViewModel: ObservableObject {
+    private enum ScanLifecycle {
+        case idle
+        case scanning
+        case paused
+        case completed
+    }
+
     enum PrimaryActionPhase {
         case idle
         case scanning
@@ -43,7 +50,7 @@ final class StorageDashboardViewModel: ObservableObject {
     @Published var activeCleaningItemIDs: Set<StorageItem.ID> = []
     @Published var activeCleaningThreatItemIDs: Set<ProtectionThreatItem.ID> = []
     @Published var toastMessage: String?
-    @Published var dashboardStage: DashboardStage = .ready
+    @Published var dashboardStage: DashboardStage = .welcome
     @Published var scanRotation = 0.0
     @Published var hasPromptedForFullDiskAccess = DiskAuthorizationManager.shared.hasPromptedForFullDiskAccess
     @Published var selectedThreatKind: ProtectionThreatKind?
@@ -56,6 +63,8 @@ final class StorageDashboardViewModel: ObservableObject {
     @Published var scanDiscoveredCleanableBytes: Int64 = 0
     @Published var primaryActionPhase: PrimaryActionPhase = .idle
     @Published var pendingManualActionCount: Int = 0
+
+    private var scanLifecycle: ScanLifecycle = .idle
 
     var orderedCategories: [StorageCategory] {
         guard let snapshot else { return [] }
@@ -137,17 +146,25 @@ final class StorageDashboardViewModel: ObservableObject {
     }
 
     var primaryActionTitle: String {
-        if dashboardStage == .ready {
-            return isScanning ? "扫描中" : "扫描"
+        if dashboardStage == .ready || dashboardStage == .scannedSummary {
+            return isScanning ? "暂停" : "运行"
         }
         return primaryActionPhase.title
     }
 
     var primaryActionSymbolName: String {
-        if dashboardStage == .ready {
-            return isScanning ? PrimaryActionPhase.scanning.symbolName : "magnifyingglass"
+        if dashboardStage == .ready || dashboardStage == .scannedSummary {
+            return isScanning ? "pause.fill" : "play.fill"
         }
         return primaryActionPhase.symbolName
+    }
+
+    var showsWelcomeScreen: Bool {
+        dashboardStage == .welcome
+    }
+
+    var canRescanToWelcome: Bool {
+        (dashboardStage == .ready && !isScanning) || dashboardStage == .scannedSummary || dashboardStage == .details
     }
 
     var isPrimaryActionInProgress: Bool {
@@ -167,6 +184,7 @@ final class StorageDashboardViewModel: ObservableObject {
     }
 
     func refresh() async {
+        scanLifecycle = .scanning
         isScanning = true
         primaryActionPhase = .scanning
         startScanAnimation()
@@ -188,6 +206,8 @@ final class StorageDashboardViewModel: ObservableObject {
             }).scan()
         }.value
 
+        guard scanLifecycle == .scanning else { return }
+
         self.snapshot = snapshot
         self.selectedCategory = orderedCategories.first(where: { !$0.items.filter(\.isCleanable).isEmpty }) ?? orderedCategories.first
         self.selectedCategoryIDs = Set(visibleCleaningCategories.map(\.id))
@@ -196,6 +216,7 @@ final class StorageDashboardViewModel: ObservableObject {
 
         self.detailKind = .cleaning
         self.dashboardStage = .scannedSummary
+        self.scanLifecycle = .completed
         self.lastSpeedExecutionResult = nil
         self.activePopover = nil
         self.scanCurrentPath = ""
@@ -203,7 +224,18 @@ final class StorageDashboardViewModel: ObservableObject {
     }
 
     func performPrimaryAction() async {
-        if dashboardStage == .ready {
+        if dashboardStage == .welcome {
+            dashboardStage = .ready
+            await refresh()
+            return
+        }
+
+        if dashboardStage == .ready, isScanning {
+            pauseScan()
+            return
+        }
+
+        if dashboardStage == .scannedSummary {
             await refresh()
             return
         }
@@ -236,6 +268,16 @@ final class StorageDashboardViewModel: ObservableObject {
         dashboardStage = .scannedSummary
     }
 
+    func pauseScan() {
+        guard isScanning else { return }
+        scanLifecycle = .paused
+        isScanning = false
+        primaryActionPhase = .idle
+        stopScanAnimation()
+        scanCurrentPath = ""
+        showToast("已暂停扫描")
+    }
+
     func resetToHome() {
         snapshot = nil
         scanCurrentPath = ""
@@ -245,7 +287,11 @@ final class StorageDashboardViewModel: ObservableObject {
         selectedThreatKinds = []
         selectedCategoryIDs = []
         detailKind = .cleaning
-        dashboardStage = .ready
+        dashboardStage = .welcome
+        scanLifecycle = .idle
+        isScanning = false
+        primaryActionPhase = .idle
+        stopScanAnimation()
         activePopover = nil
         lastSpeedExecutionResult = nil
     }

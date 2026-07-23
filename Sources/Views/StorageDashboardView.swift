@@ -2,16 +2,39 @@ import AppKit
 import SwiftUI
 
 struct StorageDashboardView: View {
+    private static let welcomeAppIcon = NSImage(named: "AppIcon")
+
     @ObservedObject var viewModel: StorageDashboardViewModel
 
     var body: some View {
         ZStack {
             backgroundView
             switch viewModel.dashboardStage {
+            case .welcome:
+                welcomeView
             case .ready, .scannedSummary:
                 launchView
             case .details:
                 resultsView
+            }
+        }
+        .overlay(alignment: .topLeading) {
+            if viewModel.dashboardStage != .welcome,
+               viewModel.dashboardStage != .details,
+               viewModel.canRescanToWelcome {
+                Button {
+                    viewModel.resetToHome()
+                } label: {
+                    Label("重新扫描", systemImage: "sidebar.left")
+                }
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.9))
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
+                .background(.white.opacity(0.08), in: Capsule())
+                .overlay { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
+                .buttonStyle(.plain)
+                .offset(x: 26, y: 26)
             }
         }
         .overlay(alignment: .top) {
@@ -46,7 +69,6 @@ struct StorageDashboardView: View {
 
     private var launchView: some View {
         VStack(spacing: 36) {
-            Spacer()
             VStack(spacing: 14) {
                 Text("好了，我发现的内容都在这里。")
                     .font(.system(size: 42, weight: .bold, design: .rounded))
@@ -56,6 +78,8 @@ struct StorageDashboardView: View {
                     .foregroundStyle(.white.opacity(0.55))
                     .multilineTextAlignment(.center)
             }
+
+            Spacer()
 
             HStack(alignment: .top, spacing: 56) {
                 HomeFeatureCard(
@@ -173,7 +197,6 @@ struct StorageDashboardView: View {
                 }
                 }
                 .buttonStyle(.plain)
-                .disabled(viewModel.isPrimaryActionInProgress)
 
                 if viewModel.isPrimaryActionInProgress {
                     Text(viewModel.scanDiscoveredCleanableBytes.byteString)
@@ -193,6 +216,45 @@ struct StorageDashboardView: View {
         }
     }
 
+    private var welcomeView: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 54)
+
+            appIconArtwork
+                .frame(width: 360, height: 280)
+
+            VStack(spacing: 20) {
+                Text("欢迎使用 CleanMac")
+                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                Text("开始全面、仔细扫描您的 Mac。")
+                    .font(.system(size: 21, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.78))
+            }
+            .padding(.top, 24)
+
+            Spacer()
+
+            Button {
+                Task { await viewModel.performPrimaryAction() }
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(.white.opacity(0.14))
+                        .frame(width: 140, height: 140)
+                        .overlay(Circle().stroke(Color.cyan.opacity(0.9), lineWidth: 4))
+                        .shadow(color: .cyan.opacity(0.22), radius: 28)
+                    Text("扫描")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+            }
+            .buttonStyle(.plain)
+            .padding(.bottom, 42)
+        }
+        .padding(.horizontal, 48)
+    }
+
 
     private var resultsView: some View {
         HStack(spacing: 24) {
@@ -206,13 +268,12 @@ struct StorageDashboardView: View {
         Button {
             viewModel.backToSummary()
         } label: {
-            Label("返回摘要", systemImage: "chevron.left")
+            Label("返回摘要", systemImage: "sidebar.left")
         }
         .font(.system(size: 18, weight: .bold, design: .rounded))
         .foregroundStyle(.white.opacity(0.9))
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
-        .padding(.top, 0)
         .background(.white.opacity(0.08), in: Capsule())
         .overlay { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
         .buttonStyle(.plain)
@@ -490,6 +551,117 @@ struct StorageDashboardView: View {
                     StatsCapsule(title: viewModel.detailKind == .protection ? "风险项" : "可用空间", value: viewModel.detailKind == .protection ? "\(viewModel.protectionCount)" : snapshot.freeSpace.byteString, tint: viewModel.detailKind == .protection ? .orange : .pink)
                 }
             }
+        }
+    }
+
+    private var appIconArtwork: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color(red: 0.98, green: 0.40, blue: 0.70).opacity(0.34),
+                            Color(red: 0.36, green: 0.80, blue: 0.96).opacity(0.14),
+                            .clear
+                        ],
+                        center: .center,
+                        startRadius: 18,
+                        endRadius: 170
+                    )
+                )
+                .frame(width: 320, height: 320)
+                .blur(radius: 10)
+
+            ZStack {
+                RoundedRectangle(cornerRadius: 42, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.97, green: 0.42, blue: 0.73),
+                                Color(red: 0.89, green: 0.21, blue: 0.55)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 280, height: 200)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 42, style: .continuous)
+                            .stroke(.white.opacity(0.12), lineWidth: 1)
+                    )
+
+                RoundedRectangle(cornerRadius: 42, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [.white.opacity(0.24), .white.opacity(0.02)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 280, height: 200)
+                    .mask(
+                        VStack(spacing: 0) {
+                            RoundedRectangle(cornerRadius: 42, style: .continuous)
+                                .frame(height: 66)
+                            Spacer()
+                        }
+                    )
+
+                iconWiperShape
+                    .stroke(Color(red: 0.22, green: 0.13, blue: 0.31), style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
+                    .frame(width: 170, height: 150)
+                    .offset(x: 54, y: -6)
+
+                iconWiperShape
+                    .stroke(.black.opacity(0.16), style: StrokeStyle(lineWidth: 12, lineCap: .round, lineJoin: .round))
+                    .frame(width: 170, height: 150)
+                    .offset(x: 57, y: -2)
+                    .blur(radius: 0.8)
+
+                Circle()
+                    .trim(from: 0.18, to: 0.92)
+                    .stroke(Color(red: 0.67, green: 0.12, blue: 0.43), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: 20, height: 20)
+                    .rotationEffect(.degrees(-38))
+                    .offset(y: 62)
+            }
+
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [.white.opacity(0.94), Color(red: 0.86, green: 0.88, blue: 0.95)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 82, height: 18)
+                .offset(y: 118)
+                .shadow(color: .black.opacity(0.14), radius: 10, y: 7)
+
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [.white.opacity(0.98), Color(red: 0.80, green: 0.82, blue: 0.90)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 128, height: 18)
+                .offset(y: 144)
+                .shadow(color: .black.opacity(0.12), radius: 12, y: 8)
+        }
+        .frame(width: 360, height: 300)
+        .shadow(color: .black.opacity(0.18), radius: 24, y: 20)
+    }
+
+    private var iconWiperShape: Path {
+        Path { path in
+            path.move(to: CGPoint(x: 14, y: 10))
+            path.addLine(to: CGPoint(x: 138, y: 102))
+            path.addLine(to: CGPoint(x: 124, y: 108))
+            path.addLine(to: CGPoint(x: 152, y: 16))
+            path.move(to: CGPoint(x: 136, y: 102))
+            path.addLine(to: CGPoint(x: 164, y: 146))
         }
     }
 }

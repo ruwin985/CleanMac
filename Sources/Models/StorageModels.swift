@@ -68,6 +68,7 @@ enum CategorySortOption: String, CaseIterable, Identifiable {
 }
 
 enum DashboardStage {
+    case welcome
     case ready
     case scannedSummary
     case details
@@ -213,7 +214,6 @@ struct StorageItem: Identifiable, Hashable {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
 
         var safePrefixes = [
-            home + "/.Trash",
             home + "/Library/Caches",
             home + "/Library/Logs",
             home + "/Library/Developer/Xcode/DerivedData",
