@@ -25,7 +25,7 @@ struct StorageDashboardView: View {
                 Button {
                     viewModel.resetToHome()
                 } label: {
-                    Label("重新扫描", systemImage: "sidebar.left")
+                    Label("重新扫描", systemImage: "chevron.left")
                 }
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.9))
@@ -34,7 +34,7 @@ struct StorageDashboardView: View {
                 .background(.white.opacity(0.08), in: Capsule())
                 .overlay { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
                 .buttonStyle(.plain)
-                .offset(x: 26, y: 26)
+                .offset(x: 26, y: 55)
             }
         }
         .overlay(alignment: .top) {
@@ -44,8 +44,18 @@ struct StorageDashboardView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+        .overlay {
+            if viewModel.showsFullDiskAccessPrompt {
+                FullDiskAccessPrompt(
+                    openSettings: { viewModel.openFullDiskAccessSettings() },
+                    dismiss: { viewModel.dismissFullDiskAccessPrompt() }
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            }
+        }
         .animation(.spring(response: 0.35, dampingFraction: 0.86), value: viewModel.toastMessage)
         .animation(.spring(response: 0.35, dampingFraction: 0.86), value: viewModel.activePopover?.card.id)
+        .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.showsFullDiskAccessPrompt)
         .alert("操作失败", isPresented: Binding(get: { viewModel.lastErrorMessage != nil }, set: { if !$0 { viewModel.lastErrorMessage = nil } })) {
             Button("好") { viewModel.lastErrorMessage = nil }
         } message: {
@@ -78,8 +88,6 @@ struct StorageDashboardView: View {
                     .foregroundStyle(.white.opacity(0.55))
                     .multilineTextAlignment(.center)
             }
-
-            Spacer()
 
             HStack(alignment: .top, spacing: 56) {
                 HomeFeatureCard(
@@ -209,7 +217,7 @@ struct StorageDashboardView: View {
             Spacer()
         }
         .padding(.horizontal, 48)
-        .padding(.vertical, 32)
+        .padding(.vertical, 46)
         .contentShape(Rectangle())
         .onTapGesture {
             viewModel.hidePopover()
@@ -268,7 +276,7 @@ struct StorageDashboardView: View {
         Button {
             viewModel.backToSummary()
         } label: {
-            Label("返回摘要", systemImage: "sidebar.left")
+            Label("返回摘要", systemImage: "chevron.left")
         }
         .font(.system(size: 18, weight: .bold, design: .rounded))
         .foregroundStyle(.white.opacity(0.9))
@@ -678,6 +686,77 @@ private struct ToastView: View {
         .background(.black.opacity(0.48), in: Capsule())
         .overlay { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
         .shadow(color: .black.opacity(0.18), radius: 14, y: 8)
+    }
+}
+
+private struct FullDiskAccessPrompt: View {
+    let openSettings: () -> Void
+    let dismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(.black.opacity(0.36))
+                .ignoresSafeArea()
+                .onTapGesture(perform: dismiss)
+
+            VStack(alignment: .center, spacing: 20) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .center, spacing: 12) {
+                        Text("授权 CleanMac 访问全部磁盘")
+                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                        (
+                            Text("打开您的“")
+                                .foregroundStyle(.white.opacity(0.88))
+                            + Text("系统偏好设置")
+                                .foregroundStyle(Color.blue)
+                            + Text("”，进行身份验证并在“完全磁盘访问权限”列表中选择 CleanMac。")
+                                .foregroundStyle(.white.opacity(0.88))
+                        )
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity)
+                        .onTapGesture(perform: openSettings)
+                    }
+
+                    Spacer(minLength: 16)
+
+                    Button(action: dismiss) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.75))
+                            .frame(width: 30, height: 30)
+                            .background(.white.opacity(0.08), in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Image("FullDiskAccessGuide")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 340)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(.white.opacity(0.08), lineWidth: 1)
+                    }
+                    .shadow(color: .black.opacity(0.26), radius: 24, y: 18)
+                    .frame(maxWidth: .infinity)
+
+            }
+            .padding(28)
+            .frame(width: 540)
+            .background(.ultraThinMaterial.opacity(0.92), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(.white.opacity(0.10), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.35), radius: 40, y: 20)
+        }
     }
 }
 

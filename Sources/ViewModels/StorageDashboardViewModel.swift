@@ -45,6 +45,7 @@ final class StorageDashboardViewModel: ObservableObject {
     @Published var detailKind: DashboardDetailKind = .cleaning
     @Published var sortOption: CategorySortOption = .sizeDescending
     @Published var lastErrorMessage: String?
+    @Published var showsFullDiskAccessPrompt = false
     @Published var isCleaning = false
     @Published var isBulkCleaning = false
     @Published var activeCleaningItemIDs: Set<StorageItem.ID> = []
@@ -235,14 +236,23 @@ final class StorageDashboardViewModel: ObservableObject {
             return
         }
 
-        if dashboardStage == .scannedSummary {
+        if dashboardStage == .ready, !isScanning {
             await refresh()
             return
         }
 
+        if dashboardStage == .scannedSummary {
+            guard hasFullDiskAccess else {
+                presentFullDiskAccessPrompt()
+                return
+            }
+
+            await runAllRecommendedActions()
+            return
+        }
+
         guard hasFullDiskAccess else {
-            lastErrorMessage = "运行前可先开启完全磁盘访问，以便统一处理需要权限的目录。\n\nCleanMac 当前没有访问该目录的权限。请前往系统设置 > 隐私与安全性 > 完全磁盘访问，并为 CleanMac 开启权限后重试。"
-            openFullDiskAccessSettings()
+            presentFullDiskAccessPrompt()
             return
         }
 
@@ -352,6 +362,15 @@ final class StorageDashboardViewModel: ObservableObject {
     func openFullDiskAccessSettings() {
         DiskAuthorizationManager.shared.openFullDiskAccessSettings()
         hasPromptedForFullDiskAccess = true
+        showsFullDiskAccessPrompt = false
+    }
+
+    func presentFullDiskAccessPrompt() {
+        showsFullDiskAccessPrompt = true
+    }
+
+    func dismissFullDiskAccessPrompt() {
+        showsFullDiskAccessPrompt = false
     }
 
     func revealThreatItem(_ threatItem: ProtectionThreatItem) {

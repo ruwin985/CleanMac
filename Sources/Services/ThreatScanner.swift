@@ -418,7 +418,6 @@ struct ThreatScanner {
             ("pckeeper", "PCKeeper"),
             ("advancedmaccleaner", "Advanced Mac Cleaner"),
             ("maccleaner", "Mac Cleaner PUA"),
-            ("cleanmymac", "CleanMyMac (verify legitimacy)"),
             ("searchbaron", "SearchBaron Hijacker"),
             ("searchmarquis", "Search Marquis Hijacker"),
             ("searchdiversion", "Search Diversion"),
