@@ -336,7 +336,7 @@ struct StorageDashboardView: View {
                 .background(.black.opacity(0.16), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .buttonStyle(.plain)
 
-                VStack(spacing: 12) {
+                VStack(spacing: 8) {
                     ForEach(viewModel.visibleCleaningCategories) { category in
                         CleaningSidebarCategoryCard(
                             category: category,
@@ -1031,7 +1031,7 @@ private struct HomeFeatureCard: View {
     let hoverChanged: (Bool) -> Void
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 14) {
             Button(action: iconTap) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 34, style: .continuous)
@@ -1050,6 +1050,8 @@ private struct HomeFeatureCard: View {
             .animation(.spring(response: 0.28, dampingFraction: 0.78), value: isHovered)
 
             VStack(spacing: 8) {
+                Spacer()
+                    .frame(height: 14)
                 HStack(spacing: 10) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.cyan)
@@ -1083,11 +1085,11 @@ private struct HomeFeatureCard: View {
 
                     if let buttonTitle {
                         Button(buttonTitle, action: buttonTap)
-                            .frame(minWidth: 128, minHeight: 48)
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .frame(minWidth: 128, minHeight: 24)
+                            .font(.system(size: 17, weight: .bold, design: .rounded))
                             .foregroundStyle(isButtonDisabled ? .white.opacity(0.45) : .cyan)
-                            .padding(.horizontal, 28)
-                            .padding(.vertical, 14)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 6)
                             .background(isButtonDisabled ? .white.opacity(0.10) : .black.opacity(0.18), in: Capsule())
                             .overlay {
                                 Capsule()
