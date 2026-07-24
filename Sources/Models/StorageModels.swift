@@ -7,6 +7,7 @@ enum StorageSection: String, CaseIterable, Identifiable {
     case developer
     case system
     case hidden
+    case trash
 
     var id: String { rawValue }
 
@@ -17,6 +18,7 @@ enum StorageSection: String, CaseIterable, Identifiable {
         case .developer: return "开发环境"
         case .system: return "系统"
         case .hidden: return "隐形空间"
+        case .trash: return "废纸篓"
         }
     }
 
@@ -27,6 +29,7 @@ enum StorageSection: String, CaseIterable, Identifiable {
         case .developer: return "Xcode、模拟器、Homebrew 与开发缓存"
         case .system: return "系统数据、日志与系统缓存"
         case .hidden: return "Library、容器、索引与其他不易察觉的数据"
+        case .trash: return "废纸篓受限制，手动去清理"
         }
     }
 
@@ -37,6 +40,7 @@ enum StorageSection: String, CaseIterable, Identifiable {
         case .developer: return Color(red: 0.64, green: 0.45, blue: 0.98)
         case .system: return Color(red: 0.40, green: 0.84, blue: 0.67)
         case .hidden: return Color(red: 0.99, green: 0.67, blue: 0.39)
+        case .trash: return Color(red: 0.43, green: 0.82, blue: 0.95)
         }
     }
 
@@ -47,6 +51,7 @@ enum StorageSection: String, CaseIterable, Identifiable {
         case .developer: return "hammer.fill"
         case .system: return "gearshape.2.fill"
         case .hidden: return "eye.slash.fill"
+        case .trash: return "trash.fill"
         }
     }
 }

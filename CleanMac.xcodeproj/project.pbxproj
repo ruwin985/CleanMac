@@ -7,254 +7,328 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		142E1B695601FB590ABCB685 /* StorageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3553DBCD2FAB2DBACD616AC0 /* StorageModels.swift */; };
-		1DEECB73264C7C457DF73BD2 /* StorageScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC646813F558A9FAE3EF363 /* StorageScanner.swift */; };
-		1F38DAB34E1D4AF18E63B0A1 /* DiskAuthorizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C239E13A8A548D58D857710 /* DiskAuthorizationManager.swift */; };
-		2A7B8C9D0E1F223344556677 /* ThreatScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B8C9D0E1F22334455667788 /* ThreatScanner.swift */; };
-		4A2B3D4C5E6F708192A3B4C5 /* SpeedOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6C7D8E9F00112233445566 /* SpeedOptimizer.swift */; };
-		6C3D4E5F60718293A4B5C6D7 /* SecurityAuditScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D4E5F6071829304B5C6D7E8 /* SecurityAuditScanner.swift */; };
-		1E22370A710A245265016770 /* StorageDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84A2AC6CBAEC815CF65B0793 /* StorageDashboardView.swift */; };
-		2DE4D5A08AFD779AF4BBEB77 /* CleanMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117B0873E9A552BA57DFA864 /* CleanMacApp.swift */; };
-		88C8824E81004231F1F5A54D /* StorageDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE5420F895A7CA3B30030AE /* StorageDashboardViewModel.swift */; };
-		F0991A8CD11DBAF02499532F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 704B5F37B742A1A2AEE85DF4 /* Assets.xcassets */; };
+		2B3411A2A2C313E9141F5A45 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 181DB067E9C456767AAC06C0 /* Assets.xcassets */; };
+		32A40DB724B9EB97687A07DA /* CleanMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C9C1E410E0BB4ECEDAD2CA6 /* CleanMacApp.swift */; };
+		384D0534F53D47FF51B2F0B0 /* StorageScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0EE7DA2642B1B4CAE28101 /* StorageScanner.swift */; };
+		3F5E583860EDA0A303475266 /* ThreatScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AD30765EE3EAD79CBADAE8 /* ThreatScanner.swift */; };
+		4857A1EBB25CE63ABEFCEF41 /* SecurityAuditScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8A3B1B671963F215007D05 /* SecurityAuditScanner.swift */; };
+		4A193DAEC7C1EE21C2F9B0FF /* LoginItemSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFDABC39E9B865F173C6EC5 /* LoginItemSettings.swift */; };
+		6EA04505D1C419BDD1FE018A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 181DB067E9C456767AAC06C0 /* Assets.xcassets */; };
+		77836748138611EA57035064 /* MenuBarAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 043BDB076899E1F1BC31CFA7 /* MenuBarAppDelegate.swift */; };
+		8C4FED8AD38DA9C745ED22A2 /* CleanMacMenuBar.app in Resources */ = {isa = PBXBuildFile; fileRef = 179DCC4F790785DE59154B53 /* CleanMacMenuBar.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		998E284F91B37DE8B80440A0 /* DiskAuthorizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFABD280E154DADD76B1A7F1 /* DiskAuthorizationManager.swift */; };
+		AE1066FEB65C3633EECF4BC4 /* StorageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D396C34DE5C82563F0F489 /* StorageModels.swift */; };
+		AF55192921F4D4A6F5BCCC4C /* StorageDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA514A875D51F4F7FBE1AA5 /* StorageDashboardViewModel.swift */; };
+		B36E7D10EB86BF1D63D6280B /* LoginItemRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C4FC7AB72A70EDDCFCEE87 /* LoginItemRegistrar.swift */; };
+		BAA46C1FD9EB3B3E11CED08F /* CleanMacMenuBarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0B03E7A0FC2A284BCAEDE7 /* CleanMacMenuBarApp.swift */; };
+		BBDCB7547A469AE8B343F8C7 /* SettingsMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC07DFF5D895960192DDD1F /* SettingsMenuButton.swift */; };
+		BCF2C3B066D53DCF1488AB89 /* AboutWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C982A4D89B1B332861EB37 /* AboutWindow.swift */; };
+		C4F79969756CB6C74C6B17A6 /* FeedbackWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E357EBDA8359C43C562CF71 /* FeedbackWindow.swift */; };
+		D7BA45CF3A1BA648A9BC22F5 /* SpeedOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126873F1AA15A5804CDAE067 /* SpeedOptimizer.swift */; };
+		E10C09C4744FACD41662A62D /* MenuBarLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DFCF3D6169139D469958F15 /* MenuBarLauncher.swift */; };
+		E2189C3A05179218266FF0D0 /* AppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDA6E0E38904FFC080B8EF8 /* AppSettingsView.swift */; };
+		FE80F1BD6C77E2A5119C37E6 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C15680DC83C706828658FF8 /* MenuBarController.swift */; };
+		FE814AD05C39E40E712D8BE3 /* StorageDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324DE060C8DAC7622A45A6DC /* StorageDashboardView.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		1B91DFD4B4929EAA78E29204 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E435598BB8F57054B1DB5432 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1E2752467064E30925F99E5;
+			remoteInfo = CleanMacMenuBar;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		02878A0B514EC273C753762F /* CleanMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CleanMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		117B0873E9A552BA57DFA864 /* CleanMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanMacApp.swift; sourceTree = "<group>"; };
-		3553DBCD2FAB2DBACD616AC0 /* StorageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageModels.swift; sourceTree = "<group>"; };
-		3B8C9D0E1F22334455667788 /* ThreatScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreatScanner.swift; sourceTree = "<group>"; };
-		5B6C7D8E9F00112233445566 /* SpeedOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedOptimizer.swift; sourceTree = "<group>"; };
-		7D4E5F6071829304B5C6D7E8 /* SecurityAuditScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityAuditScanner.swift; sourceTree = "<group>"; };
-		7C239E13A8A548D58D857710 /* DiskAuthorizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskAuthorizationManager.swift; sourceTree = "<group>"; };
-		704B5F37B742A1A2AEE85DF4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		84A2AC6CBAEC815CF65B0793 /* StorageDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageDashboardView.swift; sourceTree = "<group>"; };
-		CCC646813F558A9FAE3EF363 /* StorageScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageScanner.swift; sourceTree = "<group>"; };
-		EFE5420F895A7CA3B30030AE /* StorageDashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageDashboardViewModel.swift; sourceTree = "<group>"; };
+		043BDB076899E1F1BC31CFA7 /* MenuBarAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarAppDelegate.swift; sourceTree = "<group>"; };
+		126873F1AA15A5804CDAE067 /* SpeedOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedOptimizer.swift; sourceTree = "<group>"; };
+		15CB264AE6622A24D0D387FD /* CleanMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CleanMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		179DCC4F790785DE59154B53 /* CleanMacMenuBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CleanMacMenuBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		181DB067E9C456767AAC06C0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1D8A3B1B671963F215007D05 /* SecurityAuditScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityAuditScanner.swift; sourceTree = "<group>"; };
+		27C982A4D89B1B332861EB37 /* AboutWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindow.swift; sourceTree = "<group>"; };
+		2E357EBDA8359C43C562CF71 /* FeedbackWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackWindow.swift; sourceTree = "<group>"; };
+		324DE060C8DAC7622A45A6DC /* StorageDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageDashboardView.swift; sourceTree = "<group>"; };
+		3C9C1E410E0BB4ECEDAD2CA6 /* CleanMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanMacApp.swift; sourceTree = "<group>"; };
+		60D396C34DE5C82563F0F489 /* StorageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageModels.swift; sourceTree = "<group>"; };
+		6F0EE7DA2642B1B4CAE28101 /* StorageScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageScanner.swift; sourceTree = "<group>"; };
+		6FDA6E0E38904FFC080B8EF8 /* AppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsView.swift; sourceTree = "<group>"; };
+		79C4FC7AB72A70EDDCFCEE87 /* LoginItemRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemRegistrar.swift; sourceTree = "<group>"; };
+		7C15680DC83C706828658FF8 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		9DFCF3D6169139D469958F15 /* MenuBarLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarLauncher.swift; sourceTree = "<group>"; };
+		AAA514A875D51F4F7FBE1AA5 /* StorageDashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageDashboardViewModel.swift; sourceTree = "<group>"; };
+		AAFDABC39E9B865F173C6EC5 /* LoginItemSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemSettings.swift; sourceTree = "<group>"; };
+		AEC07DFF5D895960192DDD1F /* SettingsMenuButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMenuButton.swift; sourceTree = "<group>"; };
+		BA0B03E7A0FC2A284BCAEDE7 /* CleanMacMenuBarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanMacMenuBarApp.swift; sourceTree = "<group>"; };
+		D6AD30765EE3EAD79CBADAE8 /* ThreatScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreatScanner.swift; sourceTree = "<group>"; };
+		EFABD280E154DADD76B1A7F1 /* DiskAuthorizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskAuthorizationManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
-		35B6D550843862A882EBB435 /* Products */ = {
+		19998617DD7CCCCB0C63BF51 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
-				02878A0B514EC273C753762F /* CleanMac.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		45BE51DAF82BFC607D9C4DB5 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				704B5F37B742A1A2AEE85DF4 /* Assets.xcassets */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
-		5B84A48297D538B0E30C5677 /* ViewModels */ = {
-			isa = PBXGroup;
-			children = (
-				EFE5420F895A7CA3B30030AE /* StorageDashboardViewModel.swift */,
+				AAA514A875D51F4F7FBE1AA5 /* StorageDashboardViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
-		A95F1D046A10353C2B51A1D9 /* Views */ = {
+		33988A994F2759726C190258 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				84A2AC6CBAEC815CF65B0793 /* StorageDashboardView.swift */,
+				15CB264AE6622A24D0D387FD /* CleanMac.app */,
+				179DCC4F790785DE59154B53 /* CleanMacMenuBar.app */,
 			);
-			path = Views;
+			name = Products;
 			sourceTree = "<group>";
 		};
-		E10E09C5A5633DE4151F85BE = {
+		33A8BB23B676ED0D9B76B182 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				45BE51DAF82BFC607D9C4DB5 /* Resources */,
-				F4543F19D39EA1FF49EC6A36 /* Sources */,
-				35B6D550843862A882EBB435 /* Products */,
+				60D396C34DE5C82563F0F489 /* StorageModels.swift */,
 			);
+			path = Models;
 			sourceTree = "<group>";
 		};
-		E9D168C008F054F28536128A /* Services */ = {
+		40CA2385990AF7CCD816BD50 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				7C239E13A8A548D58D857710 /* DiskAuthorizationManager.swift */,
-				5B6C7D8E9F00112233445566 /* SpeedOptimizer.swift */,
-				7D4E5F6071829304B5C6D7E8 /* SecurityAuditScanner.swift */,
-				3B8C9D0E1F22334455667788 /* ThreatScanner.swift */,
-				CCC646813F558A9FAE3EF363 /* StorageScanner.swift */,
+				EFABD280E154DADD76B1A7F1 /* DiskAuthorizationManager.swift */,
+				1D8A3B1B671963F215007D05 /* SecurityAuditScanner.swift */,
+				126873F1AA15A5804CDAE067 /* SpeedOptimizer.swift */,
+				6F0EE7DA2642B1B4CAE28101 /* StorageScanner.swift */,
+				D6AD30765EE3EAD79CBADAE8 /* ThreatScanner.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
 		};
-		F4543F19D39EA1FF49EC6A36 /* Sources */ = {
+		48F254D3FE47DE2CE2A8F358 /* MenuBarApp */ = {
 			isa = PBXGroup;
 			children = (
-				117B0873E9A552BA57DFA864 /* CleanMacApp.swift */,
-				FB1E76F4299A8314BC44B3B5 /* Models */,
-				E9D168C008F054F28536128A /* Services */,
-				5B84A48297D538B0E30C5677 /* ViewModels */,
-				A95F1D046A10353C2B51A1D9 /* Views */,
+				27C982A4D89B1B332861EB37 /* AboutWindow.swift */,
+				BA0B03E7A0FC2A284BCAEDE7 /* CleanMacMenuBarApp.swift */,
+				AAFDABC39E9B865F173C6EC5 /* LoginItemSettings.swift */,
+				043BDB076899E1F1BC31CFA7 /* MenuBarAppDelegate.swift */,
+				7C15680DC83C706828658FF8 /* MenuBarController.swift */,
+				AEC07DFF5D895960192DDD1F /* SettingsMenuButton.swift */,
+			);
+			path = MenuBarApp;
+			sourceTree = "<group>";
+		};
+		6508FEC5CE6D69EE70FC4FED /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				324DE060C8DAC7622A45A6DC /* StorageDashboardView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		7DCCF88D0B5CC96E9F7EE876 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				6FDA6E0E38904FFC080B8EF8 /* AppSettingsView.swift */,
+				2E357EBDA8359C43C562CF71 /* FeedbackWindow.swift */,
+				79C4FC7AB72A70EDDCFCEE87 /* LoginItemRegistrar.swift */,
+				9DFCF3D6169139D469958F15 /* MenuBarLauncher.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		848CC90CB7DA4E7B389E52FD = {
+			isa = PBXGroup;
+			children = (
+				48F254D3FE47DE2CE2A8F358 /* MenuBarApp */,
+				D00322235E61A80AA01278B8 /* Resources */,
+				AD8529FA1D93F479CB828B38 /* Sources */,
+				33988A994F2759726C190258 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AD8529FA1D93F479CB828B38 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				3C9C1E410E0BB4ECEDAD2CA6 /* CleanMacApp.swift */,
+				33A8BB23B676ED0D9B76B182 /* Models */,
+				40CA2385990AF7CCD816BD50 /* Services */,
+				7DCCF88D0B5CC96E9F7EE876 /* Support */,
+				19998617DD7CCCCB0C63BF51 /* ViewModels */,
+				6508FEC5CE6D69EE70FC4FED /* Views */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
 		};
-		FB1E76F4299A8314BC44B3B5 /* Models */ = {
+		D00322235E61A80AA01278B8 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				3553DBCD2FAB2DBACD616AC0 /* StorageModels.swift */,
+				181DB067E9C456767AAC06C0 /* Assets.xcassets */,
 			);
-			path = Models;
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AFCDC24824E0F97402C9F6DC /* CleanMac */ = {
+		0C898882A1195C1A5FD6EAC5 /* CleanMac */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C767CA25EC30CDBC04A69B7E /* Build configuration list for PBXNativeTarget "CleanMac" */;
+			buildConfigurationList = 308F08FB0795066CE9AC4ADA /* Build configuration list for PBXNativeTarget "CleanMac" */;
 			buildPhases = (
-				928BF7F410E0927774802119 /* Sources */,
-				1601563D9B08F3F3E107245A /* Resources */,
+				E497258AF2028F69E98E51FB /* Sources */,
+				72698F6596A6B866ABF95F34 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D1CD8E0E7F59DD2F01661C04 /* PBXTargetDependency */,
 			);
 			name = CleanMac;
 			packageProductDependencies = (
 			);
 			productName = CleanMac;
-			productReference = 02878A0B514EC273C753762F /* CleanMac.app */;
+			productReference = 15CB264AE6622A24D0D387FD /* CleanMac.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A1E2752467064E30925F99E5 /* CleanMacMenuBar */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C9568FB97EA6685CCE036A86 /* Build configuration list for PBXNativeTarget "CleanMacMenuBar" */;
+			buildPhases = (
+				4E26638160EE81AB5CD07389 /* Sources */,
+				8CBFCC10C29B1C8C3D136625 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CleanMacMenuBar;
+			packageProductDependencies = (
+			);
+			productName = CleanMacMenuBar;
+			productReference = 179DCC4F790785DE59154B53 /* CleanMacMenuBar.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		52B8E848A294734B9ED732E1 /* Project object */ = {
+		E435598BB8F57054B1DB5432 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					AFCDC24824E0F97402C9F6DC = {
+					0C898882A1195C1A5FD6EAC5 = {
+						ProvisioningStyle = Automatic;
+					};
+					A1E2752467064E30925F99E5 = {
 						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 66A742841B0176B7E2D26A79 /* Build configuration list for PBXProject "CleanMac" */;
+			buildConfigurationList = 5AB2F4CF51C7D579CE02DC32 /* Build configuration list for PBXProject "CleanMac" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
 				en,
 			);
-			mainGroup = E10E09C5A5633DE4151F85BE;
+			mainGroup = 848CC90CB7DA4E7B389E52FD;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 35B6D550843862A882EBB435 /* Products */;
+			productRefGroup = 33988A994F2759726C190258 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				AFCDC24824E0F97402C9F6DC /* CleanMac */,
+				0C898882A1195C1A5FD6EAC5 /* CleanMac */,
+				A1E2752467064E30925F99E5 /* CleanMacMenuBar */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		1601563D9B08F3F3E107245A /* Resources */ = {
+		72698F6596A6B866ABF95F34 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F0991A8CD11DBAF02499532F /* Assets.xcassets in Resources */,
+				6EA04505D1C419BDD1FE018A /* Assets.xcassets in Resources */,
+				8C4FED8AD38DA9C745ED22A2 /* CleanMacMenuBar.app in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8CBFCC10C29B1C8C3D136625 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B3411A2A2C313E9141F5A45 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		928BF7F410E0927774802119 /* Sources */ = {
+		4E26638160EE81AB5CD07389 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2DE4D5A08AFD779AF4BBEB77 /* CleanMacApp.swift in Sources */,
-				1F38DAB34E1D4AF18E63B0A1 /* DiskAuthorizationManager.swift in Sources */,
-				4A2B3D4C5E6F708192A3B4C5 /* SpeedOptimizer.swift in Sources */,
-				6C3D4E5F60718293A4B5C6D7 /* SecurityAuditScanner.swift in Sources */,
-				2A7B8C9D0E1F223344556677 /* ThreatScanner.swift in Sources */,
-				1E22370A710A245265016770 /* StorageDashboardView.swift in Sources */,
-				88C8824E81004231F1F5A54D /* StorageDashboardViewModel.swift in Sources */,
-				142E1B695601FB590ABCB685 /* StorageModels.swift in Sources */,
-				1DEECB73264C7C457DF73BD2 /* StorageScanner.swift in Sources */,
+				BCF2C3B066D53DCF1488AB89 /* AboutWindow.swift in Sources */,
+				BAA46C1FD9EB3B3E11CED08F /* CleanMacMenuBarApp.swift in Sources */,
+				4A193DAEC7C1EE21C2F9B0FF /* LoginItemSettings.swift in Sources */,
+				77836748138611EA57035064 /* MenuBarAppDelegate.swift in Sources */,
+				FE80F1BD6C77E2A5119C37E6 /* MenuBarController.swift in Sources */,
+				BBDCB7547A469AE8B343F8C7 /* SettingsMenuButton.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E497258AF2028F69E98E51FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E2189C3A05179218266FF0D0 /* AppSettingsView.swift in Sources */,
+				32A40DB724B9EB97687A07DA /* CleanMacApp.swift in Sources */,
+				998E284F91B37DE8B80440A0 /* DiskAuthorizationManager.swift in Sources */,
+				C4F79969756CB6C74C6B17A6 /* FeedbackWindow.swift in Sources */,
+				B36E7D10EB86BF1D63D6280B /* LoginItemRegistrar.swift in Sources */,
+				E10C09C4744FACD41662A62D /* MenuBarLauncher.swift in Sources */,
+				4857A1EBB25CE63ABEFCEF41 /* SecurityAuditScanner.swift in Sources */,
+				D7BA45CF3A1BA648A9BC22F5 /* SpeedOptimizer.swift in Sources */,
+				FE814AD05C39E40E712D8BE3 /* StorageDashboardView.swift in Sources */,
+				AF55192921F4D4A6F5BCCC4C /* StorageDashboardViewModel.swift in Sources */,
+				AE1066FEB65C3633EECF4BC4 /* StorageModels.swift in Sources */,
+				384D0534F53D47FF51B2F0B0 /* StorageScanner.swift in Sources */,
+				3F5E583860EDA0A303475266 /* ThreatScanner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D1CD8E0E7F59DD2F01661C04 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1E2752467064E30925F99E5 /* CleanMacMenuBar */;
+			targetProxy = 1B91DFD4B4929EAA78E29204 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		1313A6D8D0B803AD50162A4B /* Release */ = {
+		40EA5DDCC1D10FDEFED9EE36 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_APP_SANDBOX = NO;
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.zyb.CleanMac;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.zyb.CleanMac.MenuBar;
+				PRODUCT_NAME = CleanMacMenuBar;
 				SDKROOT = macosx;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.1;
+				SKIP_INSTALL = YES;
 			};
-			name = Release;
+			name = Debug;
 		};
-		136C4053A2BAD76A17BFE35B /* Debug */ = {
+		5F32F63AAC4B88240888013F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -323,24 +397,7 @@
 			};
 			name = Debug;
 		};
-		20CFB453429C9F4DD9293B4B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				PRODUCT_NAME = CleanMac;
-				SDKROOT = macosx;
-			};
-			name = Debug;
-		};
-		405B298E1063742244D4FFA3 /* Release */ = {
+		7326E376FFB7BD7C743E4C49 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -357,28 +414,135 @@
 			};
 			name = Release;
 		};
+		824AD69F9F1BF2196935FBA5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_NAME = CleanMac;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		B1A1733748B3FA1111267871 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.zyb.CleanMac.MenuBar;
+				PRODUCT_NAME = CleanMacMenuBar;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		CD48AFF90DD4766CFD6C336E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zyb.CleanMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		66A742841B0176B7E2D26A79 /* Build configuration list for PBXProject "CleanMac" */ = {
+		308F08FB0795066CE9AC4ADA /* Build configuration list for PBXNativeTarget "CleanMac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				136C4053A2BAD76A17BFE35B /* Debug */,
-				1313A6D8D0B803AD50162A4B /* Release */,
+				824AD69F9F1BF2196935FBA5 /* Debug */,
+				7326E376FFB7BD7C743E4C49 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		C767CA25EC30CDBC04A69B7E /* Build configuration list for PBXNativeTarget "CleanMac" */ = {
+		5AB2F4CF51C7D579CE02DC32 /* Build configuration list for PBXProject "CleanMac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				20CFB453429C9F4DD9293B4B /* Debug */,
-				405B298E1063742244D4FFA3 /* Release */,
+				5F32F63AAC4B88240888013F /* Debug */,
+				CD48AFF90DD4766CFD6C336E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C9568FB97EA6685CCE036A86 /* Build configuration list for PBXNativeTarget "CleanMacMenuBar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				40EA5DDCC1D10FDEFED9EE36 /* Debug */,
+				B1A1733748B3FA1111267871 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 52B8E848A294734B9ED732E1 /* Project object */;
+	rootObject = E435598BB8F57054B1DB5432 /* Project object */;
 }

@@ -1,8 +1,16 @@
 import AppKit
 import SwiftUI
 
+private extension View {
+    func fullTapTarget() -> some View {
+        contentShape(Rectangle())
+    }
+}
+
 struct StorageDashboardView: View {
     private static let welcomeAppIcon = NSImage(named: "AppIcon")
+    @State private var detailScrollTargetID: StorageCategory.ID?
+    @State private var protectionScrollTargetID: ProtectionThreatKind?
 
     @ObservedObject var viewModel: StorageDashboardViewModel
 
@@ -26,6 +34,7 @@ struct StorageDashboardView: View {
                     viewModel.resetToHome()
                 } label: {
                     Label("重新扫描", systemImage: "chevron.left")
+                        .fullTapTarget()
                 }
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.9))
@@ -53,14 +62,19 @@ struct StorageDashboardView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.96)))
             }
         }
+        .overlay {
+            if let errorMessage = viewModel.lastErrorMessage {
+                ErrorPrompt(
+                    message: errorMessage,
+                    dismiss: { viewModel.lastErrorMessage = nil }
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            }
+        }
         .animation(.spring(response: 0.35, dampingFraction: 0.86), value: viewModel.toastMessage)
         .animation(.spring(response: 0.35, dampingFraction: 0.86), value: viewModel.activePopover?.card.id)
         .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.showsFullDiskAccessPrompt)
-        .alert("操作失败", isPresented: Binding(get: { viewModel.lastErrorMessage != nil }, set: { if !$0 { viewModel.lastErrorMessage = nil } })) {
-            Button("好") { viewModel.lastErrorMessage = nil }
-        } message: {
-            Text(viewModel.lastErrorMessage ?? "未知错误")
-        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.lastErrorMessage)
     }
 
     private var backgroundView: some View {
@@ -190,7 +204,7 @@ struct StorageDashboardView: View {
                         .overlay(Circle().stroke(Color.cyan.opacity(0.85), lineWidth: 6))
                         .shadow(color: .cyan.opacity(0.18), radius: 20)
                     Circle()
-                        .trim(from: 0.08, to: 0.32)
+                        .trim(from: 0.08, to: viewModel.primaryActionPhase == .cleaning ? 0.72 : 0.32)
                         .stroke(Color.white.opacity(viewModel.isPrimaryActionInProgress ? 0.95 : 0), style: StrokeStyle(lineWidth: 8, lineCap: .round))
                         .frame(width: 148, height: 148)
                         .rotationEffect(.degrees(viewModel.scanRotation))
@@ -272,30 +286,39 @@ struct StorageDashboardView: View {
         .padding(26)
     }
 
-    private var leftSidebar: some View { VStack(alignment: .leading, spacing: 24) {
-        Button {
-            viewModel.backToSummary()
-        } label: {
-            Label("返回摘要", systemImage: "chevron.left")
-        }
-        .font(.system(size: 18, weight: .bold, design: .rounded))
-        .foregroundStyle(.white.opacity(0.9))
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
-        .background(.white.opacity(0.08), in: Capsule())
-        .overlay { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
-        .buttonStyle(.plain)
+    private var leftSidebar: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Button {
+                viewModel.backToSummary()
+            } label: {
+                Label("返回摘要", systemImage: "chevron.left")
+                    .fullTapTarget()
+            }
+            .font(.system(size: 18, weight: .bold, design: .rounded))
+            .foregroundStyle(.white.opacity(0.9))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .background(.white.opacity(0.08), in: Capsule())
+            .overlay { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
+            .buttonStyle(.plain)
 
-        if viewModel.detailKind == .protection {
-            protectionSidebar
-        } else {
-            detailSummaryCard
-        }
+            ScrollView(showsIndicators: false) {
+                Group {
+                    if viewModel.detailKind == .protection {
+                        protectionSidebar
+                    } else {
+                        detailSummaryCard
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
-        cleanAuthorizationCard
-        Spacer()
+            cleanAuthorizationCard
+        }
+        .frame(width: 440)
+        .frame(maxHeight: .infinity, alignment: .topLeading)
     }
-    .frame(width: 440, alignment: .topLeading) }
 
     @ViewBuilder
     private var detailSummaryCard: some View {
@@ -305,6 +328,7 @@ struct StorageDashboardView: View {
                 Button(viewModel.areAllCategoriesSelected ? "取消全选" : "全选") {
                     viewModel.toggleCategorySelection()
                 }
+                .frame(minWidth: 108, minHeight: 48)
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.7))
                 .padding(.horizontal, 18)
@@ -318,10 +342,14 @@ struct StorageDashboardView: View {
                             category: category,
                             selected: viewModel.selectedCategoryIDs.contains(category.id),
                             focused: viewModel.selectedCategory?.id == category.id,
-                            isBulkCleaning: viewModel.isBulkCleaning
-                        ) {
-                            viewModel.selectCategory(category)
-                        }
+                            isBulkCleaning: viewModel.isBulkCleaning,
+                            focusAction: {
+                                viewModel.focusCategory(category)
+                            },
+                            toggleSelectionAction: {
+                                viewModel.toggleCategorySelection(for: category)
+                            }
+                        )
                     }
                 }
             }
@@ -334,6 +362,7 @@ struct StorageDashboardView: View {
         Button(viewModel.areAllThreatsSelected ? "取消全选" : "全选") {
             viewModel.toggleThreatSelection()
         }
+            .frame(minWidth: 108, minHeight: 48)
             .font(.system(size: 18, weight: .bold, design: .rounded))
             .foregroundStyle(.white.opacity(0.7))
             .padding(.horizontal, 18)
@@ -343,9 +372,17 @@ struct StorageDashboardView: View {
 
         VStack(spacing: 12) {
             ForEach(viewModel.protectionThreatGroups) { group in
-                ProtectionThreatSidebarCard(group: group, selected: viewModel.selectedThreatKinds.contains(group.kind)) {
-                    viewModel.selectThreat(kind: group.kind)
-                }
+                ProtectionThreatSidebarCard(
+                    group: group,
+                    selected: viewModel.selectedThreatKinds.contains(group.kind),
+                    focused: viewModel.selectedThreatKind == group.kind,
+                    focusAction: {
+                        viewModel.focusThreat(kind: group.kind)
+                    },
+                    toggleSelectionAction: {
+                        viewModel.toggleThreatSelection(for: group.kind)
+                    }
+                )
             }
         }
     } }
@@ -378,7 +415,8 @@ struct StorageDashboardView: View {
     }
     .padding(.top, 26) }
 
-    private var rightDetailsPane: some View { VStack(alignment: .leading, spacing: 22) {
+    private var rightDetailsPane: some View { ScrollViewReader { proxy in
+        VStack(alignment: .leading, spacing: 22) {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(detailHeaderTitle)
@@ -452,14 +490,24 @@ struct StorageDashboardView: View {
                             category: category,
                             items: viewModel.visibleItems(for: category),
                             selected: viewModel.selectedCategoryIDs.contains(category.id),
-                            focused: category.id == viewModel.selectedCategory?.id
-                            ,activeCleaningItemIDs: viewModel.activeCleaningItemIDs
-                            ,isBulkCleaning: viewModel.isBulkCleaning
-                        ) {
-                            viewModel.selectCategory(category)
-                        } cleanAction: { item in
-                            Task { await viewModel.clean(item) }
-                        }
+                            focused: category.id == viewModel.selectedCategory?.id,
+                            selectedItemIDs: viewModel.selectedCleaningItemIDs,
+                            activeCleaningItemIDs: viewModel.activeCleaningItemIDs,
+                            isBulkCleaning: viewModel.isBulkCleaning,
+                            focusAction: {
+                                viewModel.focusCategory(category)
+                            },
+                            toggleSelectionAction: {
+                                viewModel.toggleCategorySelection(for: category)
+                            },
+                            toggleItemSelectionAction: { item in
+                                viewModel.toggleCleaningItemSelection(item, in: category)
+                            },
+                            cleanAction: { item in
+                                Task { await viewModel.clean(item) }
+                            }
+                        )
+                        .id(category.id)
                     }
                 }
                 .padding(.vertical, 4)
@@ -476,6 +524,24 @@ struct StorageDashboardView: View {
     .overlay {
         RoundedRectangle(cornerRadius: 34, style: .continuous)
             .stroke(.white.opacity(0.10), lineWidth: 1)
+    }
+        .onAppear {
+            detailScrollTargetID = viewModel.selectedCategory?.id
+        }
+        .onChange(of: viewModel.selectedCategory?.id) { _, targetID in
+            guard viewModel.detailKind == .cleaning, let targetID else { return }
+            detailScrollTargetID = targetID
+            withAnimation(.easeInOut(duration: 0.22)) {
+                proxy.scrollTo(targetID, anchor: .top)
+            }
+        }
+        .onChange(of: viewModel.selectedThreatKind) { _, targetID in
+            guard viewModel.detailKind == .protection, let targetID else { return }
+            protectionScrollTargetID = targetID
+            withAnimation(.easeInOut(duration: 0.22)) {
+                proxy.scrollTo(targetID, anchor: .top)
+            }
+        }
     } }
 
     private var detailHeaderTitle: String {
@@ -533,19 +599,28 @@ struct StorageDashboardView: View {
 
                 VStack(spacing: 14) {
                     ForEach(group.items) { item in
-                        ProtectionThreatItemRow(item: item, isLoading: viewModel.activeCleaningThreatItemIDs.contains(item.id)) {
-                            if item.item != nil && item.item?.isCleanable == true {
-                                Task {
-                                    await viewModel.cleanThreatItem(item)
+                        ProtectionThreatItemRow(
+                            item: item,
+                            selected: viewModel.selectedProtectionItemKeys.contains("\(item.name)|\(item.item?.path ?? item.path)|\(item.symbolName)"),
+                            isLoading: viewModel.activeCleaningThreatItemIDs.contains(item.id),
+                            toggleSelectionAction: {
+                                viewModel.toggleProtectionItemSelection(item, in: group.kind)
+                            },
+                            deleteAction: {
+                                if item.item != nil && item.item?.isCleanable == true {
+                                    Task {
+                                        await viewModel.cleanThreatItem(item)
+                                    }
+                                } else {
+                                    viewModel.revealThreatItem(item)
                                 }
-                            } else {
-                                viewModel.revealThreatItem(item)
                             }
-                        }
+                        )
                     }
                 }
             }
             .padding(.bottom, 8)
+            .id(group.kind)
         }
     }
     .padding(.vertical, 4) }
@@ -674,6 +749,56 @@ struct StorageDashboardView: View {
     }
 }
 
+private struct ErrorPrompt: View {
+    let message: String
+    let dismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(Color.black.opacity(0.52))
+                .ignoresSafeArea()
+                .onTapGesture(perform: dismiss)
+
+            VStack(alignment: .leading, spacing: 22) {
+                Text("操作失败")
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.96))
+
+                Text(message)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.88))
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button(action: dismiss) {
+                    Text("好")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.96))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .contentShape(Capsule())
+                }
+                    .background(Color.white.opacity(0.10), in: Capsule())
+                    .overlay {
+                        Capsule()
+                            .stroke(.white.opacity(0.10), lineWidth: 1)
+                    }
+                    .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
+            .frame(width: 350)
+            .background(.ultraThinMaterial.opacity(0.92), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(.white.opacity(0.12), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.42), radius: 30, y: 16)
+        }
+    }
+}
+
 private struct ToastView: View {
     let message: String
     var body: some View {
@@ -713,7 +838,7 @@ private struct FullDiskAccessPrompt: View {
                                 .foregroundStyle(.white.opacity(0.88))
                             + Text("系统偏好设置")
                                 .foregroundStyle(Color.blue)
-                            + Text("”，进行身份验证并在“完全磁盘访问权限”列表中选择 CleanMac。")
+                            + Text("”，进行身份验证后，在“完全磁盘访问权限”列表底部点击“+”添加 CleanMac，再按需开启权限。")
                                 .foregroundStyle(.white.opacity(0.88))
                         )
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
@@ -753,9 +878,9 @@ private struct FullDiskAccessPrompt: View {
             .background(.ultraThinMaterial.opacity(0.92), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .stroke(.white.opacity(0.10), lineWidth: 1)
+                    .stroke(.white.opacity(0.12), lineWidth: 1)
             }
-            .shadow(color: .black.opacity(0.35), radius: 40, y: 20)
+            .shadow(color: .black.opacity(0.42), radius: 40, y: 20)
         }
     }
 }
@@ -785,8 +910,9 @@ private struct CleaningInfoBubble: View {
                 }
             }
             if let action = content.action {
-                Button(action.title, action: action.handler)
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
+        Button(action.title, action: action.handler)
+            .frame(minWidth: 92, minHeight: 34)
+            .font(.system(size: 10, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
@@ -831,6 +957,7 @@ private struct ProtectionInfoBubble: View {
             }
             if let action = content.action {
                 Button(action.title, action: action.handler)
+                    .frame(minWidth: 92, minHeight: 34)
                     .font(.system(size: 10, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
@@ -956,6 +1083,7 @@ private struct HomeFeatureCard: View {
 
                     if let buttonTitle {
                         Button(buttonTitle, action: buttonTap)
+                            .frame(minWidth: 128, minHeight: 48)
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                             .foregroundStyle(isButtonDisabled ? .white.opacity(0.45) : .cyan)
                             .padding(.horizontal, 28)
@@ -993,34 +1121,62 @@ private struct StatsCapsule: View {
 private struct ProtectionThreatSidebarCard: View {
     let group: ProtectionThreatGroup
     let selected: Bool
-    let action: () -> Void
+    let focused: Bool
+    let focusAction: () -> Void
+    let toggleSelectionAction: () -> Void
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle").font(.system(size: 28, weight: .bold)).foregroundStyle(selected ? .cyan : .white.opacity(0.58))
-                ZStack {
-                    Circle().fill(LinearGradient(colors: [.white.opacity(0.34), .white.opacity(0.16)], startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 72, height: 72)
-                    Image(systemName: group.symbolName).font(.system(size: 30, weight: .bold)).foregroundStyle(.white)
+        ZStack(alignment: .leading) {
+            Button(action: focusAction) {
+                HStack(spacing: 16) {
+                    Color.clear
+                        .frame(width: 28, height: 28)
+                    ZStack {
+                        Circle().fill(LinearGradient(colors: [.white.opacity(0.34), .white.opacity(0.16)], startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 72, height: 72)
+                        Image(systemName: group.symbolName).font(.system(size: 30, weight: .bold)).foregroundStyle(.white)
+                    }
+                    Text(group.title).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                    Spacer()
+                    Text("\(group.threatCount) 个威胁").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
                 }
-                Text(group.title).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(.white)
-                Spacer()
-                Text("\(group.threatCount) 个威胁").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                .contentShape(Rectangle())
             }
-            .padding(22)
-            .background(selected ? .white.opacity(0.12) : .white.opacity(0.06), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-            .overlay { RoundedRectangle(cornerRadius: 28, style: .continuous).stroke(selected ? .white.opacity(0.14) : .clear, lineWidth: 1) }
+            .buttonStyle(.plain)
+
+            HStack(spacing: 16) {
+                Button(action: toggleSelectionAction) {
+                    Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(selected ? .cyan : .white.opacity(0.58))
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+            }
         }
-        .buttonStyle(.plain)
+        .padding(22)
+        .background((focused || selected) ? .white.opacity(0.12) : .white.opacity(0.06), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: 28, style: .continuous).stroke((focused || selected) ? .white.opacity(0.14) : .clear, lineWidth: 1) }
     }
 }
 
 private struct ProtectionThreatItemRow: View {
     let item: ProtectionThreatItem
+    let selected: Bool
     let isLoading: Bool
+    let toggleSelectionAction: () -> Void
     let deleteAction: () -> Void
 
     var body: some View {
         HStack(spacing: 16) {
+            Button(action: toggleSelectionAction) {
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(selected ? .cyan : .white.opacity(0.55))
+            }
+            .buttonStyle(.plain)
+
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous).fill(.white.opacity(0.12)).frame(width: 54, height: 54)
                 Image(systemName: item.symbolName).font(.system(size: 24, weight: .bold)).foregroundStyle(.white)
@@ -1095,18 +1251,24 @@ private struct CleanableCategoryGroup: View {
     let items: [StorageItem]
     let selected: Bool
     let focused: Bool
+    let selectedItemIDs: Set<StorageItem.ID>
     let activeCleaningItemIDs: Set<StorageItem.ID>
     let isBulkCleaning: Bool
-    let selectAction: () -> Void
+    let focusAction: () -> Void
+    let toggleSelectionAction: () -> Void
+    let toggleItemSelectionAction: (StorageItem) -> Void
     let cleanAction: (StorageItem) -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 16) {
-                Button(action: selectAction) {
+                Button(action: toggleSelectionAction) {
+                    Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(selected ? .cyan : .white.opacity(0.55))
+                }
+                .buttonStyle(.plain)
+                Button(action: focusAction) {
                     HStack(spacing: 14) {
-                        Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(selected ? .cyan : .white.opacity(0.55))
                         ZStack {
                             Circle().fill(category.section.tint.gradient).frame(width: 56, height: 56)
                             Image(systemName: category.section.icon).font(.system(size: 24, weight: .bold)).foregroundStyle(.white)
@@ -1130,10 +1292,19 @@ private struct CleanableCategoryGroup: View {
 
             ForEach(items) { item in
                 HStack(spacing: 14) {
+                    Button {
+                        toggleItemSelectionAction(item)
+                    } label: {
+                        Image(systemName: selectedItemIDs.contains(item.id) ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundStyle(selectedItemIDs.contains(item.id) ? .cyan : .white.opacity(0.55))
+                    }
+                    .buttonStyle(.plain)
+
                     Image(systemName: item.symbolName).frame(width: 28).foregroundStyle(.white.opacity(0.86))
                     VStack(alignment: .leading, spacing: 4) {
                         Text(item.name).font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(.white)
-                        Text(item.path).font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(.white.opacity(0.50)).lineLimit(1)
+                        CopyablePathLabel(path: item.path)
                     }
                     Spacer()
                     Text(item.sizeInBytes.byteString).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
@@ -1171,60 +1342,99 @@ private struct CleaningSidebarCategoryCard: View {
     let selected: Bool
     let focused: Bool
     let isBulkCleaning: Bool
-    let action: () -> Void
+    let focusAction: () -> Void
+    let toggleSelectionAction: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(selected ? .cyan : .white.opacity(0.55))
+        ZStack(alignment: .leading) {
+            Button(action: focusAction) {
+                HStack(spacing: 16) {
+                    Color.clear
+                        .frame(width: 24, height: 24)
 
-                ZStack {
-                    Circle()
-                        .fill(category.section.tint.gradient)
-                        .frame(width: 54, height: 54)
-                    Image(systemName: category.section.icon)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(category.title)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                    Text(viewModelText(for: category))
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.66))
-                        .lineLimit(2)
-                }
-
-                Spacer()
-
-                HStack(spacing: 8) {
-                    if isBulkCleaning && selected {
-                        ProgressView()
-                            .controlSize(.small)
-                            .tint(.white)
+                    ZStack {
+                        Circle()
+                            .fill(category.section.tint.gradient)
+                            .frame(width: 54, height: 54)
+                        Image(systemName: category.section.icon)
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(.white)
                     }
 
-                    Text(isBulkCleaning && selected ? "清理中…" : category.cleanableSizeInBytes.byteString)
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.95))
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(category.title)
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text(viewModelText(for: category))
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.66))
+                            .lineLimit(2)
+                    }
+
+                    Spacer()
+
+                    HStack(spacing: 8) {
+                        if isBulkCleaning && selected {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(.white)
+                        }
+
+                        Text(isBulkCleaning && selected ? "清理中…" : category.cleanableSizeInBytes.byteString)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.95))
+                    }
                 }
+                .contentShape(Rectangle())
             }
-            .padding(20)
-            .background(.black.opacity(focused ? 0.18 : 0.12), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke((focused || selected) ? .white.opacity(0.16) : .clear, lineWidth: 1)
+            .buttonStyle(.plain)
+
+            HStack(spacing: 16) {
+                Button(action: toggleSelectionAction) {
+                    Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(selected ? .cyan : .white.opacity(0.55))
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
             }
         }
-        .buttonStyle(.plain)
+        .padding(20)
+        .background(.black.opacity(focused ? 0.18 : 0.12), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke((focused || selected) ? .white.opacity(0.16) : .clear, lineWidth: 1)
+        }
         .disabled(isBulkCleaning)
     }
 
     private func viewModelText(for category: StorageCategory) -> String {
         category.subtitle
+    }
+}
+
+private struct CopyablePathLabel: View {
+    let path: String
+
+    var body: some View {
+        Button {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(path, forType: .string)
+        } label: {
+            HStack(spacing: 6) {
+                Text(path)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.50))
+                    .lineLimit(1)
+                Image(systemName: "doc.on.doc")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.5))
+            }
+        }
+        .buttonStyle(.plain)
+        .help("复制路径")
     }
 }

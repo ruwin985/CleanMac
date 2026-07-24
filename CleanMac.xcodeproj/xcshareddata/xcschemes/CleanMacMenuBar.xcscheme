@@ -15,9 +15,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0C898882A1195C1A5FD6EAC5"
-               BuildableName = "CleanMac.app"
-               BlueprintName = "CleanMac"
+               BlueprintIdentifier = "A1E2752467064E30925F99E5"
+               BuildableName = "CleanMacMenuBar.app"
+               BlueprintName = "CleanMacMenuBar"
                ReferencedContainer = "container:CleanMac.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0C898882A1195C1A5FD6EAC5"
-            BuildableName = "CleanMac.app"
-            BlueprintName = "CleanMac"
+            BlueprintIdentifier = "A1E2752467064E30925F99E5"
+            BuildableName = "CleanMacMenuBar.app"
+            BlueprintName = "CleanMacMenuBar"
             ReferencedContainer = "container:CleanMac.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -57,9 +57,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0C898882A1195C1A5FD6EAC5"
-            BuildableName = "CleanMac.app"
-            BlueprintName = "CleanMac"
+            BlueprintIdentifier = "A1E2752467064E30925F99E5"
+            BuildableName = "CleanMacMenuBar.app"
+            BlueprintName = "CleanMacMenuBar"
             ReferencedContainer = "container:CleanMac.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -76,9 +76,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0C898882A1195C1A5FD6EAC5"
-            BuildableName = "CleanMac.app"
-            BlueprintName = "CleanMac"
+            BlueprintIdentifier = "A1E2752467064E30925F99E5"
+            BuildableName = "CleanMacMenuBar.app"
+            BlueprintName = "CleanMacMenuBar"
             ReferencedContainer = "container:CleanMac.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

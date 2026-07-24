@@ -57,6 +57,8 @@ final class StorageDashboardViewModel: ObservableObject {
     @Published var selectedThreatKind: ProtectionThreatKind?
     @Published var selectedThreatKinds: Set<ProtectionThreatKind> = []
     @Published var selectedCategoryIDs: Set<StorageCategory.ID> = []
+    @Published var selectedCleaningItemIDs: Set<StorageItem.ID> = []
+    @Published var selectedProtectionItemKeys: Set<String> = []
     @Published var activePopover: DashboardPopoverContent?
     @Published var hoveredCard: DashboardCardKind?
     @Published var lastSpeedExecutionResult: SpeedExecutionResult?
@@ -86,7 +88,10 @@ final class StorageDashboardViewModel: ObservableObject {
     }
 
     var visibleCleaningCategories: [StorageCategory] {
-        orderedCategories.filter { !visibleItems(for: $0).isEmpty }
+        orderedCategories.filter {
+            if $0.section == .trash { return true }
+            return !visibleItems(for: $0).isEmpty
+        }
     }
 
     var areAllCategoriesSelected: Bool {
@@ -100,7 +105,9 @@ final class StorageDashboardViewModel: ObservableObject {
 
     var selectedCleanableSizeInBytes: Int64 {
         selectedCategories.reduce(0) { result, category in
-            result + visibleItems(for: category).reduce(0) { $0 + $1.sizeInBytes }
+            result + visibleItems(for: category)
+                .filter { selectedCleaningItemIDs.contains($0.id) }
+                .reduce(0) { $0 + $1.sizeInBytes }
         }
     }
 
@@ -125,7 +132,12 @@ final class StorageDashboardViewModel: ObservableObject {
         if selectedThreatKinds.isEmpty {
             return []
         }
-        return protectionThreatGroups.filter { selectedThreatKinds.contains($0.kind) }
+        return protectionThreatGroups.compactMap { group in
+            guard selectedThreatKinds.contains(group.kind) else { return nil }
+            let items = group.items.filter { selectedProtectionItemKeys.contains(protectionItemKey(for: $0)) }
+            guard !items.isEmpty else { return nil }
+            return ProtectionThreatGroup(kind: group.kind, items: items)
+        }
     }
 
     var selectedThreatGroup: ProtectionThreatGroup? {
@@ -148,14 +160,18 @@ final class StorageDashboardViewModel: ObservableObject {
 
     var primaryActionTitle: String {
         if dashboardStage == .ready || dashboardStage == .scannedSummary {
-            return isScanning ? "暂停" : "运行"
+            if isScanning { return "暂停" }
+            if dashboardStage == .scannedSummary && primaryActionPhase == .cleaning { return "清理中" }
+            return "运行"
         }
         return primaryActionPhase.title
     }
 
     var primaryActionSymbolName: String {
         if dashboardStage == .ready || dashboardStage == .scannedSummary {
-            return isScanning ? "pause.fill" : "play.fill"
+            if isScanning { return "pause.fill" }
+            if dashboardStage == .scannedSummary && primaryActionPhase == .cleaning { return PrimaryActionPhase.cleaning.symbolName }
+            return "play.fill"
         }
         return primaryActionPhase.symbolName
     }
@@ -174,6 +190,7 @@ final class StorageDashboardViewModel: ObservableObject {
 
     func visibleItems(for category: StorageCategory) -> [StorageItem] {
         let cleanable = category.items.filter(\.isCleanable)
+        if category.section == .trash { return cleanable }
         switch sortOption {
         case .sizeDescending:
             return cleanable.sorted { $0.sizeInBytes > $1.sizeInBytes }
@@ -214,6 +231,10 @@ final class StorageDashboardViewModel: ObservableObject {
         self.selectedCategoryIDs = Set(visibleCleaningCategories.map(\.id))
         self.selectedThreatKind = snapshot.protectionThreatGroups.first?.kind
         self.selectedThreatKinds = Set(snapshot.protectionThreatGroups.map(\.kind))
+        self.selectedCleaningItemIDs = Set(visibleCleaningCategories.flatMap { visibleItems(for: $0).map(\.id) })
+        self.selectedProtectionItemKeys = Set(snapshot.protectionThreatGroups.flatMap { group in
+            group.items.map { protectionItemKey(for: $0) }
+        })
 
         self.detailKind = .cleaning
         self.dashboardStage = .scannedSummary
@@ -261,12 +282,12 @@ final class StorageDashboardViewModel: ObservableObject {
 
     func openDetails(for kind: DashboardDetailKind) {
         detailKind = kind
-        selectedCategory = preferredCategory(for: kind)
+        selectedCategory = defaultCategory(for: kind)
         if kind == .cleaning, selectedCategoryIDs.isEmpty {
             selectedCategoryIDs = Set(visibleCleaningCategories.map(\.id))
         }
         if kind == .protection {
-            selectedThreatKind = protectionThreatGroups.first?.kind
+            selectedThreatKind = defaultThreatKind()
             if selectedThreatKinds.isEmpty {
                 selectedThreatKinds = Set(protectionThreatGroups.map(\.kind))
             }
@@ -296,6 +317,8 @@ final class StorageDashboardViewModel: ObservableObject {
         selectedThreatKind = nil
         selectedThreatKinds = []
         selectedCategoryIDs = []
+        selectedCleaningItemIDs = []
+        selectedProtectionItemKeys = []
         detailKind = .cleaning
         dashboardStage = .welcome
         scanLifecycle = .idle
@@ -412,7 +435,7 @@ final class StorageDashboardViewModel: ObservableObject {
             try await Task.detached(priority: .userInitiated) {
                 try StorageScanner().clean(item)
             }.value
-            await refreshAfterCleaning(message: "已清理 \(item.name)")
+            applyLocalCleanup(for: item, message: "已清理 \(item.name)")
         } catch {
             lastErrorMessage = error.localizedDescription
         }
@@ -458,18 +481,35 @@ final class StorageDashboardViewModel: ObservableObject {
     func toggleCategorySelection() {
         if areAllCategoriesSelected {
             selectedCategoryIDs = []
+            selectedCleaningItemIDs = []
         } else {
             selectedCategoryIDs = Set(visibleCleaningCategories.map(\.id))
+            selectedCleaningItemIDs = Set(visibleCleaningCategories.flatMap { visibleItems(for: $0).map(\.id) })
         }
     }
 
-    func selectCategory(_ category: StorageCategory) {
+    func focusCategory(_ category: StorageCategory) {
         selectedCategory = category
+    }
+
+    func toggleCategorySelection(for category: StorageCategory) {
+        let itemIDs = Set(visibleItems(for: category).map(\.id))
         if selectedCategoryIDs.contains(category.id) {
             selectedCategoryIDs.remove(category.id)
+            selectedCleaningItemIDs.subtract(itemIDs)
         } else {
             selectedCategoryIDs.insert(category.id)
+            selectedCleaningItemIDs.formUnion(itemIDs)
         }
+    }
+
+    func toggleCleaningItemSelection(_ item: StorageItem, in category: StorageCategory) {
+        if selectedCleaningItemIDs.contains(item.id) {
+            selectedCleaningItemIDs.remove(item.id)
+        } else {
+            selectedCleaningItemIDs.insert(item.id)
+        }
+        syncCategorySelection(for: category)
     }
 
     func cleanSelectedThreatGroup() async {
@@ -524,7 +564,7 @@ final class StorageDashboardViewModel: ObservableObject {
             try await Task.detached(priority: .userInitiated) {
                 try StorageScanner().clean(item)
             }.value
-            await refreshAfterCleaning(message: "已删除 \(threatItem.name)")
+            applyLocalCleanup(for: item, message: "已删除 \(threatItem.name)")
         } catch {
             lastErrorMessage = error.localizedDescription
         }
@@ -646,28 +686,49 @@ final class StorageDashboardViewModel: ObservableObject {
         if areAllThreatsSelected {
             selectedThreatKinds = []
             selectedThreatKind = nil
+            selectedProtectionItemKeys = []
         } else {
             let allKinds = Set(protectionThreatGroups.map(\.kind))
             selectedThreatKinds = allKinds
             selectedThreatKind = protectionThreatGroups.first?.kind
+            selectedProtectionItemKeys = Set(protectionThreatGroups.flatMap { group in
+                group.items.map { protectionItemKey(for: $0) }
+            })
         }
     }
 
-    func selectThreat(kind: ProtectionThreatKind) {
+    func focusThreat(kind: ProtectionThreatKind) {
+        selectedThreatKind = kind
+    }
+
+    func toggleThreatSelection(for kind: ProtectionThreatKind) {
+        let itemIDs = Set(protectionThreatGroups.first(where: { $0.kind == kind })?.items.map { protectionItemKey(for: $0) } ?? [])
         if selectedThreatKinds.contains(kind) {
             selectedThreatKinds.remove(kind)
+            selectedProtectionItemKeys.subtract(itemIDs)
             if selectedThreatKind == kind {
-                selectedThreatKind = selectedThreatKinds.first
+                selectedThreatKind = defaultThreatKind(from: selectedThreatKinds)
             }
         } else {
             selectedThreatKinds.insert(kind)
-            selectedThreatKind = kind
+            selectedProtectionItemKeys.formUnion(itemIDs)
         }
+    }
+
+    func toggleProtectionItemSelection(_ item: ProtectionThreatItem, in kind: ProtectionThreatKind) {
+        let itemKey = protectionItemKey(for: item)
+        if selectedProtectionItemKeys.contains(itemKey) {
+            selectedProtectionItemKeys.remove(itemKey)
+        } else {
+            selectedProtectionItemKeys.insert(itemKey)
+        }
+        syncThreatSelection(for: kind)
     }
 
     func clearThreatSelection() {
         selectedThreatKinds = []
         selectedThreatKind = nil
+        selectedProtectionItemKeys = []
     }
 
     private func refreshAfterCleaning(message: String) async {
@@ -675,10 +736,14 @@ final class StorageDashboardViewModel: ObservableObject {
             StorageScanner().scan()
         }.value
         self.snapshot = snapshot
-        self.selectedCategory = preferredCategory(for: detailKind)
+        self.selectedCategory = defaultCategory(for: detailKind)
+        self.selectedCleaningItemIDs = Set(visibleCleaningCategories.flatMap { visibleItems(for: $0).map(\.id) })
         let allKinds = Set(snapshot.protectionThreatGroups.map(\.kind))
         self.selectedThreatKinds = selectedThreatKinds.intersection(allKinds)
-        self.selectedThreatKind = snapshot.protectionThreatGroups.first(where: { selectedThreatKinds.contains($0.kind) })?.kind
+        self.selectedThreatKind = defaultThreatKind(from: self.selectedThreatKinds)
+        self.selectedProtectionItemKeys = Set(snapshot.protectionThreatGroups.flatMap { group in
+            self.selectedThreatKinds.contains(group.kind) ? group.items.map { protectionItemKey(for: $0) } : []
+        })
         self.pendingManualActionCount = snapshot.categories
             .flatMap(\.items)
             .filter { $0.isCleanable && !$0.isSafeForOneClickCleanup }
@@ -686,10 +751,81 @@ final class StorageDashboardViewModel: ObservableObject {
         showToast(message)
     }
 
+    private func applyLocalCleanup(for item: StorageItem, message: String) {
+        guard let snapshot else {
+            showToast(message)
+            return
+        }
+
+        let updatedCategories = snapshot.categories.compactMap { category -> StorageCategory? in
+            let remainingItems = category.items.filter { $0.path != item.path }
+            guard remainingItems.count != category.items.count else {
+                return category
+            }
+
+            if category.section != .trash && remainingItems.filter(\.isCleanable).isEmpty {
+                return nil
+            }
+
+            return StorageCategory(section: category.section, items: remainingItems)
+        }
+
+        let updatedThreatRecords = snapshot.threatRecords.filter { record in
+            if let storageItem = record.relatedItem {
+                return storageItem.path != item.path
+            }
+            return record.path != item.path
+        }
+
+        self.snapshot = StorageSnapshot(
+            scannedAt: Date(),
+            totalCapacity: snapshot.totalCapacity,
+            freeSpace: snapshot.freeSpace + item.sizeInBytes,
+            categories: updatedCategories,
+            threatRecords: updatedThreatRecords
+        )
+
+        let validCategoryIDs = Set(visibleCleaningCategories.map(\.id))
+        selectedCategoryIDs = selectedCategoryIDs.intersection(validCategoryIDs)
+        if selectedCategoryIDs.isEmpty, !validCategoryIDs.isEmpty {
+            selectedCategoryIDs = validCategoryIDs
+        }
+        let validCleaningItemIDs = Set(visibleCleaningCategories.flatMap { visibleItems(for: $0).map(\.id) })
+        selectedCleaningItemIDs = selectedCleaningItemIDs.intersection(validCleaningItemIDs)
+        if selectedCleaningItemIDs.isEmpty, !validCleaningItemIDs.isEmpty {
+            selectedCleaningItemIDs = validCleaningItemIDs
+        }
+
+        selectedCategory = defaultCategory(for: detailKind)
+
+        let allKinds = Set(protectionThreatGroups.map(\.kind))
+        selectedThreatKinds = selectedThreatKinds.intersection(allKinds)
+        if selectedThreatKinds.isEmpty, !allKinds.isEmpty {
+            selectedThreatKinds = allKinds
+        }
+        let validProtectionItemIDs = Set(protectionThreatGroups.flatMap { group in
+            selectedThreatKinds.contains(group.kind) ? group.items.map { protectionItemKey(for: $0) } : []
+        })
+        selectedProtectionItemKeys = selectedProtectionItemKeys.intersection(validProtectionItemIDs)
+        if selectedProtectionItemKeys.isEmpty, !validProtectionItemIDs.isEmpty {
+            selectedProtectionItemKeys = validProtectionItemIDs
+        }
+        selectedThreatKind = defaultThreatKind(from: selectedThreatKinds)
+
+        pendingManualActionCount = self.snapshot?.categories
+            .flatMap(\.items)
+            .filter { $0.isCleanable && !$0.isSafeForOneClickCleanup }
+            .count ?? 0
+
+        showToast(message)
+    }
+
     private func preferredCategory(for kind: DashboardDetailKind) -> StorageCategory? {
         switch kind {
         case .cleaning:
-            return orderedCategories.first(where: { !$0.items.filter(\.isCleanable).isEmpty }) ?? orderedCategories.first
+            return orderedCategories.first(where: { $0.section == .trash && !$0.items.filter(\.isCleanable).isEmpty })
+                ?? orderedCategories.first(where: { !$0.items.filter(\.isCleanable).isEmpty })
+                ?? orderedCategories.first
         case .protection:
             return orderedCategories.first(where: { $0.section == .hidden })
                 ?? orderedCategories.first(where: { $0.section == .system })
@@ -699,6 +835,58 @@ final class StorageDashboardViewModel: ObservableObject {
                 ?? orderedCategories.first(where: { $0.section == .developer })
                 ?? orderedCategories.first
         }
+    }
+
+    private func defaultCategory(for kind: DashboardDetailKind) -> StorageCategory? {
+        switch kind {
+        case .cleaning:
+            return visibleCleaningCategories.first ?? preferredCategory(for: kind)
+        case .protection, .speed:
+            return preferredCategory(for: kind)
+        }
+    }
+
+    private func defaultThreatKind(from selectedKinds: Set<ProtectionThreatKind>? = nil) -> ProtectionThreatKind? {
+        let activeKinds = selectedKinds ?? selectedThreatKinds
+        return protectionThreatGroups.first(where: { activeKinds.contains($0.kind) })?.kind
+            ?? protectionThreatGroups.first?.kind
+    }
+
+    private func syncCategorySelection(for category: StorageCategory) {
+        let itemIDs = Set(visibleItems(for: category).map(\.id))
+        guard !itemIDs.isEmpty else {
+            selectedCategoryIDs.remove(category.id)
+            return
+        }
+
+        if itemIDs.isSubset(of: selectedCleaningItemIDs) {
+            selectedCategoryIDs.insert(category.id)
+        } else {
+            selectedCategoryIDs.remove(category.id)
+        }
+    }
+
+    private func syncThreatSelection(for kind: ProtectionThreatKind) {
+        let itemIDs = Set(protectionThreatGroups.first(where: { $0.kind == kind })?.items.map { protectionItemKey(for: $0) } ?? [])
+        guard !itemIDs.isEmpty else {
+            selectedThreatKinds.remove(kind)
+            return
+        }
+
+        if itemIDs.isSubset(of: selectedProtectionItemKeys) {
+            selectedThreatKinds.insert(kind)
+        } else {
+            selectedThreatKinds.remove(kind)
+        }
+
+        if selectedThreatKind == kind, !selectedThreatKinds.contains(kind) {
+            selectedThreatKind = defaultThreatKind(from: selectedThreatKinds)
+        }
+    }
+
+    private func protectionItemKey(for item: ProtectionThreatItem) -> String {
+        let marker = item.item?.path ?? item.path
+        return "\(item.name)|\(marker)|\(item.symbolName)"
     }
 
     private func startScanAnimation() {

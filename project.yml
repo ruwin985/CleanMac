@@ -18,12 +18,36 @@ targets:
     platform: macOS
     sources:
       - path: Sources
+        excludes:
+          - Support/MenuBarController.swift
+          - Support/AppLifecycleController.swift
       - path: Resources
+    dependencies:
+      - target: CleanMacMenuBar
+        embed: true
+        codeSign: false
     settings:
       base:
         PRODUCT_NAME: CleanMac
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
         CODE_SIGN_STYLE: Automatic
+    scheme:
+      testTargets: []
+
+  CleanMacMenuBar:
+    type: application
+    platform: macOS
+    sources:
+      - path: MenuBarApp
+      - path: Resources
+    settings:
+      base:
+        PRODUCT_NAME: CleanMacMenuBar
+        PRODUCT_BUNDLE_IDENTIFIER: com.zyb.CleanMac.MenuBar
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_NSHumanReadableCopyright: ""
+        CODE_SIGN_STYLE: Automatic
+        SKIP_INSTALL: YES
     scheme:
       testTargets: []

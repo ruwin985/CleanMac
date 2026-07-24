@@ -93,7 +93,8 @@ struct StorageScanner {
             makeApplicationsCategory(home: home),
             makeDeveloperCategory(home: home),
             makeSystemCategory(home: home),
-            makeHiddenCategory(home: home)
+            makeHiddenCategory(home: home),
+            makeTrashCategory(home: home)
         ]
 
         let threatRecords = ThreatScanner().scan(categories: categories) + SecurityAuditScanner().scan()
@@ -377,6 +378,21 @@ struct StorageScanner {
         return StorageCategory(section: .hidden, items: items.filter { $0.sizeInBytes > 0 })
     }
 
+    private func makeTrashCategory(home: URL) -> StorageCategory {
+        let trashURL = home.appendingPathComponent(".Trash", isDirectory: true)
+        let size = directorySize(at: trashURL, countAsCleanable: true)
+
+        let trashItem = StorageItem(
+            name: "废纸篓",
+            path: trashURL.path,
+            sizeInBytes: size,
+            symbolName: "trash.fill",
+            isCleanable: true
+        )
+
+        return StorageCategory(section: .trash, items: [trashItem])
+    }
+
     /// 家目录下的隐藏 dotfile / dotfolder（如 ~/.cache、~/.android、~/.npm）。
     /// 出于安全考虑，只有位于可再生缓存白名单中的目录才标记为可清理；
     /// 其余（.ssh、.gitconfig、.zshrc、.aws 等配置类）仅列出供用户查看，绝不代删。
@@ -520,7 +536,10 @@ struct StorageScanner {
             homePath + "/library/group containers",
             homePath + "/library/application support",
             homePath + "/library/containers",
-            homePath + "/library/mail"
+            homePath + "/library/mail",
+            homePath + "/library/messages",
+            homePath + "/library/safari",
+            homePath + "/.trash"
         ]
 
         return heavyPrefixes.contains(where: loweredPath.hasPrefix)

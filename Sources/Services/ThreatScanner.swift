@@ -71,9 +71,7 @@ struct ThreatScanner {
             (home + "/Library/LaunchAgents", "bolt.fill"),
             ("/Library/LaunchAgents", "bolt.fill"),
             ("/Library/LaunchDaemons", "bolt.fill"),
-            (home + "/Library/Application Support", "folder.fill"),
-            (home + "/Library/Safari/Extensions", "safari.fill"),
-            (home + "/Library/Containers", "shippingbox.fill")
+            (home + "/Library/Safari/Extensions", "safari.fill")
         ]
 
         var results: [StorageItem] = []
