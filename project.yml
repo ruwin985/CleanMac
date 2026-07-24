@@ -25,7 +25,6 @@ targets:
     dependencies:
       - target: CleanMacMenuBar
         embed: true
-        codeSign: false
     settings:
       base:
         PRODUCT_NAME: CleanMac

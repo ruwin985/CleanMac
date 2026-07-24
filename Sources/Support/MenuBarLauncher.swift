@@ -3,7 +3,10 @@ import AppKit
 @MainActor
 enum MenuBarLauncher {
     static func launchIfNeeded() {
-        guard let menuBarAppURL = bundledMenuBarAppURL() else { return }
+        guard let menuBarAppURL = bundledMenuBarAppURL() else {
+            NSLog("CleanMacMenuBar.app not found in bundle hierarchy.")
+            return
+        }
         let bundleIdentifier = "com.zyb.CleanMac.MenuBar"
 
         let isRunning = NSWorkspace.shared.runningApplications.contains {
@@ -22,13 +25,18 @@ enum MenuBarLauncher {
     }
 
     private static func bundledMenuBarAppURL() -> URL? {
-        let candidates: [URL?] = [
-            Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("CleanMacMenuBar.app"),
-            Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("CleanMacMenuBar.app"),
-            Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("CleanMacMenuBar.app")
+        let bundleURL = Bundle.main.bundleURL
+        let contentsURL = bundleURL.appendingPathComponent("Contents", isDirectory: true)
+        let candidates: [URL] = [
+            contentsURL.appendingPathComponent("Resources/CleanMacMenuBar.app", isDirectory: true),
+            contentsURL.appendingPathComponent("Applications/CleanMacMenuBar.app", isDirectory: true),
+            contentsURL.appendingPathComponent("Library/LoginItems/CleanMacMenuBar.app", isDirectory: true),
+            bundleURL.deletingLastPathComponent().appendingPathComponent("CleanMacMenuBar.app", isDirectory: true),
+            bundleURL.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("CleanMacMenuBar.app", isDirectory: true),
+            bundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("CleanMacMenuBar.app", isDirectory: true)
         ]
 
         let fileManager = FileManager.default
-        return candidates.compactMap { $0 }.first { fileManager.fileExists(atPath: $0.path) }
+        return candidates.first { fileManager.fileExists(atPath: $0.path) }
     }
 }
