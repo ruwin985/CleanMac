@@ -49,7 +49,7 @@ struct StorageDashboardView: View {
         .overlay(alignment: .top) {
             if let toastMessage = viewModel.toastMessage {
                 ToastView(message: toastMessage)
-                    .padding(.top, 22)
+                    .padding(.top, 122)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
@@ -911,11 +911,11 @@ private struct CleaningInfoBubble: View {
             }
             if let action = content.action {
         Button(action.title, action: action.handler)
-            .frame(minWidth: 92, minHeight: 34)
-            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .frame(minWidth: 92, minHeight: 8)
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 1)
                     .background(.white.opacity(0.28), in: Capsule())
                     .buttonStyle(.plain)
             }
@@ -957,11 +957,11 @@ private struct ProtectionInfoBubble: View {
             }
             if let action = content.action {
                 Button(action.title, action: action.handler)
-                    .frame(minWidth: 92, minHeight: 34)
+                    .frame(minWidth: 92, minHeight: 8)
                     .font(.system(size: 10, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 1)
                     .background(.white.opacity(0.28), in: Capsule())
                     .buttonStyle(.plain)
             }

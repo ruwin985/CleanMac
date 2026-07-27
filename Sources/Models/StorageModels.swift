@@ -271,6 +271,27 @@ struct StorageItem: Identifiable, Hashable {
 
         return manualPrefixes.contains { path == $0 || path.hasPrefix($0 + "/") }
     }
+
+    var manualCleanupHint: String {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+
+        if path == home + "/Library/Logs" || path.hasPrefix(home + "/Library/Logs/") || path == "/private/var/log" || path.hasPrefix("/private/var/log/") {
+            return "日志文件"
+        }
+        if path == home + "/Library/Application Support" || path.hasPrefix(home + "/Library/Application Support/") {
+            return "应用支持数据"
+        }
+        if path == home + "/Library/Group Containers" || path.hasPrefix(home + "/Library/Group Containers/") {
+            return "共享容器数据"
+        }
+        if path == home + "/Library/Mail" || path.hasPrefix(home + "/Library/Mail/") {
+            return "邮件数据"
+        }
+        if path == "/Library/Caches" || path.hasPrefix("/Library/Caches/") {
+            return "系统缓存"
+        }
+        return "部分内容"
+    }
 }
 
 struct StorageCategory: Identifiable, Hashable {

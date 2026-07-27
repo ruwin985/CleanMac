@@ -64,7 +64,15 @@ final class StorageDashboardViewModel: ObservableObject {
     @Published var lastSpeedExecutionResult: SpeedExecutionResult?
     @Published var scanCurrentPath: String = ""
     @Published var scanDiscoveredCleanableBytes: Int64 = 0
-    @Published var primaryActionPhase: PrimaryActionPhase = .idle
+    @Published var primaryActionPhase: PrimaryActionPhase = .idle {
+        didSet {
+            if primaryActionPhase == .idle {
+                stopScanAnimation()
+            } else {
+                startScanAnimation()
+            }
+        }
+    }
     @Published var pendingManualActionCount: Int = 0
 
     private var scanLifecycle: ScanLifecycle = .idle
@@ -611,9 +619,18 @@ final class StorageDashboardViewModel: ObservableObject {
         var didPerformAnyAction = false
         var summaries: [String] = []
         var skippedManualItemCount = 0
+        var cleanedCategoryTitle: String?
+        var cleanedCategoryCount = 0
+        var cleanedThreatCount = 0
+        var optimizedTaskCount = 0
+        var manualCategories: [String] = []
 
         if let category = preferredCategory(for: .cleaning) {
-            let items = visibleItems(for: category).filter(\.isSafeForOneClickCleanup)
+            let allVisibleItems = visibleItems(for: category)
+            let items = allVisibleItems.filter(\.isSafeForOneClickCleanup)
+            let manualItems = allVisibleItems.filter { $0.isCleanable && !$0.isSafeForOneClickCleanup }
+            skippedManualItemCount += manualItems.count
+            manualCategories.append(contentsOf: manualItems.map(\.manualCleanupHint))
             if !items.isEmpty {
                 do {
                     let summary = try await Task.detached(priority: .userInitiated) {
@@ -621,9 +638,13 @@ final class StorageDashboardViewModel: ObservableObject {
                     }.value
                     if summary.succeededCount > 0 {
                         didPerformAnyAction = true
-                        summaries.append("已清理 \(summary.succeededCount) 项")
+                        cleanedCategoryTitle = category.title
+                        cleanedCategoryCount = summary.succeededCount
+                        summaries.append("已清理\(category.title)中的 \(summary.succeededCount) 项内容")
                     }
                     skippedManualItemCount += summary.skippedCount
+                manualCategories.append(contentsOf: summary.skippedItems.map(\.manualCleanupHint))
+                manualCategories.append(contentsOf: summary.skippedItems.map(\.manualCleanupHint))
                 } catch {
                     lastErrorMessage = error.localizedDescription
                     return
@@ -640,7 +661,8 @@ final class StorageDashboardViewModel: ObservableObject {
                 }.value
                 if summary.succeededCount > 0 {
                     didPerformAnyAction = true
-                    summaries.append("已处理 \(summary.succeededCount) 项风险")
+                    cleanedThreatCount = summary.succeededCount
+                    summaries.append("已处理 \(summary.succeededCount) 项风险内容")
                 }
                 skippedManualItemCount += summary.skippedCount
             } catch {
@@ -659,6 +681,7 @@ final class StorageDashboardViewModel: ObservableObject {
                 }.value
                 let performanceGain = min(8 + completedTasks.count * 3, 32)
                 lastSpeedExecutionResult = SpeedExecutionResult(executedTasks: completedTasks, performanceGainPercent: performanceGain)
+                optimizedTaskCount = completedTasks.count
                 didPerformAnyAction = true
                 summaries.append(lastSpeedExecutionResult?.message ?? "已完成优化")
             } catch {
@@ -674,12 +697,22 @@ final class StorageDashboardViewModel: ObservableObject {
 
         if skippedManualItemCount > 0 {
             pendingManualActionCount = skippedManualItemCount
-            summaries.append("另有 \(skippedManualItemCount) 项可在详情中手动处理")
+            summaries.append("另有 \(skippedManualItemCount) 项需要点击“查看详情”后手动确认删除")
         } else {
             pendingManualActionCount = 0
         }
 
-        await refreshAfterCleaning(message: summaries.joined(separator: "，"))
+        let cleanupSummary = buildRunSummary(
+            cleanedCategoryTitle: cleanedCategoryTitle,
+            cleanedCategoryCount: cleanedCategoryCount,
+            cleanedThreatCount: cleanedThreatCount,
+            optimizedTaskCount: optimizedTaskCount,
+            skippedManualItemCount: skippedManualItemCount,
+            manualCategories: manualCategories,
+            fallbackSummaries: summaries
+        )
+
+        await refreshAfterCleaning(message: cleanupSummary)
     }
 
     func toggleThreatSelection() {
@@ -890,19 +923,62 @@ final class StorageDashboardViewModel: ObservableObject {
     }
 
     private func startScanAnimation() {
+        scanRotation = 0
         withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
             scanRotation = 360
         }
     }
 
     private func stopScanAnimation() {
-        scanRotation = 0
+        withAnimation(.easeOut(duration: 0.2)) {
+            scanRotation = 0
+        }
+    }
+
+    private func buildRunSummary(
+        cleanedCategoryTitle: String?,
+        cleanedCategoryCount: Int,
+        cleanedThreatCount: Int,
+        optimizedTaskCount: Int,
+        skippedManualItemCount: Int,
+        manualCategories: [String],
+        fallbackSummaries: [String]
+    ) -> String {
+        var parts: [String] = []
+
+        if cleanedCategoryCount > 0, let cleanedCategoryTitle {
+            parts.append("已清理\(cleanedCategoryTitle)中的 \(cleanedCategoryCount) 项内容")
+        }
+
+        if cleanedThreatCount > 0 {
+            parts.append("已处理 \(cleanedThreatCount) 项风险内容")
+        }
+
+        if optimizedTaskCount > 0 {
+            parts.append("已完成 \(optimizedTaskCount) 项性能优化")
+        }
+
+        if skippedManualItemCount > 0 {
+            let categoryHint = manualCleanupCategoryHint(from: manualCategories)
+            if categoryHint.isEmpty {
+                parts.append("另有 \(skippedManualItemCount) 项需要点击“查看详情”后手动确认删除")
+            } else {
+                parts.append("另有 \(skippedManualItemCount) 项需要点击“查看详情”后手动确认删除，例如：\(categoryHint)")
+            }
+        }
+
+        return parts.isEmpty ? fallbackSummaries.joined(separator: "，") : parts.joined(separator: "；")
+    }
+
+    private func manualCleanupCategoryHint(from categories: [String]) -> String {
+        let unique = Array(NSOrderedSet(array: categories)) as? [String] ?? []
+        return unique.prefix(3).joined(separator: "、")
     }
 
     private func showToast(_ message: String) {
         toastMessage = message
         Task {
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            try? await Task.sleep(nanoseconds: 3_500_000_000)
             if self.toastMessage == message {
                 self.toastMessage = nil
             }

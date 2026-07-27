@@ -82,16 +82,36 @@ final class MenuBarController: NSObject {
     }
 
     private func launchMainApp(arguments: [String]) {
-        guard let appURL = locateMainApp() else {
-            NSSound.beep()
-            return
-        }
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
         configuration.arguments = arguments
+
+        if let appURL = locateMainApp() {
+            NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
+                if let error {
+                    NSLog("Failed to open CleanMac via URL: %@", error.localizedDescription)
+                    self.launchMainAppByBundleIdentifier(arguments: arguments)
+                }
+            }
+            return
+        }
+
+        launchMainAppByBundleIdentifier(arguments: arguments)
+    }
+
+    private func launchMainAppByBundleIdentifier(arguments: [String]) {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        configuration.arguments = arguments
+
+        guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.zyb.CleanMac") else {
+            NSSound.beep()
+            return
+        }
+
         NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
             if let error {
-                NSLog("Failed to open CleanMac: %@", error.localizedDescription)
+                NSLog("Failed to open CleanMac via bundle identifier: %@", error.localizedDescription)
                 NSSound.beep()
             }
         }
@@ -99,10 +119,14 @@ final class MenuBarController: NSObject {
 
     private func locateMainApp() -> URL? {
         let fileManager = FileManager.default
+        let bundleURL = Bundle.main.bundleURL
+        let contentsURL = bundleURL.appendingPathComponent("Contents", isDirectory: true)
         let candidates = [
-            Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("CleanMac.app"),
-            Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("CleanMac.app"),
-            Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("CleanMac.app")
+            contentsURL.deletingLastPathComponent().appendingPathComponent("MacOS/CleanMac.app"),
+            contentsURL.appendingPathComponent("../../CleanMac.app").standardizedFileURL,
+            bundleURL.deletingLastPathComponent().appendingPathComponent("CleanMac.app", isDirectory: true),
+            bundleURL.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("CleanMac.app", isDirectory: true),
+            bundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("CleanMac.app", isDirectory: true)
         ]
         return candidates.first(where: { fileManager.fileExists(atPath: $0.path) })
     }

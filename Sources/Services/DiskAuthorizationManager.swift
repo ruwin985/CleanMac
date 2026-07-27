@@ -17,38 +17,52 @@ final class DiskAuthorizationManager {
     var hasFullDiskAccess: Bool {
         let fileManager = FileManager.default
         let home = fileManager.homeDirectoryForCurrentUser
-        let protectedCandidates = [
+        let protectedDirectories = [
             home.appendingPathComponent("Library/Mail", isDirectory: true),
             home.appendingPathComponent("Library/Messages", isDirectory: true),
             home.appendingPathComponent("Library/Safari", isDirectory: true),
-            home.appendingPathComponent("Library/Application Support/com.apple.TCC", isDirectory: true)
+            home.appendingPathComponent("Library/Application Support/CallHistoryDB", isDirectory: true)
         ]
 
-        for url in protectedCandidates where fileManager.fileExists(atPath: url.path) {
-            if canEnumerateProtectedDirectory(at: url) {
-                return true
-            }
-        }
-
-        return false
-    }
-
-    private func canEnumerateProtectedDirectory(at url: URL) -> Bool {
-        guard let enumerator = FileManager.default.enumerator(
-            at: url,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants],
-            errorHandler: { _, _ in false }
-        ) else {
-            return false
-        }
-
-        for case let itemURL as URL in enumerator {
-            _ = itemURL.path
+        if protectedDirectories.contains(where: canEnumerateProtectedDirectory) {
             return true
         }
 
-        return false
+        let protectedFiles = [
+            home.appendingPathComponent("Library/Application Support/com.apple.TCC/TCC.db")
+        ]
+
+        return protectedFiles.contains(where: canReadProtectedFile)
+    }
+
+    private func canEnumerateProtectedDirectory(at url: URL) -> Bool {
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+            return false
+        }
+
+        do {
+            let contents = try FileManager.default.contentsOfDirectory(
+                at: url,
+                includingPropertiesForKeys: nil,
+                options: [.skipsHiddenFiles]
+            )
+            return !contents.isEmpty || canOpenDirectoryStream(at: url)
+        } catch {
+            return false
+        }
+    }
+
+    private func canOpenDirectoryStream(at url: URL) -> Bool {
+        let handle = opendir(url.path)
+        guard let handle else { return false }
+        closedir(handle)
+        return true
+    }
+
+    private func canReadProtectedFile(at url: URL) -> Bool {
+        guard FileManager.default.fileExists(atPath: url.path) else { return false }
+        return (try? Data(contentsOf: url, options: [.mappedIfSafe])) != nil
     }
 
     func markPromptedForFullDiskAccess() {
