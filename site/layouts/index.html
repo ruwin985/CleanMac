@@ -30,33 +30,31 @@
   const stage = document.querySelector('.js-hero-stage');
   const copy = document.querySelector('.js-hero-copy');
   const cta = document.querySelector('.js-hero-cta');
+  const button = stage?.querySelector('.button');
   if (!stage || !copy || !cta) return;
 
   let hidden = false;
-  let timerId = null;
 
   const hidePanels = () => {
-    if (hidden) return;
     hidden = true;
     stage.classList.add('is-hidden');
   };
 
   const showPanels = () => {
-    if (!hidden) return;
     hidden = false;
     stage.classList.remove('is-hidden');
   };
 
-  const armTimer = () => {
-    window.clearTimeout(timerId);
-    timerId = window.setTimeout(hidePanels, 3000);
-  };
+  stage.addEventListener('click', (event) => {
+    if (button && button.contains(event.target)) {
+      return;
+    }
 
-  armTimer();
-
-  stage.addEventListener('click', () => {
-    showPanels();
-    armTimer();
+    if (hidden) {
+      showPanels();
+    } else {
+      hidePanels();
+    }
   });
 })();
 </script>
