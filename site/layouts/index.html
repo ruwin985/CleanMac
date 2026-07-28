@@ -1,93 +1,157 @@
 {{ define "main" }}
 <section class="hero shell">
   <div class="hero-copy">
-    <div class="eyebrow">macOS 磁盘清理工具</div>
+    <div class="eyebrow">macOS 清理与空间巡检</div>
     <h1>{{ site.Params.heroTagline }}</h1>
     <p class="lead">{{ site.Params.heroSubtitle }}</p>
     <div class="actions">
-      <a class="button primary" href="{{ site.Params.githubRepo }}" target="_blank" rel="noreferrer">{{ site.Params.downloadText }}</a>
-      <a class="button secondary" href="#features">查看功能</a>
+      <a class="button primary" href="{{ site.Params.dmgURL }}" {{ if not (hasPrefix site.Params.dmgURL `#`) }}target="_blank" rel="noreferrer"{{ end }}>下载 DMG</a>
+      <a class="button secondary" href="#preview">观看演示</a>
     </div>
-    <ul class="stats">
-      <li><strong>SwiftUI</strong><span>原生 macOS 体验</span></li>
-      <li><strong>安全清理</strong><span>优先建议可安全删除项</span></li>
-      <li><strong>macOS 14+</strong><span>专注现代系统能力</span></li>
-    </ul>
+    <div class="hero-notes">
+      <span>适配 macOS 14+</span>
+      <span>SwiftUI 原生体验</span>
+      <span>安全优先的清理策略</span>
+    </div>
   </div>
-  <div class="hero-art card">
-    <img src="{{ `images/cleanmac-icon.png` | relURL }}" alt="CleanMac 应用图标">
-    <div class="art-panel">
-      <div class="panel-row"><span>可回收空间</span><strong>缓存 / 日志 / 废纸篓</strong></div>
-      <div class="panel-row"><span>重点巡检</span><strong>开发缓存 / 隐私残留</strong></div>
-      <div class="panel-row"><span>辅助优化</span><strong>维护脚本 / DNS 刷新</strong></div>
+
+  <div class="device-stage">
+    <div class="device-window glass-card">
+      <div class="window-bar">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="window-body">
+        <aside class="sidebar">
+          <div class="sidebar-title">CleanMac</div>
+          <ul>
+            <li class="active">磁盘总览</li>
+            <li>可清理项</li>
+            <li>隐私巡检</li>
+            <li>性能优化</li>
+          </ul>
+        </aside>
+        <div class="dashboard">
+          <div class="dashboard-top">
+            <div>
+              <p class="mini-label">已扫描空间</p>
+              <h3>智能识别可释放容量</h3>
+            </div>
+            <div class="storage-pill">可回收 18.4 GB</div>
+          </div>
+          <div class="meter-card">
+            <div class="meter-ring">
+              <div class="meter-ring-inner">
+                <strong>68%</strong>
+                <span>已使用</span>
+              </div>
+            </div>
+            <div class="meter-legend">
+              <div><i class="dot blue"></i><span>用户文件</span><strong>212 GB</strong></div>
+              <div><i class="dot green"></i><span>缓存与日志</span><strong>18.4 GB</strong></div>
+              <div><i class="dot gray"></i><span>系统占用</span><strong>96 GB</strong></div>
+            </div>
+          </div>
+          <div class="dashboard-list">
+            <div class="list-row"><span>下载目录旧安装包</span><strong>4.1 GB</strong></div>
+            <div class="list-row"><span>Xcode DerivedData</span><strong>7.8 GB</strong></div>
+            <div class="list-row"><span>日志与临时文件</span><strong>2.3 GB</strong></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="features" class="shell section-grid">
-  <div class="section-heading">
-    <div class="eyebrow">功能概览</div>
-    <h2>围绕“看清空间占用”与“放心清理”设计</h2>
+<section class="shell trust-strip">
+  <div>看清空间占用</div>
+  <div>安全清理建议</div>
+  <div>隐私残留巡检</div>
+  <div>开发环境缓存整理</div>
+</section>
+
+<section id="preview" class="shell preview-section">
+  <div class="section-copy center">
+    <div class="eyebrow">产品演示</div>
+    <h2>用一段视频，快速了解 CleanMac 的核心体验</h2>
+    <p>建议替换成你的真实录屏：展示扫描过程、清理建议、隐私巡检和一键优化流程。</p>
   </div>
-  <div class="feature-grid">
-    <article class="card feature">
-      <h3>磁盘扫描</h3>
-      <p>按用户文件、应用、系统文件、开发缓存与隐藏占用分类统计，快速发现真正占空间的内容。</p>
+  <div class="video-card glass-card">
+    {{ if site.Params.videoURL }}
+      <video controls playsinline preload="metadata" poster="{{ `images/cleanmac-icon.png` | relURL }}">
+        <source src="{{ site.Params.videoURL }}" type="video/mp4">
+        你的浏览器不支持 HTML5 视频播放。
+      </video>
+    {{ else }}
+      <div class="video-placeholder">
+        <div class="play-badge">▶</div>
+        <h3>这里放产品介绍视频</h3>
+        <p>把演示视频上传到 `site/static/videos/` 后，在 `site/config.toml` 中填写 `videoURL`。</p>
+      </div>
+    {{ end }}
+  </div>
+  <div class="download-panel glass-card">
+    <div>
+      <div class="eyebrow">下载安装</div>
+      <h3>下载最新 DMG 安装包</h3>
+      <p>建议把正式安装包挂到 GitHub Releases、对象存储或你自己的下载 CDN，然后把链接填到站点配置里。</p>
+    </div>
+    <div class="download-actions">
+      <a class="button primary large" href="{{ site.Params.dmgURL }}" {{ if not (hasPrefix site.Params.dmgURL `#`) }}target="_blank" rel="noreferrer"{{ end }}>立即下载 DMG</a>
+      <a class="text-link" href="{{ site.Params.githubRepo }}" target="_blank" rel="noreferrer">查看源码与发布记录</a>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="shell feature-showcase">
+  <div class="section-copy">
+    <div class="eyebrow">功能亮点</div>
+    <h2>像 Apple 产品页一样，聚焦清晰、轻盈、可信赖的体验表达</h2>
+  </div>
+  <div class="feature-grid refined">
+    <article class="glass-card feature large">
+      <p class="mini-label">磁盘扫描</p>
+      <h3>分类看清占用，不再盲目删文件</h3>
+      <p>按用户文件、应用、系统文件、开发缓存与隐藏占用拆分空间来源，快速定位真正的大头。</p>
     </article>
-    <article class="card feature">
-      <h3>安全清理</h3>
-      <p>优先识别缓存、日志、废纸篓和部分开发产物，避免把高风险目录伪装成“一键可删”。</p>
+    <article class="glass-card feature">
+      <p class="mini-label">安全清理</p>
+      <h3>优先建议可安全删除项</h3>
+      <p>缓存、日志、废纸篓与部分开发产物可直接处理；高风险目录保留手动建议。</p>
     </article>
-    <article class="card feature">
-      <h3>手动建议</h3>
-      <p>对仍可能被系统或 App 使用的目录，明确给出手动处理建议，减少误删风险。</p>
+    <article class="glass-card feature">
+      <p class="mini-label">权限引导</p>
+      <h3>必要时引导开启完整磁盘访问</h3>
+      <p>减少“扫不全”“看不见”的困惑，让结果更接近真实磁盘状态。</p>
     </article>
-    <article class="card feature">
-      <h3>权限引导</h3>
-      <p>检测“完全磁盘访问”状态，并引导跳转系统设置，帮助用户获得完整扫描结果。</p>
-    </article>
-    <article class="card feature">
-      <h3>隐私巡检</h3>
-      <p>按木马病毒、广告软件、隐私追踪项等维度展示可疑残留线索，辅助日常安全自查。</p>
-    </article>
-    <article class="card feature">
-      <h3>基础优化</h3>
-      <p>提供维护脚本、DNS 缓存刷新、内存压力释放与开发缓存清理等轻量系统优化操作。</p>
+    <article class="glass-card feature">
+      <p class="mini-label">隐私巡检</p>
+      <h3>辅助排查残留与可疑项</h3>
+      <p>从广告软件、追踪残留到常见可疑线索，帮助用户建立更直观的安全感。</p>
     </article>
   </div>
 </section>
 
-<section class="shell two-column">
-  <div>
-    <div class="eyebrow">适用场景</div>
-    <h2>适合个人用户，也适合开发者工作机</h2>
-    <ul class="list-card">
-      <li>本地磁盘空间排查与大目录定位</li>
-      <li>下载目录旧安装包与压缩包整理</li>
+<section class="shell split-section">
+  <div class="glass-card narrative">
+    <div class="eyebrow">适合谁</div>
+    <h2>个人用户与开发者，都能更轻松地管理磁盘空间</h2>
+    <ul class="clean-list">
+      <li>本地磁盘空间排查与清理</li>
+      <li>下载目录旧 DMG / 安装包整理</li>
       <li>Xcode DerivedData、Archives、模拟器缓存清理</li>
-      <li>常见隐私/残留文件巡检</li>
+      <li>常见隐私残留巡检</li>
       <li>轻量级系统维护辅助</li>
     </ul>
   </div>
-  <div>
-    <div class="eyebrow">技术栈</div>
-    <h2>原生实现，便于继续演进</h2>
-    <ul class="stack-list card">
-      <li><strong>语言：</strong>Swift 6 / SwiftPM</li>
-      <li><strong>界面：</strong>SwiftUI</li>
-      <li><strong>工程：</strong>Xcode 工程 + XcodeGen</li>
-      <li><strong>平台：</strong>macOS 14+</li>
-      <li><strong>源码：</strong><a href="{{ site.Params.githubRepo }}" target="_blank" rel="noreferrer">GitHub</a></li>
+  <div class="glass-card narrative">
+    <div class="eyebrow">技术实现</div>
+    <h2>原生 SwiftUI 构建，保持现代 macOS 质感</h2>
+    <ul class="spec-list">
+      <li><span>语言</span><strong>Swift 6 / SwiftPM</strong></li>
+      <li><span>界面</span><strong>SwiftUI</strong></li>
+      <li><span>工程</span><strong>Xcode + XcodeGen</strong></li>
+      <li><span>平台</span><strong>macOS 14+</strong></li>
     </ul>
   </div>
-</section>
-
-<section class="shell cta card">
-  <div>
-    <div class="eyebrow">开始使用</div>
-    <h2>把 CleanMac 发布到 GitHub Pages</h2>
-    <p>站点已按 Hugo 结构搭好，可直接接入 GitHub Actions 构建并部署到 GitHub Pages。</p>
-  </div>
-  <a class="button primary" href="{{ site.Params.githubRepo }}" target="_blank" rel="noreferrer">前往仓库</a>
 </section>
 {{ end }}

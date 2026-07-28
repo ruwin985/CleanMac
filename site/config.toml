@@ -10,9 +10,11 @@ enableRobotsTXT = true
 [params]
   description = 'CleanMac 是一款为 macOS 打造的磁盘清理与空间巡检工具，帮助你识别大文件、开发缓存、日志与隐私残留。'
   githubRepo = 'https://github.com/ruwin985/CleanMac'
-  downloadText = '查看 GitHub 项目'
-  heroTagline = '更干净的磁盘，更轻松的 Mac。'
-  heroSubtitle = '使用 SwiftUI 构建，聚焦磁盘空间分析、安全清理、隐私残留巡检与基础性能优化。'
+  downloadText = '下载 DMG'
+  heroTagline = '让 Mac 恢复轻盈，像新的一样自然。'
+  heroSubtitle = 'CleanMac 以原生 SwiftUI 构建，帮你扫描磁盘占用、识别可安全清理项、巡检隐私残留，并为开发环境提供更从容的整理体验。'
+  videoURL = ''
+  dmgURL = '#'
 
 [markup]
   [markup.goldmark]
