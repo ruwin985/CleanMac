@@ -2,7 +2,8 @@
 <section class="hero-video-shell js-hero-stage" aria-label="CleanMac Hero">
   <div class="hero-video-frame">
     <video class="hero-video" autoplay muted loop playsinline poster="{{ `images/cleanmac-icon.png` | relURL }}">
-      <source src="{{ site.Params.videoURL | relURL }}" type="video/mp4">
+      <source src="{{ `videos/output-mobile.mp4` | relURL }}" type="video/mp4" media="(max-width: 768px)">
+      <source src="{{ `videos/output.mp4` | relURL }}" type="video/mp4">
       你的浏览器不支持 HTML5 视频播放。
     </video>
     <div class="hero-overlay"></div>
