@@ -1,0 +1,93 @@
+{{ define "main" }}
+<section class="hero shell">
+  <div class="hero-copy">
+    <div class="eyebrow">macOS 磁盘清理工具</div>
+    <h1>{{ site.Params.heroTagline }}</h1>
+    <p class="lead">{{ site.Params.heroSubtitle }}</p>
+    <div class="actions">
+      <a class="button primary" href="{{ site.Params.githubRepo }}" target="_blank" rel="noreferrer">{{ site.Params.downloadText }}</a>
+      <a class="button secondary" href="#features">查看功能</a>
+    </div>
+    <ul class="stats">
+      <li><strong>SwiftUI</strong><span>原生 macOS 体验</span></li>
+      <li><strong>安全清理</strong><span>优先建议可安全删除项</span></li>
+      <li><strong>macOS 14+</strong><span>专注现代系统能力</span></li>
+    </ul>
+  </div>
+  <div class="hero-art card">
+    <img src="{{ `images/cleanmac-icon.png` | relURL }}" alt="CleanMac 应用图标">
+    <div class="art-panel">
+      <div class="panel-row"><span>可回收空间</span><strong>缓存 / 日志 / 废纸篓</strong></div>
+      <div class="panel-row"><span>重点巡检</span><strong>开发缓存 / 隐私残留</strong></div>
+      <div class="panel-row"><span>辅助优化</span><strong>维护脚本 / DNS 刷新</strong></div>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="shell section-grid">
+  <div class="section-heading">
+    <div class="eyebrow">功能概览</div>
+    <h2>围绕“看清空间占用”与“放心清理”设计</h2>
+  </div>
+  <div class="feature-grid">
+    <article class="card feature">
+      <h3>磁盘扫描</h3>
+      <p>按用户文件、应用、系统文件、开发缓存与隐藏占用分类统计，快速发现真正占空间的内容。</p>
+    </article>
+    <article class="card feature">
+      <h3>安全清理</h3>
+      <p>优先识别缓存、日志、废纸篓和部分开发产物，避免把高风险目录伪装成“一键可删”。</p>
+    </article>
+    <article class="card feature">
+      <h3>手动建议</h3>
+      <p>对仍可能被系统或 App 使用的目录，明确给出手动处理建议，减少误删风险。</p>
+    </article>
+    <article class="card feature">
+      <h3>权限引导</h3>
+      <p>检测“完全磁盘访问”状态，并引导跳转系统设置，帮助用户获得完整扫描结果。</p>
+    </article>
+    <article class="card feature">
+      <h3>隐私巡检</h3>
+      <p>按木马病毒、广告软件、隐私追踪项等维度展示可疑残留线索，辅助日常安全自查。</p>
+    </article>
+    <article class="card feature">
+      <h3>基础优化</h3>
+      <p>提供维护脚本、DNS 缓存刷新、内存压力释放与开发缓存清理等轻量系统优化操作。</p>
+    </article>
+  </div>
+</section>
+
+<section class="shell two-column">
+  <div>
+    <div class="eyebrow">适用场景</div>
+    <h2>适合个人用户，也适合开发者工作机</h2>
+    <ul class="list-card">
+      <li>本地磁盘空间排查与大目录定位</li>
+      <li>下载目录旧安装包与压缩包整理</li>
+      <li>Xcode DerivedData、Archives、模拟器缓存清理</li>
+      <li>常见隐私/残留文件巡检</li>
+      <li>轻量级系统维护辅助</li>
+    </ul>
+  </div>
+  <div>
+    <div class="eyebrow">技术栈</div>
+    <h2>原生实现，便于继续演进</h2>
+    <ul class="stack-list card">
+      <li><strong>语言：</strong>Swift 6 / SwiftPM</li>
+      <li><strong>界面：</strong>SwiftUI</li>
+      <li><strong>工程：</strong>Xcode 工程 + XcodeGen</li>
+      <li><strong>平台：</strong>macOS 14+</li>
+      <li><strong>源码：</strong><a href="{{ site.Params.githubRepo }}" target="_blank" rel="noreferrer">GitHub</a></li>
+    </ul>
+  </div>
+</section>
+
+<section class="shell cta card">
+  <div>
+    <div class="eyebrow">开始使用</div>
+    <h2>把 CleanMac 发布到 GitHub Pages</h2>
+    <p>站点已按 Hugo 结构搭好，可直接接入 GitHub Actions 构建并部署到 GitHub Pages。</p>
+  </div>
+  <a class="button primary" href="{{ site.Params.githubRepo }}" target="_blank" rel="noreferrer">前往仓库</a>
+</section>
+{{ end }}

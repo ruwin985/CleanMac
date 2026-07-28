@@ -157,3 +157,23 @@ bash scripts/export-universal-dmg.sh
 - 增加扫描结果导出能力
 - 增加多语言 README 与应用内帮助
 - 清理历史 `build/` 产物并补充发布流程文档
+
+## 网站页面（Hugo + GitHub Pages）
+
+仓库已新增基于 Hugo 的站点目录：
+
+- `site/`
+
+包含内容：
+
+- 首页落地页模板
+- CleanMac 产品介绍文案
+- GitHub Pages 工作流配置
+
+快速开始：
+
+1. 安装 Hugo Extended
+2. 进入 `site/` 目录运行 `hugo server`
+3. 将 `site/config.toml` 中的 `USERNAME` 替换为你的 GitHub 用户名
+4. 在 GitHub 仓库 Settings → Pages 中选择 `GitHub Actions` 作为 Source
+5. 推送到 `main` 分支后自动部署
