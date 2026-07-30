@@ -528,14 +528,14 @@ struct StorageDashboardView: View {
         .onAppear {
             detailScrollTargetID = viewModel.selectedCategory?.id
         }
-        .onChange(of: viewModel.selectedCategory?.id) { _, targetID in
+        .onChange(of: viewModel.selectedCategory?.id) { targetID in
             guard viewModel.detailKind == .cleaning, let targetID else { return }
             detailScrollTargetID = targetID
             withAnimation(.easeInOut(duration: 0.22)) {
                 proxy.scrollTo(targetID, anchor: .top)
             }
         }
-        .onChange(of: viewModel.selectedThreatKind) { _, targetID in
+        .onChange(of: viewModel.selectedThreatKind) { targetID in
             guard viewModel.detailKind == .protection, let targetID else { return }
             protectionScrollTargetID = targetID
             withAnimation(.easeInOut(duration: 0.22)) {
@@ -835,11 +835,11 @@ private struct FullDiskAccessPrompt: View {
                             .frame(maxWidth: .infinity)
                         (
                             Text("打开您的“")
-                                .foregroundStyle(.white.opacity(0.88))
+                                .foregroundColor(.white.opacity(0.88))
                             + Text("系统偏好设置")
-                                .foregroundStyle(Color.blue)
+                                .foregroundColor(.blue)
                             + Text("”，进行身份验证后，在“完全磁盘访问权限”列表底部点击“+”添加 CleanMac，再按需开启权限。")
-                                .foregroundStyle(.white.opacity(0.88))
+                                .foregroundColor(.white.opacity(0.88))
                         )
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .multilineTextAlignment(.center)

@@ -2,7 +2,7 @@ name: CleanMac
 options:
   minimumXcodeGenVersion: 2.38.0
   deploymentTarget:
-    macOS: '14.0'
+    macOS: '13.0'
 settings:
   base:
     PRODUCT_BUNDLE_IDENTIFIER: com.zyb.CleanMac

@@ -12,7 +12,7 @@ ARCHIVE_PATH="$BUILD_DIR/$APP_NAME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 DMG_DIR="$BUILD_DIR/dmg"
 APP_PATH="$EXPORT_DIR/$APP_NAME.app"
-DMG_PATH="$BUILD_DIR/${APP_NAME}-${VERSION}-universal.dmg"
+DMG_PATH="$BUILD_DIR/${APP_NAME}-${VERSION}.dmg"
 
 rm -rf "$ARCHIVE_PATH" "$EXPORT_DIR" "$DMG_DIR"
 mkdir -p "$BUILD_DIR" "$EXPORT_DIR" "$DMG_DIR"
@@ -55,5 +55,10 @@ hdiutil create \
   -format UDZO \
   "$DMG_PATH"
 
+SITE_DOWNLOADS_DIR="site/static/downloads"
+mkdir -p "$SITE_DOWNLOADS_DIR"
+cp -f "$DMG_PATH" "$SITE_DOWNLOADS_DIR/$APP_NAME.dmg"
+
 echo "\nUniversal app: $APP_PATH"
 echo "Universal dmg: $DMG_PATH"
+echo "Site download: $SITE_DOWNLOADS_DIR/$APP_NAME.dmg"
