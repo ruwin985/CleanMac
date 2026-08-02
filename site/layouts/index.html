@@ -1,61 +1,27 @@
 {{ define "main" }}
-<section class="hero-video-shell js-hero-stage" aria-label="CleanMac Hero">
-  <div class="hero-video-frame">
-    <video class="hero-video" autoplay muted loop playsinline poster="{{ `images/cleanmac-icon.png` | relURL }}">
-      <source src="{{ `videos/output-mobile.mp4` | relURL }}" type="video/mp4">
+<section class="apple-hero" id="overview" aria-label="CleanMac 首页首屏">
+  <div class="apple-hero-copy">
+    <h1>清理 Mac，安排妥。</h1>
+    <p class="apple-hero-subtitle">
+      <span class="copy-desktop">用 CleanMac 扫描磁盘、清理缓存，<br>还能整理开发残留与隐私痕迹。</span>
+      <span class="copy-mobile">扫描磁盘，清理缓存，<br>整理开发残留与隐私痕迹。</span>
+    </p>
+    <a class="apple-hero-button" href="{{ site.Params.dmgURL | relURL }}">
+      <span class="button-desktop">{{ site.Params.downloadText | default "下载" }}</span>
+      <span class="button-mobile">下载</span>
+    </a>
+  </div>
+
+  <div class="apple-hero-media" aria-label="CleanMac 应用演示视频">
+    <video class="apple-hero-video" autoplay muted loop playsinline poster="{{ `images/cleanmac-icon.png` | relURL }}">
+      <source media="(max-width: 734px)" src="{{ `videos/output-mobile.mp4` | relURL }}" type="video/mp4">
+      <source src="{{ `videos/output.mp4` | relURL }}" type="video/mp4">
       你的浏览器不支持 HTML5 视频播放。
     </video>
-    <div class="hero-overlay"></div>
-    <div class="hero-noise"></div>
-    <div class="hero-content shell">
-      <div class="hero-copy js-hero-copy">
-        <div class="eyebrow dark">CleanMac for macOS</div>
-        <h1>CleanMac.</h1>
-        <p class="subhead">让 Mac 恢复轻盈，像新的一样自然。</p>
-        <p class="lead">扫描磁盘占用、识别可安全清理项、整理开发缓存，并在更克制、更安静的界面里完成一切。</p>
-      </div>
-
-      <div class="hero-cta js-hero-cta">
-        <div class="hero-actions">
-          <a class="button primary large" href="{{ site.Params.dmgURL | relURL }}">下载 DMG</a>
-        </div>
-        <p class="fineprint">适用于 macOS 13 及以上版本</p>
-      </div>
-    </div>
   </div>
+
+  <p class="apple-hero-disclaimer">
+    免责声明：CleanMac 仅提供本地磁盘分析与清理建议，删除文件前请确认不再需要并提前备份重要数据。实际可清理空间、风险提示和性能提升会因设备、系统版本与使用情况而异。
+  </p>
 </section>
-
-<script>
-(() => {
-  const stage = document.querySelector('.js-hero-stage');
-  const copy = document.querySelector('.js-hero-copy');
-  const cta = document.querySelector('.js-hero-cta');
-  const button = stage?.querySelector('.button');
-  if (!stage || !copy || !cta) return;
-
-  let hidden = false;
-
-  const hidePanels = () => {
-    hidden = true;
-    stage.classList.add('is-hidden');
-  };
-
-  const showPanels = () => {
-    hidden = false;
-    stage.classList.remove('is-hidden');
-  };
-
-  stage.addEventListener('click', (event) => {
-    if (button && button.contains(event.target)) {
-      return;
-    }
-
-    if (hidden) {
-      showPanels();
-    } else {
-      hidePanels();
-    }
-  });
-})();
-</script>
 {{ end }}

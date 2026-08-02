@@ -1,12 +1,18 @@
 <header class="site-header">
-  <div class="shell header-inner">
-    <a class="brand" href="{{ `/` | relURL }}">
-      <img src="{{ `images/cleanmac-icon.png` | relURL }}" alt="CleanMac">
-      <span>CleanMac</span>
-    </a>
-    <nav>
-      <a href="#features">功能</a>
+  <nav class="global-nav" aria-label="主导航">
+    <span class="nav-brand" aria-label="CleanMac">
+      <img src="{{ `images/cleanmac-icon.png` | relURL }}" alt="">
+    </span>
+
+    <div class="nav-links">
+      <a href="#overview">概览</a>
       <a href="{{ site.Params.githubRepo }}" target="_blank" rel="noreferrer">GitHub</a>
-    </nav>
-  </div>
+      <a href="{{ site.Params.dmgURL | relURL }}">下载</a>
+    </div>
+
+    <div class="nav-actions" aria-hidden="true">
+      <span class="nav-icon nav-icon-bag"></span>
+      <span class="nav-icon nav-icon-menu"></span>
+    </div>
+  </nav>
 </header>
