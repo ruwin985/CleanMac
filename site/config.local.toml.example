@@ -6,3 +6,4 @@
   paddleEnvironment = 'sandbox'
   paddlePriceID = 'pri_sandbox_replace_me'
   paddleClientToken = 'test_replace_me'
+  purchasePriceText = '¥0.01'

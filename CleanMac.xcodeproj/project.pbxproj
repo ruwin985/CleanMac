@@ -413,6 +413,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_KEY_CleanMacLicensePublicKey = "";
 				INFOPLIST_KEY_CleanMacPaddleCheckoutURL = "https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy";
+				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥0.01";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -432,6 +433,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_KEY_CleanMacLicensePublicKey = "";
 				INFOPLIST_KEY_CleanMacPaddleCheckoutURL = "https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy";
+				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥0.01";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (

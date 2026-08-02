@@ -31,6 +31,8 @@ final class LicenseManager: ObservableObject {
     private static let defaultsPrefix = "cleanmac.license."
     private static let checkoutURLInfoKey = "CleanMacPaddleCheckoutURL"
     private static let checkoutURLEnvironmentKey = "CLEANMAC_PADDLE_CHECKOUT_URL"
+    private static let purchasePriceTextInfoKey = "CleanMacPurchasePriceText"
+    private static let purchasePriceTextEnvironmentKey = "CLEANMAC_PURCHASE_PRICE_TEXT"
     private static let publicKeyInfoKey = "CleanMacLicensePublicKey"
     private static let publicKeyEnvironmentKey = "CLEANMAC_LICENSE_PUBLIC_KEY"
 
@@ -90,6 +92,13 @@ final class LicenseManager: ObservableObject {
         return url
     }
 
+    var purchasePriceText: String {
+        configuredValue(
+            infoKey: Self.purchasePriceTextInfoKey,
+            environmentKey: Self.purchasePriceTextEnvironmentKey
+        )?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "¥0.01"
+    }
+
     func refresh() {
         if let storedCode = storedString(for: Self.licenseCodeAccount),
            let licenseInfo = try? validateLicenseCode(storedCode) {
@@ -108,7 +117,7 @@ final class LicenseManager: ObservableObject {
 
     func openPurchasePage() {
         guard let purchaseURL else {
-            activationErrorMessage = "购买入口尚未配置：请在 Paddle 创建 ¥10 一次性买断 Checkout，并填入 CleanMacPaddleCheckoutURL。"
+            activationErrorMessage = "购买入口尚未配置：请在 Paddle 创建 \(purchasePriceText) 一次性买断 Checkout，并填入 CleanMacPaddleCheckoutURL。"
             return
         }
         NSWorkspace.shared.open(purchaseURL)
@@ -199,6 +208,12 @@ final class LicenseManager: ObservableObject {
             return bundleValue
         }
         return nil
+    }
+}
+
+private extension String {
+    var nonEmpty: String? {
+        isEmpty ? nil : self
     }
 }
 

@@ -37,7 +37,7 @@ struct AppSettingsView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Button("¥10 购买授权码") {
+                Button("\(licenseManager.purchasePriceText) 购买授权码") {
                     licenseManager.openPurchasePage()
                 }
                 .disabled(licenseManager.purchaseURL == nil)

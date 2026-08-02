@@ -31,6 +31,7 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
         INFOPLIST_KEY_CleanMacPaddleCheckoutURL: "https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy"
+        INFOPLIST_KEY_CleanMacPurchasePriceText: "¥0.01"
         INFOPLIST_KEY_CleanMacLicensePublicKey: ""
         CODE_SIGN_STYLE: Automatic
     scheme:

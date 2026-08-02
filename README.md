@@ -119,11 +119,11 @@ bash scripts/export-universal-dmg.sh
 
 ## 支付与授权
 
-当前工程已接入“1 天试用 + ¥10 一次性买断”的授权门禁：首次启动会自动开始 1 天试用；试用结束后再次启动或重新激活主窗口时，会显示全屏蒙层，要求用户输入授权码或前往 Paddle 购买。
+当前工程已接入“1 天试用 + ¥0.01 一次性买断”的授权门禁：首次启动会自动开始 1 天试用；试用结束后再次启动或重新激活主窗口时，会显示全屏蒙层，要求用户输入授权码或前往 Paddle 购买。
 
 ### Paddle 配置
 
-1. 在 Paddle 创建 `CleanMac` 产品，并配置一次性价格 `CNY 10.00`
+1. 在 Paddle 创建 `CleanMac` 产品，并配置一次性价格 `CNY 0.01`
 2. 为该价格创建或复制 Paddle Checkout 购买链接
 3. 将购买链接填入 `project.yml` 的 `INFOPLIST_KEY_CleanMacPaddleCheckoutURL`
 4. 生成授权密钥，并将公钥填入 `project.yml` 的 `INFOPLIST_KEY_CleanMacLicensePublicKey`
@@ -133,6 +133,7 @@ bash scripts/export-universal-dmg.sh
 
 - Product ID：`pro_01kz09hhw9m21dgfbj2tdvs1f3`
 - Price ID：`pri_01kz09hjt717rwqqr4nj82dy81`
+- 当前价格：`CNY 0.01`
 - App 购买入口：`https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy`
 
 站点使用 Paddle.js overlay Checkout。需要在 Paddle Dashboard → Developer Tools → Authentication → Client-side tokens 创建一个前端 token，并填入 `site/config.toml` 的 `paddleClientToken`。已有 `priceID` 会传入 Checkout：
@@ -181,6 +182,7 @@ http://localhost:1313/CleanMac/?checkout=cleanmac#buy
 ```bash
 PADDLE_SANDBOX_PRICE_ID=pri_...
 PADDLE_SANDBOX_CLIENT_TOKEN=test_...
+PADDLE_SANDBOX_AMOUNT_MINOR_UNITS=1
 ```
 
 再运行 `python3 scripts/setup-paddle-sandbox.py` 生成本地覆盖配置。
