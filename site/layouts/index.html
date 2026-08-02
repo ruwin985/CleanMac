@@ -6,10 +6,19 @@
       <span class="copy-desktop">用 CleanMac 扫描磁盘、清理缓存，<br>还能整理开发残留与隐私痕迹。</span>
       <span class="copy-mobile">扫描磁盘，清理缓存，<br>整理开发残留与隐私痕迹。</span>
     </p>
-    <a class="apple-hero-button" href="{{ site.Params.dmgURL | relURL }}">
-      <span class="button-desktop">{{ site.Params.downloadText | default "下载" }}</span>
-      <span class="button-mobile">下载</span>
-    </a>
+    <div class="apple-hero-actions" id="buy">
+      <a class="apple-hero-button apple-hero-button-primary" href="{{ site.Params.dmgURL | relURL }}">
+        <span class="button-desktop">{{ site.Params.downloadText | default "下载" }}</span>
+        <span class="button-mobile">下载</span>
+      </a>
+      <button class="apple-hero-button apple-hero-button-secondary" type="button" data-paddle-checkout>
+        ¥10 买断
+      </button>
+    </div>
+
+    <p class="apple-hero-purchase-note" data-paddle-message>
+      免费试用 1 天，试用结束后输入购买成功收到的授权码即可继续使用。
+    </p>
   </div>
 
   <div class="apple-hero-media" aria-label="CleanMac 应用演示视频">
@@ -24,4 +33,16 @@
     免责声明：CleanMac 仅提供本地磁盘分析与清理建议，删除文件前请确认不再需要并提前备份重要数据。实际可清理空间、风险提示和性能提升会因设备、系统版本与使用情况而异。
   </p>
 </section>
+<script>
+  window.cleanMacPaddleConfig = {
+    environment: {{ site.Params.paddleEnvironment | default "production" | jsonify }},
+    clientToken: {{ site.Params.paddleClientToken | default "" | jsonify }},
+    priceID: {{ site.Params.paddlePriceID | jsonify }},
+    autoOpenParam: "checkout",
+    autoOpenValue: "cleanmac"
+  };
+</script>
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js" defer></script>
+{{ $checkoutJS := resources.Get "js/paddle-checkout.js" | minify | fingerprint }}
+<script src="{{ $checkoutJS.RelPermalink }}" defer></script>
 {{ end }}

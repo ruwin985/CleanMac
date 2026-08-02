@@ -1,0 +1,196 @@
+import SwiftUI
+
+struct LicenseStatusPill: View {
+    @ObservedObject var licenseManager: LicenseManager
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: iconName)
+            Text(licenseManager.statusText)
+        }
+        .font(.system(size: 13, weight: .bold, design: .rounded))
+        .foregroundStyle(.white.opacity(0.92))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
+        .background(.white.opacity(0.09), in: Capsule())
+        .overlay { Capsule().stroke(.white.opacity(0.12), lineWidth: 1) }
+        .shadow(color: .black.opacity(0.18), radius: 12, y: 8)
+    }
+
+    private var iconName: String {
+        switch licenseManager.state {
+        case .trial:
+            return "clock.badge.checkmark"
+        case .licensed:
+            return "checkmark.seal.fill"
+        case .locked:
+            return "lock.fill"
+        }
+    }
+}
+
+struct LicenseGateOverlay: View {
+    @ObservedObject var licenseManager: LicenseManager
+    @State private var licenseCode = ""
+    @FocusState private var isLicenseFieldFocused: Bool
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    .black.opacity(0.82),
+                    Color(red: 0.17, green: 0.16, blue: 0.30).opacity(0.94),
+                    Color(red: 0.08, green: 0.11, blue: 0.20).opacity(0.96)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .overlay(.ultraThinMaterial.opacity(0.24))
+            .ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                VStack(spacing: 14) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 54, weight: .bold))
+                        .foregroundStyle(
+                            LinearGradient(colors: [.mint, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+
+                    Text("CleanMac 试用已结束")
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+
+                    Text("CleanMac 提供 1 天免费试用，之后 ¥10 一次性买断。购买成功后，将授权码粘贴到这里即可继续使用。")
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.74))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .frame(maxWidth: 560)
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("授权码")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.64))
+
+                    TextField("CM1-…", text: $licenseCode)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 15, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .focused($isLicenseFieldFocused)
+                        .onSubmit(activate)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .background(.black.opacity(0.26), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(.white.opacity(isLicenseFieldFocused ? 0.35 : 0.12), lineWidth: 1)
+                        }
+
+                    if let activationErrorMessage = licenseManager.activationErrorMessage {
+                        Label(activationErrorMessage, systemImage: "exclamationmark.triangle.fill")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Label("订单完成后，请使用 Paddle 购买成功邮件中收到的授权码。", systemImage: "envelope.fill")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.52))
+                    }
+                }
+                .frame(maxWidth: 560)
+
+                HStack(spacing: 14) {
+                    Button(action: licenseManager.openPurchasePage) {
+                        Label("¥10 购买授权码", systemImage: "cart.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(LicenseGateButtonStyle(kind: .primary))
+                    .disabled(licenseManager.purchaseURL == nil)
+                    .opacity(licenseManager.purchaseURL == nil ? 0.58 : 1)
+
+                    Button(action: activate) {
+                        Label("激活使用", systemImage: "key.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(LicenseGateButtonStyle(kind: .secondary))
+                    .disabled(trimmedLicenseCode.isEmpty)
+                    .opacity(trimmedLicenseCode.isEmpty ? 0.58 : 1)
+                }
+                .frame(maxWidth: 560)
+
+                if licenseManager.purchaseURL == nil {
+                    Text("购买入口尚未配置，请在 Paddle 创建 Checkout 后填入 CleanMacPaddleCheckoutURL。")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.48))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 520)
+                }
+            }
+            .padding(34)
+            .frame(width: 680)
+            .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 34, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 34, style: .continuous)
+                    .stroke(.white.opacity(0.12), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.42), radius: 50, y: 28)
+        }
+        .onAppear {
+            isLicenseFieldFocused = true
+        }
+    }
+
+    private var trimmedLicenseCode: String {
+        licenseCode.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func activate() {
+        guard !trimmedLicenseCode.isEmpty else { return }
+        licenseManager.activate(with: trimmedLicenseCode)
+    }
+}
+
+private struct LicenseGateButtonStyle: ButtonStyle {
+    enum Kind {
+        case primary
+        case secondary
+    }
+
+    let kind: Kind
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 15, weight: .bold, design: .rounded))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+            .background(background(isPressed: configuration.isPressed), in: Capsule())
+            .overlay { Capsule().stroke(.white.opacity(0.14), lineWidth: 1) }
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.spring(response: 0.24, dampingFraction: 0.82), value: configuration.isPressed)
+    }
+
+    private func background(isPressed: Bool) -> some ShapeStyle {
+        switch kind {
+        case .primary:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.17, green: 0.82, blue: 0.64).opacity(isPressed ? 0.78 : 1),
+                    Color(red: 0.08, green: 0.58, blue: 0.92).opacity(isPressed ? 0.78 : 1)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .secondary:
+            return LinearGradient(
+                colors: [
+                    .white.opacity(isPressed ? 0.10 : 0.16),
+                    .white.opacity(isPressed ? 0.06 : 0.10)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+}

@@ -9,8 +9,10 @@ private extension View {
 
 struct StorageDashboardView: View {
     private static let welcomeAppIcon = NSImage(named: "AppIcon")
+    private let licenseRefreshTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
     @State private var detailScrollTargetID: StorageCategory.ID?
     @State private var protectionScrollTargetID: ProtectionThreatKind?
+    @EnvironmentObject private var licenseManager: LicenseManager
 
     @ObservedObject var viewModel: StorageDashboardViewModel
 
@@ -53,6 +55,13 @@ struct StorageDashboardView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+        .overlay(alignment: .topTrailing) {
+            if !licenseManager.requiresLicenseOverlay {
+                LicenseStatusPill(licenseManager: licenseManager)
+                    .padding(.top, 26)
+                    .padding(.trailing, 26)
+            }
+        }
         .overlay {
             if viewModel.showsFullDiskAccessPrompt {
                 FullDiskAccessPrompt(
@@ -71,10 +80,26 @@ struct StorageDashboardView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.96)))
             }
         }
+        .overlay {
+            if licenseManager.requiresLicenseOverlay {
+                LicenseGateOverlay(licenseManager: licenseManager)
+                    .transition(.opacity.combined(with: .scale(scale: 0.985)))
+            }
+        }
+        .onAppear {
+            licenseManager.refresh()
+        }
+        .onReceive(licenseRefreshTimer) { _ in
+            licenseManager.refresh()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            licenseManager.refresh()
+        }
         .animation(.spring(response: 0.35, dampingFraction: 0.86), value: viewModel.toastMessage)
         .animation(.spring(response: 0.35, dampingFraction: 0.86), value: viewModel.activePopover?.card.id)
         .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.showsFullDiskAccessPrompt)
         .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.lastErrorMessage)
+        .animation(.spring(response: 0.35, dampingFraction: 0.9), value: licenseManager.requiresLicenseOverlay)
     }
 
     private var backgroundView: some View {

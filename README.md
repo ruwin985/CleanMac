@@ -117,6 +117,65 @@ xcodebuild -project CleanMac.xcodeproj -scheme CleanMac -configuration Debug -de
 bash scripts/export-universal-dmg.sh
 ```
 
+## 支付与授权
+
+当前工程已接入“1 天试用 + ¥10 一次性买断”的授权门禁：首次启动会自动开始 1 天试用；试用结束后再次启动或重新激活主窗口时，会显示全屏蒙层，要求用户输入授权码或前往 Paddle 购买。
+
+### Paddle 配置
+
+1. 在 Paddle 创建 `CleanMac` 产品，并配置一次性价格 `CNY 10.00`
+2. 为该价格创建或复制 Paddle Checkout 购买链接
+3. 将购买链接填入 `project.yml` 的 `INFOPLIST_KEY_CleanMacPaddleCheckoutURL`
+4. 生成授权密钥，并将公钥填入 `project.yml` 的 `INFOPLIST_KEY_CleanMacLicensePublicKey`
+5. 重新生成 Xcode 工程或同步 Info.plist 配置后打包发布
+
+当前 Paddle 目录项：
+
+- Product ID：`pro_01kz09hhw9m21dgfbj2tdvs1f3`
+- Price ID：`pri_01kz09hjt717rwqqr4nj82dy81`
+- App 购买入口：`https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy`
+
+站点使用 Paddle.js overlay Checkout。需要在 Paddle Dashboard → Developer Tools → Authentication → Client-side tokens 创建一个前端 token，并填入 `site/config.toml` 的 `paddleClientToken`。已有 `priceID` 会传入 Checkout：
+
+```toml
+paddleEnvironment = 'production'
+paddlePriceID = 'pri_01kz09hjt717rwqqr4nj82dy81'
+paddleClientToken = 'live_...'
+```
+
+生产环境 Checkout 不能在 `localhost` 上完整测试。上线前还需要在 Paddle Dashboard 中完成两项配置：
+
+1. Checkout → Checkout settings：将默认付款链接设置为 `https://ruwin985.github.io/CleanMac/`
+2. Checkout → Website approval：提交并通过 `ruwin985.github.io` 域名审批
+
+本地调试 Paddle Checkout 请切换到 sandbox 的 `priceID` 和 client-side token。
+
+SwiftPM/命令行调试时也可以通过环境变量覆盖：
+
+```bash
+export CLEANMAC_PADDLE_CHECKOUT_URL='https://your-paddle-checkout-url'
+export CLEANMAC_LICENSE_PUBLIC_KEY='base64-public-key'
+```
+
+### 授权码生成
+
+客户端不会内置 Paddle API 密钥；购买成功后需要由你通过 Paddle Webhook、后台服务或人工流程生成授权码并发给用户。
+
+首次生成密钥对：
+
+```bash
+swift scripts/generate-license-code.swift --new-key
+```
+
+妥善保存输出的 `CLEANMAC_LICENSE_PRIVATE_KEY`，只把 `CleanMacLicensePublicKey` 配置进客户端。为 Paddle 交易生成授权码：
+
+```bash
+export CLEANMAC_LICENSE_PRIVATE_KEY='base64-private-key'
+swift scripts/generate-license-code.swift --transaction txn_123 --email buyer@example.com
+```
+
+生成的 `CM1-...` 授权码可直接粘贴到过期蒙层中激活。
+
 ## 配置说明
 
 ### 包标识

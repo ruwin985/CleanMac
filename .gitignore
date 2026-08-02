@@ -21,3 +21,6 @@ build/
 *.dSYM
 *.dmg
 *.xcarchive
+
+# Local Paddle API credentials
+.paddle.env

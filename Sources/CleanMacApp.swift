@@ -4,6 +4,7 @@ import AppKit
 @main
 struct CleanMacApp: App {
     @StateObject private var viewModel = StorageDashboardViewModel()
+    @StateObject private var licenseManager = LicenseManager()
 
     private static func showSettingsFromLaunchArgumentIfNeeded() {
         let wantsSettings = CommandLine.arguments.contains("--show-settings")
@@ -32,11 +33,13 @@ struct CleanMacApp: App {
         WindowGroup {
             StorageDashboardView(viewModel: viewModel)
                 .frame(minWidth: 1100, minHeight: 760)
+                .environmentObject(licenseManager)
         }
         .windowResizability(.contentSize)
 
         Settings {
             AppSettingsView()
+                .environmentObject(licenseManager)
         }
 
         .commands {
