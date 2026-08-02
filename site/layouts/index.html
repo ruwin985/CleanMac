@@ -35,9 +35,9 @@
 </section>
 <script>
   window.cleanMacPaddleConfig = {
-    environment: {{ site.Params.paddleEnvironment | default "production" | jsonify }},
-    clientToken: {{ site.Params.paddleClientToken | default "" | jsonify }},
-    priceID: {{ site.Params.paddlePriceID | jsonify }},
+    environment: {{ printf "%q" (site.Params.paddleEnvironment | default "production") | safeJS }},
+    clientToken: {{ printf "%q" (site.Params.paddleClientToken | default "") | safeJS }},
+    priceID: {{ printf "%q" site.Params.paddlePriceID | safeJS }},
     autoOpenParam: "checkout",
     autoOpenValue: "cleanmac"
   };

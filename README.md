@@ -150,6 +150,41 @@ paddleClientToken = 'live_...'
 
 本地调试 Paddle Checkout 请切换到 sandbox 的 `priceID` 和 client-side token。
 
+### Paddle 沙盒支付测试
+
+本地不能用 production/live Checkout 完成支付测试。线下支付流程请使用 Paddle sandbox：
+
+1. 登录 Paddle Sandbox Dashboard：`https://sandbox-vendors.paddle.com/`
+2. 创建 sandbox API key，至少勾选 `product.write`、`price.write`、`client_token.write`
+3. 复制 `.paddle.sandbox.env.example` 为 `.paddle.sandbox.env`，填入 sandbox API key
+4. 运行脚本自动创建 sandbox 产品、一次性价格和 client-side token：
+
+```bash
+python3 scripts/setup-paddle-sandbox.py
+```
+
+脚本会生成本地覆盖配置 `site/config.local.toml`。然后用 sandbox 配置启动站点：
+
+```bash
+cd site
+hugo server --config config.toml,config.local.toml
+```
+
+打开本地购买页：
+
+```text
+http://localhost:1313/CleanMac/?checkout=cleanmac#buy
+```
+
+如果你已经在 Paddle sandbox 手动创建了 price 和 client-side token，也可以直接在 `.paddle.sandbox.env` 里填：
+
+```bash
+PADDLE_SANDBOX_PRICE_ID=pri_...
+PADDLE_SANDBOX_CLIENT_TOKEN=test_...
+```
+
+再运行 `python3 scripts/setup-paddle-sandbox.py` 生成本地覆盖配置。
+
 SwiftPM/命令行调试时也可以通过环境变量覆盖：
 
 ```bash

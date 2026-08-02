@@ -24,3 +24,4 @@ build/
 
 # Local Paddle API credentials
 .paddle.env
+.paddle.sandbox.env

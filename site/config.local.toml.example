@@ -1,0 +1,8 @@
+# Local-only Hugo override for Paddle sandbox checkout.
+# Copy this file to site/config.local.toml, then fill values from your Paddle sandbox account.
+# Run with: cd site && hugo server --config config.toml,config.local.toml
+
+[params]
+  paddleEnvironment = 'sandbox'
+  paddlePriceID = 'pri_sandbox_replace_me'
+  paddleClientToken = 'test_replace_me'

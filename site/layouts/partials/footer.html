@@ -1,6 +1,10 @@
 <footer class="site-footer">
   <div class="shell footer-inner">
     <p>© {{ now.Year }} CleanMac. Built with Hugo and deployed on GitHub Pages.</p>
-    <p><a href="{{ site.Params.githubRepo }}" target="_blank" rel="noreferrer">项目仓库</a></p>
+    <p class="footer-links">
+      <a href="{{ `legal/privacy/` | relURL }}">隐私政策</a>
+      <a href="{{ `legal/terms/` | relURL }}">服务条款</a>
+      <a href="{{ `legal/refund/` | relURL }}">退款政策</a>
+    </p>
   </div>
 </footer>

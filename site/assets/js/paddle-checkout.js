@@ -60,8 +60,15 @@
       token: config.clientToken,
       eventCallback: (event) => {
         if (event?.name === 'checkout.error') {
-          setMessage('Paddle Checkout 初始化失败，请确认线上域名已审批且已配置默认付款链接。', true);
-          console.warn('[CleanMac] Paddle checkout error', event);
+          const detail = event?.detail || event?.errors?.[0]?.message || event?.code || '';
+          const isDefaultPaymentLinkMissing = detail === 'transaction_default_checkout_url_not_set';
+          setMessage(
+            isDefaultPaymentLinkMissing
+              ? 'Paddle Checkout 初始化失败：请在当前 Paddle 环境的 Checkout Settings 中设置 Default payment link。'
+              : 'Paddle Checkout 初始化失败，请检查当前环境、client-side token、priceID 与域名配置。',
+            true
+          );
+          console.warn('[CleanMac] Paddle checkout error', JSON.stringify(event));
         }
       }
     });

@@ -1,0 +1,11 @@
+{{ define "main" }}
+<section class="legal-page">
+  <a class="legal-page-back" href="{{ site.BaseURL }}">← 返回首页</a>
+  <h1>{{ .Title }}</h1>
+  <div class="legal-list">
+    {{ range .Pages }}
+      <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+    {{ end }}
+  </div>
+</section>
+{{ end }}
