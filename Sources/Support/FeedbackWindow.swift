@@ -45,6 +45,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate {
 struct FeedbackWindowView: View {
     @StateObject private var model = FeedbackFormViewModel()
     @FocusState private var focusedField: FeedbackField?
+    @State private var isEmailFeedbackExpanded = false
 
     var body: some View {
         ZStack {
@@ -65,51 +66,26 @@ struct FeedbackWindowView: View {
                     .frame(width: 164, height: 164)
                     .padding(.top, 22)
 
-                VStack(alignment: .leading, spacing: 18) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("提供反馈")
-                            .font(.system(size: 29, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.primary.opacity(0.9))
-                        Text("请提供关于您问题的详细描述、建议或漏洞报告。国内用户推荐优先通过腾讯问卷提交，便于我们集中整理和跟进。")
-                            .font(.system(size: 14, weight: .medium, design: .rounded))
-                            .foregroundStyle(.secondary)
-                            .lineSpacing(3)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    tencentSurveyEntry
-
-                    VStack(spacing: 12) {
-                        pickerField
-                        textField("您的姓名", text: $model.name, field: .name)
-                        textField("您的联系邮箱", text: $model.email, field: .email)
-                        messageField
-                    }
-
-                    attachmentRow
-                    diagnosticsRow
-
-                    HStack(spacing: 12) {
-                        if let status = model.statusMessage {
-                            Label(status, systemImage: model.statusIsError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                .foregroundStyle(model.statusIsError ? .red : .green)
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 18) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("提供反馈")
+                                .font(.system(size: 29, weight: .bold, design: .rounded))
+                                .foregroundStyle(Color.primary.opacity(0.9))
+                            Text("请提供关于您问题的详细描述、建议或漏洞报告。国内用户推荐优先通过腾讯问卷提交，便于我们集中整理和跟进。")
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundStyle(.secondary)
+                                .lineSpacing(3)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
 
-                        Spacer()
+                        tencentSurveyEntry
 
-                        Button("发送邮件") {
-                            model.submit()
-                        }
-                        .buttonStyle(FeedbackPrimaryButtonStyle(disabled: !model.canSubmit || model.isSubmitting))
-                        .disabled(!model.canSubmit || model.isSubmitting)
-                        
-                        Spacer()
+                        emailFeedbackEntry
                     }
-                    .padding(.top, 2)
+                    .padding(.vertical, 22)
+                    .padding(.trailing, 24)
                 }
-                .padding(.vertical, 22)
-                .padding(.trailing, 24)
             }
             .padding(.leading, 40)
             .padding(.trailing, 28)
@@ -157,6 +133,103 @@ struct FeedbackWindowView: View {
                         .stroke(Color.accentColor.opacity(0.20), lineWidth: 1)
                 )
         )
+    }
+
+    private var emailFeedbackEntry: some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                    isEmailFeedbackExpanded.toggle()
+                    if !isEmailFeedbackExpanded {
+                        focusedField = nil
+                    }
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "envelope.badge")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Circle()
+                                .fill(Color.accentColor.opacity(0.12))
+                        )
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("邮件反馈")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundStyle(.primary.opacity(0.9))
+                        Text(isEmailFeedbackExpanded ? "填写详细内容后，将打开系统邮件应用发送。" : "没有腾讯问卷时可改用邮件提交，支持附件和匿名系统配置。")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+
+                    Spacer()
+
+                    Text(isEmailFeedbackExpanded ? "收起" : "展开")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(Color.accentColor.opacity(0.10))
+                        )
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(isEmailFeedbackExpanded ? 180 : 0))
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(12)
+
+            if isEmailFeedbackExpanded {
+                VStack(spacing: 12) {
+                    VStack(spacing: 10) {
+                        pickerField
+                        textField("您的姓名", text: $model.name, field: .name)
+                        textField("您的联系邮箱", text: $model.email, field: .email)
+                        messageField
+                    }
+
+                    attachmentRow
+                    diagnosticsRow
+
+                    HStack(spacing: 12) {
+                        if let status = model.statusMessage {
+                            Label(status, systemImage: model.statusIsError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .foregroundStyle(model.statusIsError ? .red : .green)
+                        }
+
+                        Spacer()
+
+                        Button("发送邮件") {
+                            model.submit()
+                        }
+                        .buttonStyle(FeedbackPrimaryButtonStyle(disabled: !model.canSubmit || model.isSubmitting))
+                        .disabled(!model.canSubmit || model.isSubmitting)
+                    }
+                    .padding(.top, 4)
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(.thinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(isEmailFeedbackExpanded ? Color.accentColor.opacity(0.20) : Color.primary.opacity(0.10), lineWidth: 1)
+                )
+        )
+        .animation(.spring(response: 0.32, dampingFraction: 0.86), value: isEmailFeedbackExpanded)
     }
 
     private var pickerField: some View {
@@ -210,7 +283,7 @@ struct FeedbackWindowView: View {
                     .padding(.horizontal, -4)
                     .padding(.vertical, -8)
             }
-            .frame(height: 158)
+            .frame(height: 118)
         }
     }
 
