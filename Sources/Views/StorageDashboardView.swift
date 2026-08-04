@@ -56,7 +56,8 @@ struct StorageDashboardView: View {
             }
         }
         .overlay(alignment: .topTrailing) {
-            if !licenseManager.requiresLicenseOverlay {
+            if viewModel.dashboardStage == .welcome,
+               !licenseManager.requiresLicenseOverlay {
                 LicenseStatusPill(licenseManager: licenseManager)
                     .padding(.top, 26)
                     .padding(.trailing, 26)
@@ -1285,6 +1286,12 @@ private struct CleanableCategoryGroup: View {
     let toggleSelectionAction: () -> Void
     let toggleItemSelectionAction: (StorageItem) -> Void
     let cleanAction: (StorageItem) -> Void
+
+    @State private var isExpanded = true
+
+    private var isExpandable: Bool { category.section == .appCaches }
+    private var showsItems: Bool { !isExpandable || isExpanded }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 16) {
@@ -1304,6 +1311,20 @@ private struct CleanableCategoryGroup: View {
                     }
                 }
                 .buttonStyle(.plain)
+                if isExpandable {
+                    Button {
+                        withAnimation(.spring(response: 0.24, dampingFraction: 0.86)) {
+                            isExpanded.toggle()
+                        }
+                    } label: {
+                        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                            .font(.system(size: 15, weight: .heavy))
+                            .foregroundStyle(.white.opacity(0.86))
+                            .frame(width: 28, height: 28)
+                            .background(.white.opacity(0.08), in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                }
                 Spacer()
                 HStack(spacing: 8) {
                     if isBulkCleaning && selected {
@@ -1317,42 +1338,46 @@ private struct CleanableCategoryGroup: View {
                 }
             }
 
-            ForEach(items) { item in
-                HStack(spacing: 14) {
-                    Button {
-                        toggleItemSelectionAction(item)
-                    } label: {
-                        Image(systemName: selectedItemIDs.contains(item.id) ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundStyle(selectedItemIDs.contains(item.id) ? .cyan : .white.opacity(0.55))
-                    }
-                    .buttonStyle(.plain)
-
-                    Image(systemName: item.symbolName).frame(width: 28).foregroundStyle(.white.opacity(0.86))
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.name).font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(.white)
-                        CopyablePathLabel(path: item.path)
-                    }
-                    Spacer()
-                    Text(item.sizeInBytes.byteString).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
-                    Button {
-                        cleanAction(item)
-                    } label: {
-                        HStack(spacing: 8) {
-                            if activeCleaningItemIDs.contains(item.id) {
-                                ProgressView()
-                                    .controlSize(.small)
-                                    .tint(.white)
-                            }
-                            Text(activeCleaningItemIDs.contains(item.id) ? "清理中…" : "清理")
+            if showsItems {
+                ForEach(items) { item in
+                    HStack(spacing: 14) {
+                        Button {
+                            toggleItemSelectionAction(item)
+                        } label: {
+                            Image(systemName: selectedItemIDs.contains(item.id) ? "checkmark.circle.fill" : "circle")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundStyle(selectedItemIDs.contains(item.id) ? .cyan : .white.opacity(0.55))
                         }
+                        .buttonStyle(.plain)
+
+                        StorageItemIconView(item: item)
+                            .frame(width: 32, height: 32)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(item.name).font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                            CopyablePathLabel(path: item.path)
+                        }
+                        Spacer()
+                        Text(item.sizeInBytes.byteString).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                        Button {
+                            cleanAction(item)
+                        } label: {
+                            HStack(spacing: 8) {
+                                if activeCleaningItemIDs.contains(item.id) {
+                                    ProgressView()
+                                        .controlSize(.small)
+                                        .tint(.white)
+                                }
+                                Text(activeCleaningItemIDs.contains(item.id) ? "清理中…" : "清理")
+                            }
+                        }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.red.opacity(0.82))
+                            .disabled(activeCleaningItemIDs.contains(item.id))
                     }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.red.opacity(0.82))
-                        .disabled(activeCleaningItemIDs.contains(item.id))
+                    .padding(16)
+                    .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
-                .padding(16)
-                .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
         }
         .padding(22)
@@ -1360,6 +1385,23 @@ private struct CleanableCategoryGroup: View {
         .overlay {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .stroke((focused || selected) ? .white.opacity(0.16) : .clear, lineWidth: 1)
+        }
+    }
+}
+
+private struct StorageItemIconView: View {
+    let item: StorageItem
+
+    var body: some View {
+        if let appIconPath = item.appIconPath {
+            Image(nsImage: NSWorkspace.shared.icon(forFile: appIconPath))
+                .resizable()
+                .scaledToFit()
+                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        } else {
+            Image(systemName: item.symbolName)
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.86))
         }
     }
 }

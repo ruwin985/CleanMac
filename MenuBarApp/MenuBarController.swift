@@ -7,9 +7,14 @@ import IOKit.ps
 final class MenuBarController: NSObject {
     static let shared = MenuBarController()
 
+    private static let lowDiskThresholdBytes: Int64 = 50_000_000_000
+    private static let lowDiskPromptLastShownDayKey = "lowDiskSpacePrompt.lastShownDay"
+
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let systemMonitor = SystemStatusMonitor()
     private var popover: NSPopover?
+    private var lowDiskPopover: NSPopover?
+    private var lowDiskPromptTimer: Timer?
     private var settingsMenu: NSMenu?
 
     private override init() {
@@ -21,6 +26,7 @@ final class MenuBarController: NSObject {
         systemMonitor.start()
         configurePopover()
         configureSettingsMenu()
+        scheduleLowDiskPromptChecks()
     }
 
     private func configureStatusItem() {
@@ -61,6 +67,10 @@ final class MenuBarController: NSObject {
     @objc
     private func togglePopover(_ sender: AnyObject?) {
         guard let button = statusItem.button, let popover else { return }
+        if lowDiskPopover?.isShown == true {
+            lowDiskPopover?.performClose(sender)
+            return
+        }
         if popover.isShown {
             popover.performClose(sender)
         } else {
@@ -71,11 +81,13 @@ final class MenuBarController: NSObject {
 
     func openMainApp() {
         popover?.performClose(nil)
+        lowDiskPopover?.performClose(nil)
         launchMainApp(arguments: [])
     }
 
     func openMainAppSettings() {
         popover?.performClose(nil)
+        lowDiskPopover?.performClose(nil)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             self.launchMainApp(arguments: ["--show-settings"])
         }
@@ -152,6 +164,7 @@ final class MenuBarController: NSObject {
 
     func openMainAppFeedback() {
         popover?.performClose(nil)
+        lowDiskPopover?.performClose(nil)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             self.launchMainApp(arguments: ["--show-feedback"])
         }
@@ -166,6 +179,73 @@ final class MenuBarController: NSObject {
     func quitMenuBar() {
         NSApp.terminate(nil)
     }
+
+    private func scheduleLowDiskPromptChecks() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+            self?.showLowDiskPromptIfNeeded()
+        }
+
+        lowDiskPromptTimer?.invalidate()
+        lowDiskPromptTimer = Timer.scheduledTimer(withTimeInterval: 30 * 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.showLowDiskPromptIfNeeded()
+            }
+        }
+    }
+
+    private func showLowDiskPromptIfNeeded() {
+        guard let button = statusItem.button,
+              systemMonitor.availableDiskBytes > 0,
+              systemMonitor.availableDiskBytes < Self.lowDiskThresholdBytes,
+              popover?.isShown != true,
+              lowDiskPopover?.isShown != true,
+              !hasShownLowDiskPromptToday() else { return }
+
+        markLowDiskPromptShownToday()
+
+        let prompt = lowDiskPopover ?? makeLowDiskPopover()
+        prompt.contentViewController = NSHostingController(
+            rootView: LowDiskSpacePromptView(
+                diskName: systemMonitor.diskName,
+                availableBytes: systemMonitor.availableDiskBytes,
+                totalBytes: systemMonitor.totalDiskBytes,
+                dismiss: { [weak self] in self?.dismissLowDiskPrompt() },
+                openApp: { [weak self] in self?.openMainApp() }
+            )
+        )
+        lowDiskPopover = prompt
+        prompt.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func makeLowDiskPopover() -> NSPopover {
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.animates = true
+        popover.contentSize = NSSize(width: 676, height: 404)
+        return popover
+    }
+
+    private func dismissLowDiskPrompt() {
+        lowDiskPopover?.performClose(nil)
+    }
+
+    private func hasShownLowDiskPromptToday() -> Bool {
+        UserDefaults.standard.string(forKey: Self.lowDiskPromptLastShownDayKey) == Self.currentDayString()
+    }
+
+    private func markLowDiskPromptShownToday() {
+        UserDefaults.standard.set(Self.currentDayString(), forKey: Self.lowDiskPromptLastShownDayKey)
+    }
+
+    private static func currentDayString() -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar.autoupdatingCurrent
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .autoupdatingCurrent
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
+    }
 }
 
 @MainActor
@@ -173,6 +253,8 @@ final class SystemStatusMonitor: ObservableObject {
     @Published private(set) var availableMemoryBytes: UInt64 = 0
     @Published private(set) var diskName: String = "Macintosh HD"
     @Published private(set) var availableDiskBytes: Int64 = 0
+    @Published private(set) var totalDiskBytes: Int64 = 0
+    @Published private(set) var totalCleanedBytes: Int64 = 0
     @Published private(set) var batteryPercentText: String = "—"
     @Published private(set) var batteryStatusText: String = "不可用"
     @Published private(set) var cpuLoadText: String = "—"
@@ -198,17 +280,23 @@ final class SystemStatusMonitor: ObservableObject {
         ByteCountFormatter.string(fromByteCount: availableDiskBytes, countStyle: .file)
     }
 
+    var totalCleanedText: String {
+        ByteCountFormatter.string(fromByteCount: totalCleanedBytes, countStyle: .file)
+    }
+
     private func refresh() {
         availableMemoryBytes = Self.readAvailableMemoryBytes() ?? 0
         refreshDisk()
+        totalCleanedBytes = CleanupHistoryReader.totalCleanedBytes()
         refreshBattery()
         refreshCPU()
     }
 
     private func refreshDisk() {
         let homeURL = URL(fileURLWithPath: NSHomeDirectory())
-        if let values = try? homeURL.resourceValues(forKeys: [.volumeAvailableCapacityKey, .volumeNameKey]) {
-            availableDiskBytes = Int64(values.volumeAvailableCapacity ?? 0)
+        if let values = try? homeURL.resourceValues(forKeys: [.volumeAvailableCapacityKey, .volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey, .volumeNameKey]) {
+            availableDiskBytes = values.volumeAvailableCapacityForImportantUsage ?? Int64(values.volumeAvailableCapacity ?? 0)
+            totalDiskBytes = Int64(values.volumeTotalCapacity ?? 0)
             diskName = values.volumeName ?? "Macintosh HD"
         }
     }
@@ -365,7 +453,7 @@ struct MenuBarPanelView: View {
                             .frame(width: 22, height: 22)
                             .background(.white.opacity(0.08), in: Circle())
 
-                        Text("清理高达 \(systemMonitor.availableDiskText) 垃圾")
+                        Text("已累计清理 \(systemMonitor.totalCleanedText) 垃圾")
                             .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
 
@@ -459,5 +547,187 @@ struct MetricCard: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(.white.opacity(0.05), lineWidth: 1)
         )
+    }
+}
+
+struct LowDiskSpacePromptView: View {
+    let diskName: String
+    let availableBytes: Int64
+    let totalBytes: Int64
+    let dismiss: () -> Void
+    let openApp: () -> Void
+
+    private var availableText: String {
+        String(format: "%.2f GB", Double(max(availableBytes, 0)) / 1_000_000_000)
+    }
+
+    private var usedRatio: CGFloat {
+        guard totalBytes > 0 else { return 0.9 }
+        let usedBytes = max(totalBytes - availableBytes, 0)
+        let ratio = Double(usedBytes) / Double(totalBytes)
+        return CGFloat(min(max(ratio, 0.06), 0.96))
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 26) {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text("磁盘空间快用完了！")
+                        .font(.system(size: 30, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.white)
+
+                    Text("启动 CleanMac 移除不需要的项目并恢复空间。")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color(red: 0.65, green: 0.80, blue: 0.96))
+                }
+
+                HStack(spacing: 30) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 0.82, green: 0.82, blue: 0.82),
+                                        Color(red: 0.48, green: 0.48, blue: 0.48)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .shadow(color: .black.opacity(0.22), radius: 2, y: 1)
+
+                        Image(systemName: "apple.logo")
+                            .font(.system(size: 34, weight: .medium))
+                            .foregroundStyle(.black.opacity(0.24))
+
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .fill(.black.opacity(0.28))
+                            .frame(height: 7)
+                            .offset(y: 35)
+                    }
+                    .frame(width: 66, height: 78)
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(diskName)
+                                .font(.system(size: 27, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.white)
+
+                            Spacer()
+
+                            Text("可用： \(availableText)")
+                                .font(.system(size: 27, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.white)
+                        }
+
+                        GeometryReader { proxy in
+                            ZStack(alignment: .leading) {
+                                Capsule()
+                                    .fill(.white.opacity(0.23))
+
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                Color(red: 1.0, green: 0.35, blue: 0.25),
+                                                Color(red: 1.0, green: 0.48, blue: 0.32)
+                                            ],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: max(10, proxy.size.width * usedRatio))
+                            }
+                        }
+                        .frame(height: 12)
+                    }
+                }
+                .padding(.leading, 5)
+            }
+            .padding(.top, 42)
+            .padding(.horizontal, 40)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+            Divider()
+                .overlay(.white.opacity(0.38))
+
+            HStack {
+                Button(action: dismiss) {
+                    Text("忽略")
+                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.95))
+                        .frame(width: 136, height: 40)
+                        .background(
+                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                .fill(Color(red: 0.37, green: 0.63, blue: 0.82).opacity(0.9))
+                        )
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Button(action: openApp) {
+                    Text("打开 CleanMac")
+                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.white)
+                        .frame(width: 256, height: 40)
+                        .background(
+                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(red: 0.10, green: 0.55, blue: 0.96),
+                                            Color(red: 0.08, green: 0.43, blue: 0.88)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 40)
+            .frame(height: 110)
+            .background(Color(red: 0.07, green: 0.34, blue: 0.48).opacity(0.72))
+        }
+        .frame(width: 676, height: 404)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color(red: 0.08, green: 0.34, blue: 0.48),
+                    Color(red: 0.06, green: 0.31, blue: 0.45),
+                    Color(red: 0.08, green: 0.40, blue: 0.55)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+    }
+}
+
+private enum CleanupHistoryReader {
+    private static let totalCleanedBytesKey = "totalCleanedBytes"
+
+    static func totalCleanedBytes() -> Int64 {
+        guard let storeURL,
+              let data = try? Data(contentsOf: storeURL),
+              let payload = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] else {
+            return 0
+        }
+
+        if let value = payload[totalCleanedBytesKey] as? Int64 {
+            return value
+        }
+        if let value = payload[totalCleanedBytesKey] as? Int {
+            return Int64(value)
+        }
+        return 0
+    }
+
+    private static var storeURL: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("CleanMac", isDirectory: true)
+            .appendingPathComponent("CleanupHistory.plist")
     }
 }

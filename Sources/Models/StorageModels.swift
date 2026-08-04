@@ -4,6 +4,7 @@ import SwiftUI
 enum StorageSection: String, CaseIterable, Identifiable {
     case userFiles
     case applications
+    case appCaches
     case developer
     case system
     case hidden
@@ -15,6 +16,7 @@ enum StorageSection: String, CaseIterable, Identifiable {
         switch self {
         case .userFiles: return "文件"
         case .applications: return "应用"
+        case .appCaches: return "App 缓存文件"
         case .developer: return "开发环境"
         case .system: return "系统"
         case .hidden: return "隐形空间"
@@ -26,6 +28,7 @@ enum StorageSection: String, CaseIterable, Identifiable {
         switch self {
         case .userFiles: return "文稿、下载、桌面与媒体文件"
         case .applications: return "应用程序与 App 容器"
+        case .appCaches: return "各个 App 在用户缓存目录中生成的缓存"
         case .developer: return "Xcode、模拟器、Homebrew 与开发缓存"
         case .system: return "系统数据、日志与系统缓存"
         case .hidden: return "Library、容器、索引与其他不易察觉的数据"
@@ -37,6 +40,7 @@ enum StorageSection: String, CaseIterable, Identifiable {
         switch self {
         case .userFiles: return Color(red: 0.23, green: 0.73, blue: 0.98)
         case .applications: return Color(red: 0.41, green: 0.56, blue: 0.98)
+        case .appCaches: return Color(red: 1.00, green: 0.56, blue: 0.36)
         case .developer: return Color(red: 0.64, green: 0.45, blue: 0.98)
         case .system: return Color(red: 0.40, green: 0.84, blue: 0.67)
         case .hidden: return Color(red: 0.99, green: 0.67, blue: 0.39)
@@ -48,6 +52,7 @@ enum StorageSection: String, CaseIterable, Identifiable {
         switch self {
         case .userFiles: return "folder.fill"
         case .applications: return "app.dashed"
+        case .appCaches: return "paintbrush.fill"
         case .developer: return "hammer.fill"
         case .system: return "gearshape.2.fill"
         case .hidden: return "eye.slash.fill"
@@ -209,9 +214,33 @@ struct StorageItem: Identifiable, Hashable {
     let id = UUID()
     let name: String
     let path: String
+    let relatedPaths: [String]
     let sizeInBytes: Int64
     let symbolName: String
     let isCleanable: Bool
+    let appIconPath: String?
+
+    init(
+        name: String,
+        path: String,
+        relatedPaths: [String] = [],
+        sizeInBytes: Int64,
+        symbolName: String,
+        isCleanable: Bool,
+        appIconPath: String? = nil
+    ) {
+        self.name = name
+        self.path = path
+        self.relatedPaths = relatedPaths
+        self.sizeInBytes = sizeInBytes
+        self.symbolName = symbolName
+        self.isCleanable = isCleanable
+        self.appIconPath = appIconPath
+    }
+
+    var cleanupPaths: [String] {
+        [path] + relatedPaths
+    }
 
     var isSafeForOneClickCleanup: Bool {
         guard isCleanable else { return false }
@@ -255,7 +284,24 @@ struct StorageItem: Identifiable, Hashable {
         // 家目录顶层可再生缓存类隐藏目录（白名单）。
         safePrefixes.append(contentsOf: HiddenDotWhitelist.cleanableNames.map { home + "/" + $0 })
 
-        return safePrefixes.contains { path == $0 || path.hasPrefix($0 + "/") }
+        return cleanupPaths.allSatisfy { cleanupPath in
+            safePrefixes.contains { cleanupPath == $0 || cleanupPath.hasPrefix($0 + "/") }
+                || isScopedCachePath(cleanupPath, home: home)
+        }
+    }
+
+    private func isScopedCachePath(_ path: String, home: String) -> Bool {
+        let scopedRoots = [
+            home + "/Library/Application Support/",
+            home + "/Library/Containers/",
+            home + "/Library/Group Containers/"
+        ]
+        guard scopedRoots.contains(where: path.hasPrefix) else { return false }
+
+        return path.hasSuffix("/Cache")
+            || path.hasSuffix("/Caches")
+            || path.contains("/Cache/")
+            || path.contains("/Caches/")
     }
 
     var shouldSuggestManualCleanup: Bool {

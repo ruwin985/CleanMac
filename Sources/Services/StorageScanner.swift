@@ -71,6 +71,100 @@ enum StorageCleanError: LocalizedError {
 }
 
 struct StorageScanner {
+    private struct InstalledAppInfo {
+        let bundleIdentifier: String
+        let displayName: String
+        let appPath: String
+
+        var cacheDisplayName: String {
+            let baseName = displayName.hasSuffix(".app") ? String(displayName.dropLast(4)) : displayName
+            return "\(baseName).app 缓存"
+        }
+    }
+
+    private struct AppMetadataIndex {
+        let appsByBundleIdentifier: [String: InstalledAppInfo]
+        let appsByName: [String: InstalledAppInfo]
+        let bundleIdentifiersByLength: [String]
+
+        func owner(forCacheName name: String) -> InstalledAppInfo? {
+            let loweredName = name.lowercased()
+            if let app = appsByBundleIdentifier[loweredName] {
+                return app
+            }
+
+            if let bundleIdentifier = bundleIdentifiersByLength.first(where: { identifier in
+                loweredName.hasPrefix(identifier + ".")
+                    || loweredName.hasPrefix(identifier + "-")
+                    || loweredName.hasPrefix(identifier + "_")
+            }) {
+                return appsByBundleIdentifier[bundleIdentifier]
+            }
+
+            let normalized = Self.normalizedName(name)
+            if let app = appsByName[normalized] {
+                return app
+            }
+
+            return appsByName[Self.normalizedNameByRemovingCacheSuffix(from: name)]
+        }
+
+        func owner(forApplicationSupportName name: String) -> InstalledAppInfo? {
+            owner(forCacheName: name)
+        }
+
+        func owner(forGroupContainerName name: String) -> InstalledAppInfo? {
+            let loweredName = name.lowercased()
+            if let bundleIdentifier = bundleIdentifiersByLength.first(where: { loweredName.contains($0) }) {
+                return appsByBundleIdentifier[bundleIdentifier]
+            }
+            return owner(forCacheName: name)
+        }
+
+        static func normalizedName(_ value: String) -> String {
+            value
+                .lowercased()
+                .replacingOccurrences(of: ".app", with: "")
+                .filter { $0.isLetter || $0.isNumber }
+        }
+
+        private static func normalizedNameByRemovingCacheSuffix(from value: String) -> String {
+            let lowercased = value.lowercased()
+            let suffixes = [" cache", " caches", "缓存"]
+            let stripped = suffixes.reduce(lowercased) { partial, suffix in
+                partial.hasSuffix(suffix) ? String(partial.dropLast(suffix.count)) : partial
+            }
+            return normalizedName(stripped)
+        }
+    }
+
+    private struct AppCacheAccumulator {
+        let name: String
+        let symbolName: String
+        let appIconPath: String?
+        var paths: [String]
+        var sizeInBytes: Int64
+
+        mutating func add(path: String, sizeInBytes: Int64) {
+            guard !paths.contains(path) else { return }
+            paths.append(path)
+            self.sizeInBytes += sizeInBytes
+        }
+
+        var storageItem: StorageItem? {
+            guard let path = paths.first else { return nil }
+            return StorageItem(
+                name: name,
+                path: path,
+                relatedPaths: Array(paths.dropFirst()),
+                sizeInBytes: sizeInBytes,
+                symbolName: symbolName,
+                isCleanable: true,
+                appIconPath: appIconPath
+            )
+        }
+    }
+
     private let fileManager = FileManager.default
     private let progress: ((ScanProgress) -> Void)?
     private let progressState = ProgressState()
@@ -91,6 +185,7 @@ struct StorageScanner {
         let categories = [
             makeUserFilesCategory(home: home),
             makeApplicationsCategory(home: home),
+            makeAppCachesCategory(home: home),
             makeDeveloperCategory(home: home),
             makeSystemCategory(home: home),
             makeHiddenCategory(home: home),
@@ -103,17 +198,38 @@ struct StorageScanner {
     }
 
     func clean(_ item: StorageItem) throws {
-        guard item.isCleanable, fileManager.fileExists(atPath: item.path) else { return }
-        let url = URL(fileURLWithPath: item.path)
+        guard item.isCleanable else { return }
+        let existingPaths = item.cleanupPaths.filter { fileManager.fileExists(atPath: $0) }
+        guard !existingPaths.isEmpty else { return }
+
         do {
-            if url.lastPathComponent == ".Trash" {
-                try emptyDirectoryContents(at: url)
-            } else {
-                try trashItem(at: url)
+            for path in existingPaths {
+                try cleanPath(path)
             }
+            CleanupHistoryStore.addCleanedBytes(item.sizeInBytes)
         } catch {
             throw mapCleanError(error, item: item)
         }
+    }
+
+    private func cleanPath(_ path: String) throws {
+        let url = URL(fileURLWithPath: path)
+        if url.lastPathComponent == ".Trash" || shouldEmptyDirectoryContents(at: url) {
+            try emptyDirectoryContents(at: url)
+        } else {
+            try trashItem(at: url)
+        }
+    }
+
+    private func shouldEmptyDirectoryContents(at url: URL) -> Bool {
+        let path = url.path
+        let homePath = fileManager.homeDirectoryForCurrentUser.path
+        guard path.hasPrefix(homePath + "/Library/Containers/")
+                || path.hasPrefix(homePath + "/Library/Group Containers/") else {
+            return false
+        }
+
+        return path.hasSuffix("/Cache") || path.hasSuffix("/Caches")
     }
 
     func clean(items: [StorageItem], categoryName: String) throws -> CleanupSummary {
@@ -171,7 +287,7 @@ struct StorageScanner {
         let children = try fileManager.contentsOfDirectory(
             at: url,
             includingPropertiesForKeys: nil,
-            options: [.skipsHiddenFiles]
+            options: []
         )
 
         for childURL in children {
@@ -298,13 +414,260 @@ struct StorageScanner {
         }.filter { $0.sizeInBytes > 0 })
     }
 
+    private func makeAppCachesCategory(home: URL) -> StorageCategory {
+        let appIndex = makeAppMetadataIndex(home: home)
+        var accumulators: [String: AppCacheAccumulator] = [:]
+
+        scanUserCacheDirectory(home: home, appIndex: appIndex, accumulators: &accumulators)
+        scanContainerCacheDirectories(home: home, appIndex: appIndex, accumulators: &accumulators)
+        scanGroupContainerCacheDirectories(home: home, appIndex: appIndex, accumulators: &accumulators)
+        scanApplicationSupportCacheDirectories(home: home, appIndex: appIndex, accumulators: &accumulators)
+
+        let items = accumulators.values.compactMap(\.storageItem)
+        return StorageCategory(section: .appCaches, items: items.sorted { $0.sizeInBytes > $1.sizeInBytes })
+    }
+
+    private func scanUserCacheDirectory(home: URL, appIndex: AppMetadataIndex, accumulators: inout [String: AppCacheAccumulator]) {
+        let cachesURL = home.appendingPathComponent("Library/Caches", isDirectory: true)
+        guard fileManager.fileExists(atPath: cachesURL.path),
+              let childURLs = try? fileManager.contentsOfDirectory(
+                at: cachesURL,
+                includingPropertiesForKeys: [.isDirectoryKey, .isRegularFileKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey],
+                options: []
+              ) else {
+            return
+        }
+
+        for childURL in childURLs {
+            guard !isIgnoredAppCacheEntry(childURL) else { continue }
+            let owner = appIndex.owner(forCacheName: childURL.lastPathComponent)
+            addAppCacheRoot(childURL, owner: owner, fallbackName: childURL.lastPathComponent, accumulators: &accumulators)
+        }
+    }
+
+    private func scanContainerCacheDirectories(home: URL, appIndex: AppMetadataIndex, accumulators: inout [String: AppCacheAccumulator]) {
+        let containersURL = home.appendingPathComponent("Library/Containers", isDirectory: true)
+        guard let containerURLs = try? fileManager.contentsOfDirectory(
+            at: containersURL,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: []
+        ) else {
+            return
+        }
+
+        for containerURL in containerURLs where !isIgnoredAppCacheEntry(containerURL) {
+            let cacheURL = containerURL.appendingPathComponent("Data/Library/Caches", isDirectory: true)
+            guard fileManager.fileExists(atPath: cacheURL.path) else { continue }
+
+            let owner = appIndex.owner(forCacheName: containerURL.lastPathComponent)
+            addAppCacheRoot(cacheURL, owner: owner, fallbackName: containerURL.lastPathComponent, accumulators: &accumulators)
+        }
+    }
+
+    private func scanGroupContainerCacheDirectories(home: URL, appIndex: AppMetadataIndex, accumulators: inout [String: AppCacheAccumulator]) {
+        let groupContainersURL = home.appendingPathComponent("Library/Group Containers", isDirectory: true)
+        guard let groupContainerURLs = try? fileManager.contentsOfDirectory(
+            at: groupContainersURL,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: []
+        ) else {
+            return
+        }
+
+        for groupContainerURL in groupContainerURLs where !isIgnoredAppCacheEntry(groupContainerURL) {
+            let owner = appIndex.owner(forGroupContainerName: groupContainerURL.lastPathComponent)
+            let candidates = [
+                groupContainerURL.appendingPathComponent("Library/Caches", isDirectory: true),
+                groupContainerURL.appendingPathComponent("Caches", isDirectory: true),
+                groupContainerURL.appendingPathComponent("Cache", isDirectory: true)
+            ]
+
+            for cacheURL in candidates where fileManager.fileExists(atPath: cacheURL.path) {
+                addAppCacheRoot(cacheURL, owner: owner, fallbackName: groupContainerURL.lastPathComponent, accumulators: &accumulators)
+            }
+        }
+    }
+
+    private func scanApplicationSupportCacheDirectories(home: URL, appIndex: AppMetadataIndex, accumulators: inout [String: AppCacheAccumulator]) {
+        let applicationSupportURL = home.appendingPathComponent("Library/Application Support", isDirectory: true)
+        guard let appSupportURLs = try? fileManager.contentsOfDirectory(
+            at: applicationSupportURL,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: []
+        ) else {
+            return
+        }
+
+        for appSupportURL in appSupportURLs where !isIgnoredAppCacheEntry(appSupportURL) {
+            let owner = appIndex.owner(forApplicationSupportName: appSupportURL.lastPathComponent)
+            let candidates = [
+                appSupportURL.appendingPathComponent("Cache", isDirectory: true),
+                appSupportURL.appendingPathComponent("Caches", isDirectory: true)
+            ]
+
+            for cacheURL in candidates where fileManager.fileExists(atPath: cacheURL.path) {
+                addAppCacheRoot(cacheURL, owner: owner, fallbackName: appSupportURL.lastPathComponent, accumulators: &accumulators)
+            }
+        }
+    }
+
+    private func addAppCacheRoot(_ url: URL, owner: InstalledAppInfo?, fallbackName: String, accumulators: inout [String: AppCacheAccumulator]) {
+        let size = cacheItemSize(at: url)
+        guard size > 0 else { return }
+
+        let key = owner?.bundleIdentifier.lowercased() ?? "fallback:\(AppMetadataIndex.normalizedName(fallbackName))"
+        let name = owner?.cacheDisplayName ?? fallbackCacheDisplayName(for: fallbackName)
+        let symbolName = fallbackName.contains(".") ? "folder.fill" : "app.fill"
+
+        var accumulator = accumulators[key] ?? AppCacheAccumulator(
+            name: name,
+            symbolName: symbolName,
+            appIconPath: owner?.appPath,
+            paths: [],
+            sizeInBytes: 0
+        )
+        accumulator.add(path: url.path, sizeInBytes: size)
+        accumulators[key] = accumulator
+    }
+
+    private func cacheItemSize(at url: URL) -> Int64 {
+        guard let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .isRegularFileKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey]) else {
+            return 0
+        }
+
+        if values.isDirectory == true {
+            return cacheDirectorySize(at: url)
+        }
+
+        guard values.isRegularFile == true else { return 0 }
+        let size = Int64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? 0)
+        if size > 0 {
+            progressState.cleanableAccumulator += size
+            progress?(ScanProgress(currentPath: url.path, discoveredCleanableBytes: progressState.cleanableAccumulator))
+        }
+        return size
+    }
+
+    private func cacheDirectorySize(at url: URL) -> Int64 {
+        guard let enumerator = fileManager.enumerator(
+            at: url,
+            includingPropertiesForKeys: [.isRegularFileKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey],
+            options: [.skipsPackageDescendants],
+            errorHandler: { _, _ in true }
+        ) else {
+            return 0
+        }
+
+        var total: Int64 = 0
+        for case let fileURL as URL in enumerator {
+            guard let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey]),
+                  values.isRegularFile == true else { continue }
+
+            let size = Int64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? 0)
+            total += size
+            progressState.cleanableAccumulator += size
+            progress?(ScanProgress(currentPath: url.path, discoveredCleanableBytes: progressState.cleanableAccumulator))
+        }
+        return total
+    }
+
+    private func fallbackCacheDisplayName(for rawName: String) -> String {
+        if rawName.localizedCaseInsensitiveContains("cache") || rawName.contains("缓存") {
+            return rawName
+        }
+        if rawName.contains(".") {
+            return rawName
+        }
+        return "\(rawName) 缓存"
+    }
+
+    private func isIgnoredAppCacheEntry(_ url: URL) -> Bool {
+        let name = url.lastPathComponent
+        return name == "." || name == ".." || name == ".DS_Store" || name == ".localized"
+    }
+
+    private func makeAppMetadataIndex(home: URL) -> AppMetadataIndex {
+        let appSearchRoots = [
+            URL(fileURLWithPath: "/Applications", isDirectory: true),
+            URL(fileURLWithPath: "/System/Applications", isDirectory: true),
+            URL(fileURLWithPath: "/System/Applications/Utilities", isDirectory: true),
+            home.appendingPathComponent("Applications", isDirectory: true)
+        ]
+
+        var appsByBundleIdentifier: [String: InstalledAppInfo] = [:]
+        var appsByName: [String: InstalledAppInfo] = [:]
+        var visitedPaths: Set<String> = []
+
+        for rootURL in appSearchRoots where fileManager.fileExists(atPath: rootURL.path) {
+            for appURL in appBundleURLs(in: rootURL) where !visitedPaths.contains(appURL.path) {
+                visitedPaths.insert(appURL.path)
+                guard let appInfo = installedAppInfo(at: appURL) else { continue }
+
+                let bundleKey = appInfo.bundleIdentifier.lowercased()
+                if appsByBundleIdentifier[bundleKey] == nil {
+                    appsByBundleIdentifier[bundleKey] = appInfo
+                }
+
+                let displayNameKey = AppMetadataIndex.normalizedName(appInfo.displayName)
+                if !displayNameKey.isEmpty, appsByName[displayNameKey] == nil {
+                    appsByName[displayNameKey] = appInfo
+                }
+
+                let fileNameKey = AppMetadataIndex.normalizedName(appURL.deletingPathExtension().lastPathComponent)
+                if !fileNameKey.isEmpty, appsByName[fileNameKey] == nil {
+                    appsByName[fileNameKey] = appInfo
+                }
+            }
+        }
+
+        return AppMetadataIndex(
+            appsByBundleIdentifier: appsByBundleIdentifier,
+            appsByName: appsByName,
+            bundleIdentifiersByLength: appsByBundleIdentifier.keys.sorted { $0.count > $1.count }
+        )
+    }
+
+    private func appBundleURLs(in rootURL: URL) -> [URL] {
+        if rootURL.pathExtension.localizedCaseInsensitiveCompare("app") == .orderedSame {
+            return [rootURL]
+        }
+
+        guard let enumerator = fileManager.enumerator(
+            at: rootURL,
+            includingPropertiesForKeys: [.isDirectoryKey, .isPackageKey],
+            options: [.skipsHiddenFiles, .skipsPackageDescendants],
+            errorHandler: { _, _ in true }
+        ) else {
+            return []
+        }
+
+        var appURLs: [URL] = []
+        for case let fileURL as URL in enumerator where fileURL.pathExtension.localizedCaseInsensitiveCompare("app") == .orderedSame {
+            appURLs.append(fileURL)
+        }
+        return appURLs
+    }
+
+    private func installedAppInfo(at appURL: URL) -> InstalledAppInfo? {
+        guard let bundle = Bundle(url: appURL),
+              let bundleIdentifier = bundle.bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !bundleIdentifier.isEmpty else {
+            return nil
+        }
+
+        let displayName = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
+            ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
+            ?? appURL.deletingPathExtension().lastPathComponent
+
+        return InstalledAppInfo(bundleIdentifier: bundleIdentifier, displayName: displayName, appPath: appURL.path)
+    }
+
     private func makeDeveloperCategory(home: URL) -> StorageCategory {
         let defs: [(String, String, String, Bool)] = [
             ("Xcode DerivedData", home.appendingPathComponent("Library/Developer/Xcode/DerivedData").path, "hammer.circle.fill", true),
             ("Xcode Archives", home.appendingPathComponent("Library/Developer/Xcode/Archives").path, "archivebox.fill", true),
             ("iOS Simulators", home.appendingPathComponent("Library/Developer/CoreSimulator").path, "iphone.gen3", false),
             ("Homebrew", "/opt/homebrew", "terminal.fill", false),
-            ("CocoaPods Cache", home.appendingPathComponent("Library/Caches/CocoaPods").path, "tray.full.fill", true),
             ("SwiftPM Cache", home.appendingPathComponent(".swiftpm").path, "shippingbox.circle.fill", true),
             ("Gradle Cache", home.appendingPathComponent(".gradle/caches").path, "bolt.circle.fill", true),
             ("Maven Repository Cache", home.appendingPathComponent(".m2/repository").path, "shippingbox.circle.fill", true),
@@ -320,25 +683,13 @@ struct StorageScanner {
             ("node-gyp Cache", home.appendingPathComponent(".node-gyp").path, "wrench.and.screwdriver.fill", true),
             ("Expo Cache", home.appendingPathComponent(".expo").path, "shippingbox.circle.fill", true),
             ("Electron Cache", home.appendingPathComponent(".electron").path, "bolt.horizontal.circle.fill", true),
-            ("Playwright Cache", home.appendingPathComponent("Library/Caches/ms-playwright").path, "globe", true),
-            ("Cypress Cache", home.appendingPathComponent("Library/Caches/Cypress").path, "checkmark.seal.fill", true),
-            ("Puppeteer Cache", home.appendingPathComponent("Library/Caches/puppeteer").path, "network", true),
-            ("Vite Cache", home.appendingPathComponent("Library/Caches/vite").path, "bolt.fill", true),
-            ("Turborepo Cache", home.appendingPathComponent("Library/Caches/turbo").path, "speedometer", true),
-            ("Next.js Cache", home.appendingPathComponent("Library/Caches/next-swc").path, "shippingbox.circle.fill", true),
             ("Unity Cache", home.appendingPathComponent("Library/Unity").path, "cube.transparent.fill", true),
             ("Unity Hub Cache", home.appendingPathComponent("Library/Application Support/UnityHub/Cache").path, "cube.transparent.fill", true),
-            ("Android Studio Cache", home.appendingPathComponent("Library/Caches/Google/AndroidStudio").path, "ladybug.fill", true),
-            ("IntelliJ Cache", home.appendingPathComponent("Library/Caches/JetBrains").path, "brain.head.profile", true),
             ("VS Code Cache", home.appendingPathComponent("Library/Application Support/Code/Cache").path, "chevron.left.forwardslash.chevron.right", true),
             ("Cursor Cache", home.appendingPathComponent("Library/Application Support/Cursor/Cache").path, "cursorarrow.rays", true),
             ("Figma Cache", home.appendingPathComponent("Library/Application Support/Figma/Cache").path, "paintpalette.fill", true),
-            ("Sketch Cache", home.appendingPathComponent("Library/Caches/com.bohemiancoding.sketch3").path, "pencil.and.ruler.fill", true),
-            ("Adobe Common Cache", home.appendingPathComponent("Library/Caches/Adobe").path, "camera.filters", true),
-            ("Blender Cache", home.appendingPathComponent("Library/Caches/Blender").path, "fanblades.fill", true),
             ("Postman Cache", home.appendingPathComponent("Library/Application Support/Postman/Cache").path, "paperplane.fill", true),
             ("Charles Cache", home.appendingPathComponent("Library/Application Support/Charles/Cache").path, "wave.3.right.circle.fill", true),
-            ("Chrome Profile Cache", home.appendingPathComponent("Library/Caches/Google/Chrome").path, "globe", true),
             ("Slack Cache", home.appendingPathComponent("Library/Application Support/Slack/Cache").path, "message.fill", true),
             ("Notion Cache", home.appendingPathComponent("Library/Application Support/Notion/Cache").path, "doc.text.fill", true),
             ("Claude Cache", home.appendingPathComponent("Library/Application Support/Claude/Cache").path, "sparkles", true),
@@ -355,7 +706,6 @@ struct StorageScanner {
     private func makeSystemCategory(home: URL) -> StorageCategory {
         let defs: [(String, String, String, Bool)] = [
             ("系统缓存", "/Library/Caches", "internaldrive.fill", false),
-            ("用户缓存", home.appendingPathComponent("Library/Caches").path, "externaldrive.fill", true),
             ("系统日志", "/private/var/log", "doc.text.magnifyingglass", false),
             ("用户日志", home.appendingPathComponent("Library/Logs").path, "note.text", true)
         ]
@@ -380,7 +730,7 @@ struct StorageScanner {
 
     private func makeTrashCategory(home: URL) -> StorageCategory {
         let trashURL = home.appendingPathComponent(".Trash", isDirectory: true)
-        let size = directorySize(at: trashURL, countAsCleanable: true)
+        let size = trashDirectorySize(at: trashURL)
 
         let trashItem = StorageItem(
             name: "废纸篓",
@@ -411,6 +761,7 @@ struct StorageScanner {
             guard name.hasPrefix("."),
                   name != ".",
                   name != "..",
+                  name != ".Trash",
                   name != ".DS_Store",
                   name != ".localized",
                   name != ".CFUserTextEncoding" else {
@@ -433,6 +784,42 @@ struct StorageScanner {
 
     private func directorySize(at url: URL, countAsCleanable: Bool) -> Int64 {
         directorySize(atPath: url.path, countAsCleanable: countAsCleanable)
+    }
+
+    private func trashDirectorySize(at url: URL) -> Int64 {
+        guard fileManager.fileExists(atPath: url.path) else { return 0 }
+        guard let enumerator = fileManager.enumerator(
+            at: url,
+            includingPropertiesForKeys: [.isRegularFileKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey],
+            options: [],
+            errorHandler: { _, _ in true }
+        ) else {
+            return 0
+        }
+
+        var total: Int64 = 0
+        var visitedFileCount = 0
+        var lastReportedPath = url.path
+
+        for case let fileURL as URL in enumerator {
+            guard let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey]),
+                  values.isRegularFile == true else {
+                continue
+            }
+
+            let size = Int64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? 0)
+            total += size
+            progressState.cleanableAccumulator += size
+            visitedFileCount += 1
+            lastReportedPath = fileURL.path
+
+            if visitedFileCount.isMultiple(of: 200) {
+                progress?(ScanProgress(currentPath: fileURL.path, discoveredCleanableBytes: progressState.cleanableAccumulator))
+            }
+        }
+
+        progress?(ScanProgress(currentPath: lastReportedPath, discoveredCleanableBytes: progressState.cleanableAccumulator))
+        return total
     }
 
     /// 递归计算目录体积，但**不触发进度回调**，并对遍历文件数设上限。
@@ -548,4 +935,54 @@ struct StorageScanner {
 
 private final class ProgressState: @unchecked Sendable {
     var cleanableAccumulator: Int64 = 0
+}
+
+private extension String {
+    var nonEmpty: String? {
+        isEmpty ? nil : self
+    }
+}
+
+private enum CleanupHistoryStore {
+    private static let totalCleanedBytesKey = "totalCleanedBytes"
+
+    static func addCleanedBytes(_ bytes: Int64) {
+        guard bytes > 0, let storeURL else { return }
+
+        do {
+            try FileManager.default.createDirectory(
+                at: storeURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+
+            let updatedTotal = totalCleanedBytes() + bytes
+            let payload: [String: Int64] = [totalCleanedBytesKey: updatedTotal]
+            let data = try PropertyListSerialization.data(fromPropertyList: payload, format: .binary, options: 0)
+            try data.write(to: storeURL, options: .atomic)
+        } catch {
+            NSLog("Failed to save cleanup history: %@", error.localizedDescription)
+        }
+    }
+
+    private static func totalCleanedBytes() -> Int64 {
+        guard let storeURL,
+              let data = try? Data(contentsOf: storeURL),
+              let payload = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] else {
+            return 0
+        }
+
+        if let value = payload[totalCleanedBytesKey] as? Int64 {
+            return value
+        }
+        if let value = payload[totalCleanedBytesKey] as? Int {
+            return Int64(value)
+        }
+        return 0
+    }
+
+    private static var storeURL: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("CleanMac", isDirectory: true)
+            .appendingPathComponent("CleanupHistory.plist")
+    }
 }

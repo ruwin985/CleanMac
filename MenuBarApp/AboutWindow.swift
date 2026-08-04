@@ -62,7 +62,7 @@ struct AboutWindowView: View {
 
                 Spacer().frame(height: 18)
 
-                Text("CleanMac X 菜单")
+                Text("CleanMac 菜单")
                     .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
 

@@ -2,11 +2,14 @@ import SwiftUI
 
 struct LicenseStatusPill: View {
     @ObservedObject var licenseManager: LicenseManager
+    @State private var currentDate = Date()
+
+    private let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: iconName)
-            Text(licenseManager.statusText)
+            Text(statusText)
         }
         .font(.system(size: 13, weight: .bold, design: .rounded))
         .foregroundStyle(.white.opacity(0.92))
@@ -15,6 +18,24 @@ struct LicenseStatusPill: View {
         .background(.white.opacity(0.09), in: Capsule())
         .overlay { Capsule().stroke(.white.opacity(0.12), lineWidth: 1) }
         .shadow(color: .black.opacity(0.18), radius: 12, y: 8)
+        .onReceive(countdownTimer) { date in
+            currentDate = date
+            if case let .trial(expiresAt) = licenseManager.state,
+               date >= expiresAt {
+                licenseManager.refresh()
+            }
+        }
+    }
+
+    private var statusText: String {
+        switch licenseManager.state {
+        case let .trial(expiresAt):
+            return "使用剩余 \(remainingTimeText(until: expiresAt))"
+        case .licensed:
+            return "已授权"
+        case .locked:
+            return "试用已结束"
+        }
     }
 
     private var iconName: String {
@@ -26,6 +47,14 @@ struct LicenseStatusPill: View {
         case .locked:
             return "lock.fill"
         }
+    }
+
+    private func remainingTimeText(until expiresAt: Date) -> String {
+        let seconds = max(0, Int(expiresAt.timeIntervalSince(currentDate).rounded(.down)))
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        let remainingSeconds = seconds % 60
+        return String(format: "%02d:%02d:%02d", hours, minutes, remainingSeconds)
     }
 }
 
