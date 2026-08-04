@@ -16,6 +16,8 @@ targets:
   CleanMac:
     type: application
     platform: macOS
+    info:
+      path: Resources/CleanMac-Info.plist
     sources:
       - path: Sources
         excludes:
@@ -33,6 +35,7 @@ targets:
         INFOPLIST_KEY_CleanMacPaddleCheckoutURL: "https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy"
         INFOPLIST_KEY_CleanMacPurchasePriceText: "¥0.01"
         INFOPLIST_KEY_CleanMacLicensePublicKey: ""
+        INFOPLIST_KEY_CleanMacTencentSurveyURL: "https://wj.qq.com/s2/27497302/29c4/"
         CODE_SIGN_STYLE: Automatic
     scheme:
       testTargets: []

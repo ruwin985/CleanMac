@@ -10,7 +10,7 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate {
         let hostingController = NSHostingController(rootView: rootView)
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 760, height: 560),
+            contentRect: NSRect(x: 0, y: 0, width: 760, height: 632),
             styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -70,12 +70,14 @@ struct FeedbackWindowView: View {
                         Text("提供反馈")
                             .font(.system(size: 29, weight: .bold, design: .rounded))
                             .foregroundStyle(Color.primary.opacity(0.9))
-                        Text("请提供关于您问题的详细描述、建议，或漏洞报告者您的疑问。以便我们对您的诉求有更清晰的认识之后作出回复。")
+                        Text("请提供关于您问题的详细描述、建议或漏洞报告。国内用户推荐优先通过腾讯问卷提交，便于我们集中整理和跟进。")
                             .font(.system(size: 14, weight: .medium, design: .rounded))
                             .foregroundStyle(.secondary)
                             .lineSpacing(3)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+
+                    tencentSurveyEntry
 
                     VStack(spacing: 12) {
                         pickerField
@@ -96,11 +98,13 @@ struct FeedbackWindowView: View {
 
                         Spacer()
 
-                        Button("发送反馈") {
+                        Button("发送邮件") {
                             model.submit()
                         }
                         .buttonStyle(FeedbackPrimaryButtonStyle(disabled: !model.canSubmit || model.isSubmitting))
                         .disabled(!model.canSubmit || model.isSubmitting)
+                        
+                        Spacer()
                     }
                     .padding(.top, 2)
                 }
@@ -110,10 +114,49 @@ struct FeedbackWindowView: View {
             .padding(.leading, 40)
             .padding(.trailing, 28)
         }
-        .frame(minWidth: 760, minHeight: 560)
+        .frame(minWidth: 760, minHeight: 632)
         .onAppear {
             focusedField = .name
         }
+    }
+
+    private var tencentSurveyEntry: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "doc.text.magnifyingglass")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 36, height: 36)
+                .background(
+                    Circle()
+                        .fill(Color.accentColor.opacity(0.12))
+                )
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("腾讯问卷反馈")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary.opacity(0.9))
+                Text("打开浏览器提交问卷，并自动带上当前填写内容与匿名系统配置。")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            Button("打开问卷") {
+                model.openTencentSurvey()
+            }
+            .buttonStyle(FeedbackSecondaryButtonStyle())
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(.thinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.accentColor.opacity(0.20), lineWidth: 1)
+                )
+        )
     }
 
     private var pickerField: some View {
@@ -262,6 +305,10 @@ enum FeedbackCategory: String, CaseIterable {
 
 @MainActor
 final class FeedbackFormViewModel: ObservableObject {
+    private static let tencentSurveyURLInfoKey = "CleanMacTencentSurveyURL"
+    private static let tencentSurveyURLEnvironmentKey = "CLEANMAC_TENCENT_SURVEY_URL"
+    private static let defaultTencentSurveyURLString = "https://wj.qq.com/s2/27497302/29c4/"
+
     @Published var category: FeedbackCategory = .feedback
     @Published var name: String = ""
     @Published var email: String = ""
@@ -293,6 +340,18 @@ final class FeedbackFormViewModel: ObservableObject {
             guard response == .OK else { return }
             self?.attachmentURL = panel.url
         }
+    }
+
+    func openTencentSurvey() {
+        guard let surveyURL = tencentSurveyURL else {
+            statusMessage = "腾讯问卷入口尚未配置。"
+            statusIsError = true
+            return
+        }
+
+        NSWorkspace.shared.open(surveyURL)
+        statusMessage = attachmentURL == nil ? "已打开腾讯问卷，请在浏览器中提交。" : "已打开腾讯问卷，附件需在问卷页重新上传。"
+        statusIsError = false
     }
 
     func submit() {
@@ -337,18 +396,121 @@ final class FeedbackFormViewModel: ObservableObject {
     }
 
     private func diagnosticsSummary() -> String {
+        let diagnostics = feedbackDiagnostics()
+
+        return [
+            "设备名称：\(diagnostics.deviceName)",
+            "macOS：\(diagnostics.macOSVersion)",
+            "应用版本：\(diagnostics.appVersion) (\(diagnostics.build))"
+        ].joined(separator: "\n")
+    }
+
+    private var tencentSurveyURL: URL? {
+        let rawValue = configuredValue(
+            infoKey: Self.tencentSurveyURLInfoKey,
+            environmentKey: Self.tencentSurveyURLEnvironmentKey
+        ) ?? Self.defaultTencentSurveyURLString
+
+        guard var components = URLComponents(string: rawValue.trimmingCharacters(in: .whitespacesAndNewlines)),
+              let scheme = components.scheme?.lowercased(),
+              ["http", "https"].contains(scheme) else {
+            return nil
+        }
+
+        let prefillItems = tencentSurveyPrefillItems()
+        let prefillNames = Set(prefillItems.map(\.name))
+        var queryItems = components.queryItems ?? []
+        queryItems.removeAll { prefillNames.contains($0.name) }
+        queryItems.append(contentsOf: prefillItems)
+        components.queryItems = queryItems
+
+        return components.url
+    }
+
+    private func tencentSurveyPrefillItems() -> [URLQueryItem] {
+        let diagnostics = feedbackDiagnostics()
+        var values: [(String, String?)] = [
+            ("source", "cleanmac_mac_app"),
+            ("channel", "tencent_wenjuan"),
+            ("feedback_type", category.rawValue),
+            ("name", trimmedNonEmpty(name)),
+            ("email", trimmedNonEmpty(email)),
+            ("message", trimmedNonEmpty(message)),
+            ("include_diagnostics", includeDiagnostics ? "1" : "0"),
+            ("locale", Locale.current.identifier),
+            ("request_id", UUID().uuidString)
+        ]
+
+        if includeDiagnostics {
+            values.append(contentsOf: [
+                ("device_name", diagnostics.deviceName),
+                ("macos_version", diagnostics.macOSVersion),
+                ("app_version", diagnostics.appVersion),
+                ("build", diagnostics.build),
+                ("arch", diagnostics.architecture)
+            ])
+        }
+
+        if let attachmentName {
+            values.append(("attachment_name", attachmentName))
+        }
+
+        return values.compactMap { name, value in
+            guard let value, !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+            return URLQueryItem(name: name, value: value)
+        }
+    }
+
+    private func feedbackDiagnostics() -> FeedbackDiagnostics {
         let processInfo = ProcessInfo.processInfo
         let osVersion = processInfo.operatingSystemVersion
         let model = Host.current().localizedName ?? "Mac"
         let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
 
-        return [
-            "设备名称：\(model)",
-            "macOS：\(osVersion.majorVersion).\(osVersion.minorVersion).\(osVersion.patchVersion)",
-            "应用版本：\(appVersion) (\(build))"
-        ].joined(separator: "\n")
+        return FeedbackDiagnostics(
+            deviceName: model,
+            macOSVersion: "\(osVersion.majorVersion).\(osVersion.minorVersion).\(osVersion.patchVersion)",
+            appVersion: appVersion,
+            build: build,
+            architecture: Self.currentArchitecture
+        )
     }
+
+    private func configuredValue(infoKey: String, environmentKey: String) -> String? {
+        if let environmentValue = ProcessInfo.processInfo.environment[environmentKey],
+           !environmentValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return environmentValue
+        }
+        if let bundleValue = Bundle.main.object(forInfoDictionaryKey: infoKey) as? String,
+           !bundleValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return bundleValue
+        }
+        return nil
+    }
+
+    private func trimmedNonEmpty(_ value: String) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    private static var currentArchitecture: String {
+        #if arch(arm64)
+        "arm64"
+        #elseif arch(x86_64)
+        "x86_64"
+        #else
+        "unknown"
+        #endif
+    }
+}
+
+private struct FeedbackDiagnostics {
+    let deviceName: String
+    let macOSVersion: String
+    let appVersion: String
+    let build: String
+    let architecture: String
 }
 
 private struct FeedbackPrimaryButtonStyle: ButtonStyle {
@@ -364,6 +526,22 @@ private struct FeedbackPrimaryButtonStyle: ButtonStyle {
                 Capsule(style: .continuous)
                     .fill(disabled ? Color.gray.opacity(0.45) : Color.accentColor.opacity(configuration.isPressed ? 0.78 : 0.96))
                     .shadow(color: disabled ? .clear : Color.accentColor.opacity(0.22), radius: 14, y: 7)
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.spring(response: 0.24, dampingFraction: 0.82), value: configuration.isPressed)
+    }
+}
+
+private struct FeedbackSecondaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 13, weight: .bold, design: .rounded))
+            .foregroundStyle(Color.accentColor)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(Color.accentColor.opacity(configuration.isPressed ? 0.16 : 0.10))
             )
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.spring(response: 0.24, dampingFraction: 0.82), value: configuration.isPressed)

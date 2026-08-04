@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CleanMacLicensePublicKey</key>
+	<string>$(INFOPLIST_KEY_CleanMacLicensePublicKey)</string>
+	<key>CleanMacPaddleCheckoutURL</key>
+	<string>$(INFOPLIST_KEY_CleanMacPaddleCheckoutURL)</string>
+	<key>CleanMacPurchasePriceText</key>
+	<string>$(INFOPLIST_KEY_CleanMacPurchasePriceText)</string>
+	<key>CleanMacTencentSurveyURL</key>
+	<string>$(INFOPLIST_KEY_CleanMacTencentSurveyURL)</string>
+	<key>LSApplicationCategoryType</key>
+	<string>$(INFOPLIST_KEY_LSApplicationCategoryType)</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>$(INFOPLIST_KEY_NSHumanReadableCopyright)</string>
+</dict>
+</plist>

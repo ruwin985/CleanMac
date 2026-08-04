@@ -194,6 +194,32 @@ export CLEANMAC_PADDLE_CHECKOUT_URL='https://your-paddle-checkout-url'
 export CLEANMAC_LICENSE_PUBLIC_KEY='base64-public-key'
 ```
 
+## 用户反馈
+
+当前反馈窗口保留邮件反馈，同时新增了腾讯问卷入口，适合国内用户优先提交反馈。
+
+### 腾讯问卷配置
+
+1. 在腾讯问卷创建 CleanMac 反馈表单，并复制公开填写链接（通常形如 `https://wj.qq.com/s2/...`）
+2. 将链接填入 `project.yml` 的 `INFOPLIST_KEY_CleanMacTencentSurveyURL`
+3. 如果直接维护 Xcode 工程，也同步更新 `CleanMac.xcodeproj` 中的 `INFOPLIST_KEY_CleanMacTencentSurveyURL`
+4. 重新构建后，反馈窗口中的「打开问卷」会跳转到腾讯问卷
+
+打开问卷时，应用会通过 URL 参数自动带上当前填写内容和匿名诊断信息，便于在腾讯问卷里做字段预填或后台筛选：
+
+- `source`：固定为 `cleanmac_mac_app`
+- `channel`：固定为 `tencent_wenjuan`
+- `feedback_type`、`name`、`email`、`message`：当前反馈表单内容
+- `include_diagnostics`、`device_name`、`macos_version`、`app_version`、`build`、`arch`、`locale`：匿名环境信息
+- `request_id`：本次打开问卷生成的一次性请求标识
+- `attachment_name`：已选择附件的文件名；实际附件仍需用户在腾讯问卷页面重新上传
+
+SwiftPM/命令行调试时也可以通过环境变量覆盖腾讯问卷链接：
+
+```bash
+export CLEANMAC_TENCENT_SURVEY_URL='https://wj.qq.com/s2/your-form-id/'
+```
+
 ### 授权码生成
 
 客户端不会内置 Paddle API 密钥；购买成功后需要由你通过 Paddle Webhook、后台服务或人工流程生成授权码并发给用户。

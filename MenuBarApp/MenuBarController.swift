@@ -71,6 +71,13 @@ final class MenuBarController: NSObject {
             lowDiskPopover?.performClose(sender)
             return
         }
+
+        if shouldShowLowDiskPromptToday {
+            popover.performClose(sender)
+            showLowDiskPrompt(relativeTo: button)
+            return
+        }
+
         if popover.isShown {
             popover.performClose(sender)
         } else {
@@ -186,7 +193,7 @@ final class MenuBarController: NSObject {
         }
 
         lowDiskPromptTimer?.invalidate()
-        lowDiskPromptTimer = Timer.scheduledTimer(withTimeInterval: 30 * 60, repeats: true) { [weak self] _ in
+        lowDiskPromptTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.showLowDiskPromptIfNeeded()
             }
@@ -195,12 +202,13 @@ final class MenuBarController: NSObject {
 
     private func showLowDiskPromptIfNeeded() {
         guard let button = statusItem.button,
-              systemMonitor.availableDiskBytes > 0,
-              systemMonitor.availableDiskBytes < Self.lowDiskThresholdBytes,
               popover?.isShown != true,
-              lowDiskPopover?.isShown != true,
-              !hasShownLowDiskPromptToday() else { return }
+              shouldShowLowDiskPromptToday else { return }
 
+        showLowDiskPrompt(relativeTo: button)
+    }
+
+    private func showLowDiskPrompt(relativeTo button: NSStatusBarButton) {
         markLowDiskPromptShownToday()
 
         let prompt = lowDiskPopover ?? makeLowDiskPopover()
@@ -218,11 +226,18 @@ final class MenuBarController: NSObject {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    private var shouldShowLowDiskPromptToday: Bool {
+        systemMonitor.availableDiskBytes > 0
+            && systemMonitor.availableDiskBytes < Self.lowDiskThresholdBytes
+            && lowDiskPopover?.isShown != true
+            && !hasShownLowDiskPromptToday()
+    }
+
     private func makeLowDiskPopover() -> NSPopover {
         let popover = NSPopover()
         popover.behavior = .transient
         popover.animates = true
-        popover.contentSize = NSSize(width: 676, height: 404)
+        popover.contentSize = NSSize(width: 338, height: 202)
         return popover
     }
 
@@ -570,20 +585,20 @@ struct LowDiskSpacePromptView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 26) {
-                VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 13) {
+                VStack(alignment: .leading, spacing: 9) {
                     Text("磁盘空间快用完了！")
-                        .font(.system(size: 30, weight: .heavy, design: .rounded))
+                        .font(.system(size: 15, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white)
 
                     Text("启动 CleanMac 移除不需要的项目并恢复空间。")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
                         .foregroundStyle(Color(red: 0.65, green: 0.80, blue: 0.96))
                 }
 
-                HStack(spacing: 30) {
+                HStack(spacing: 15) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        RoundedRectangle(cornerRadius: 3, style: .continuous)
                             .fill(
                                 LinearGradient(
                                     colors: [
@@ -594,29 +609,29 @@ struct LowDiskSpacePromptView: View {
                                     endPoint: .bottom
                                 )
                             )
-                            .shadow(color: .black.opacity(0.22), radius: 2, y: 1)
+                            .shadow(color: .black.opacity(0.22), radius: 1, y: 0.5)
 
                         Image(systemName: "apple.logo")
-                            .font(.system(size: 34, weight: .medium))
+                            .font(.system(size: 17, weight: .medium))
                             .foregroundStyle(.black.opacity(0.24))
 
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
                             .fill(.black.opacity(0.28))
-                            .frame(height: 7)
-                            .offset(y: 35)
+                            .frame(height: 4)
+                            .offset(y: 18)
                     }
-                    .frame(width: 66, height: 78)
+                    .frame(width: 33, height: 39)
 
-                    VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 7) {
                         HStack(alignment: .firstTextBaseline) {
                             Text(diskName)
-                                .font(.system(size: 27, weight: .heavy, design: .rounded))
+                                .font(.system(size: 14, weight: .heavy, design: .rounded))
                                 .foregroundStyle(.white)
 
                             Spacer()
 
                             Text("可用： \(availableText)")
-                                .font(.system(size: 27, weight: .heavy, design: .rounded))
+                                .font(.system(size: 14, weight: .heavy, design: .rounded))
                                 .foregroundStyle(.white)
                         }
 
@@ -639,13 +654,13 @@ struct LowDiskSpacePromptView: View {
                                     .frame(width: max(10, proxy.size.width * usedRatio))
                             }
                         }
-                        .frame(height: 12)
+                        .frame(height: 6)
                     }
                 }
-                .padding(.leading, 5)
+                .padding(.leading, 3)
             }
-            .padding(.top, 42)
-            .padding(.horizontal, 40)
+            .padding(.top, 21)
+            .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
             Divider()
@@ -654,11 +669,11 @@ struct LowDiskSpacePromptView: View {
             HStack {
                 Button(action: dismiss) {
                     Text("忽略")
-                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white.opacity(0.95))
-                        .frame(width: 136, height: 40)
+                        .frame(width: 68, height: 20)
                         .background(
-                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            RoundedRectangle(cornerRadius: 5, style: .continuous)
                                 .fill(Color(red: 0.37, green: 0.63, blue: 0.82).opacity(0.9))
                         )
                 }
@@ -668,11 +683,11 @@ struct LowDiskSpacePromptView: View {
 
                 Button(action: openApp) {
                     Text("打开 CleanMac")
-                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white)
-                        .frame(width: 256, height: 40)
+                        .frame(width: 128, height: 20)
                         .background(
-                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            RoundedRectangle(cornerRadius: 5, style: .continuous)
                                 .fill(
                                     LinearGradient(
                                         colors: [
@@ -687,11 +702,11 @@ struct LowDiskSpacePromptView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 40)
-            .frame(height: 110)
+            .padding(.horizontal, 20)
+            .frame(height: 55)
             .background(Color(red: 0.07, green: 0.34, blue: 0.48).opacity(0.72))
         }
-        .frame(width: 676, height: 404)
+        .frame(width: 338, height: 202)
         .background(
             LinearGradient(
                 colors: [

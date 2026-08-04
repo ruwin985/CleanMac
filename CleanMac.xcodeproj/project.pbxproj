@@ -56,6 +56,7 @@
 		324DE060C8DAC7622A45A6DC /* StorageDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageDashboardView.swift; sourceTree = "<group>"; };
 		3C9C1E410E0BB4ECEDAD2CA6 /* CleanMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanMacApp.swift; sourceTree = "<group>"; };
 		3F9AEB78F905ECF634ACCCB5 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
+		46E7A6A73AC24F3AB1263561 /* CleanMac-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CleanMac-Info.plist"; sourceTree = "<group>"; };
 		60D396C34DE5C82563F0F489 /* StorageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageModels.swift; sourceTree = "<group>"; };
 		6F0EE7DA2642B1B4CAE28101 /* StorageScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageScanner.swift; sourceTree = "<group>"; };
 		6FDA6E0E38904FFC080B8EF8 /* AppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsView.swift; sourceTree = "<group>"; };
@@ -169,6 +170,7 @@
 			isa = PBXGroup;
 			children = (
 				181DB067E9C456767AAC06C0 /* Assets.xcassets */,
+				46E7A6A73AC24F3AB1263561 /* CleanMac-Info.plist */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -414,6 +416,8 @@
 				INFOPLIST_KEY_CleanMacLicensePublicKey = "";
 				INFOPLIST_KEY_CleanMacPaddleCheckoutURL = "https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy";
 				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥0.01";
+				INFOPLIST_KEY_CleanMacTencentSurveyURL = "https://wj.qq.com/s2/27497302/29c4/";
+				INFOPLIST_FILE = "Resources/CleanMac-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -434,6 +438,8 @@
 				INFOPLIST_KEY_CleanMacLicensePublicKey = "";
 				INFOPLIST_KEY_CleanMacPaddleCheckoutURL = "https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy";
 				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥0.01";
+				INFOPLIST_KEY_CleanMacTencentSurveyURL = "https://wj.qq.com/s2/27497302/29c4/";
+				INFOPLIST_FILE = "Resources/CleanMac-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
