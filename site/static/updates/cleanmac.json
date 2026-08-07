@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "build": 1,
+  "minimumSystemVersion": "13.0",
+  "downloadURL": "https://ruwin985.github.io/CleanMac/downloads/CleanMac.dmg",
+  "releaseNotesURL": "https://ruwin985.github.io/CleanMac/changelog/",
+  "title": "CleanMac 1.0.0 已发布",
+  "summary": "CleanMac 1.0.0 更新已发布，建议下载最新版本以获得最新修复和体验优化。",
+  "isCritical": false,
+  "publishedAt": "2026-08-07T02:44:13Z"
+}

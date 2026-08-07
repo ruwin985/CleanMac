@@ -7,6 +7,12 @@ CONFIGURATION="Release"
 APP_NAME="CleanMac"
 BUNDLE_ID="com.zyb.CleanMac"
 VERSION="${VERSION:-1.0.0}"
+BUILD_NUMBER="${BUILD_NUMBER:-1}"
+MINIMUM_SYSTEM_VERSION="${MINIMUM_SYSTEM_VERSION:-13.0}"
+SITE_BASE_URL="${SITE_BASE_URL:-https://ruwin985.github.io/CleanMac}"
+RELEASE_NOTES_URL="${RELEASE_NOTES_URL:-$SITE_BASE_URL/changelog/}"
+RELEASE_SUMMARY="${RELEASE_SUMMARY:-CleanMac $VERSION 更新已发布，建议下载最新版本以获得最新修复和体验优化。}"
+UPDATE_CRITICAL="${UPDATE_CRITICAL:-false}"
 BUILD_DIR="${BUILD_DIR:-build/universal}"
 ARCHIVE_PATH="$BUILD_DIR/$APP_NAME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
@@ -59,6 +65,35 @@ SITE_DOWNLOADS_DIR="site/static/downloads"
 mkdir -p "$SITE_DOWNLOADS_DIR"
 cp -f "$DMG_PATH" "$SITE_DOWNLOADS_DIR/$APP_NAME.dmg"
 
+SITE_UPDATES_DIR="site/static/updates"
+UPDATE_MANIFEST_PATH="$SITE_UPDATES_DIR/cleanmac.json"
+PUBLISHED_AT="${PUBLISHED_AT:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}"
+mkdir -p "$SITE_UPDATES_DIR"
+
+export VERSION BUILD_NUMBER MINIMUM_SYSTEM_VERSION SITE_BASE_URL RELEASE_NOTES_URL RELEASE_SUMMARY UPDATE_CRITICAL PUBLISHED_AT UPDATE_MANIFEST_PATH
+python3 <<'PY'
+import json
+import os
+from pathlib import Path
+
+site_base_url = os.environ["SITE_BASE_URL"].rstrip("/")
+manifest = {
+    "version": os.environ["VERSION"],
+    "build": int(os.environ["BUILD_NUMBER"]),
+    "minimumSystemVersion": os.environ["MINIMUM_SYSTEM_VERSION"],
+    "downloadURL": f"{site_base_url}/downloads/CleanMac.dmg",
+    "releaseNotesURL": os.environ["RELEASE_NOTES_URL"],
+    "title": f"CleanMac {os.environ['VERSION']} 已发布",
+    "summary": os.environ["RELEASE_SUMMARY"],
+    "isCritical": os.environ["UPDATE_CRITICAL"].lower() == "true",
+    "publishedAt": os.environ["PUBLISHED_AT"],
+}
+
+path = Path(os.environ["UPDATE_MANIFEST_PATH"])
+path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+PY
+
 echo "\nUniversal app: $APP_PATH"
 echo "Universal dmg: $DMG_PATH"
 echo "Site download: $SITE_DOWNLOADS_DIR/$APP_NAME.dmg"
+echo "Update manifest: $UPDATE_MANIFEST_PATH"

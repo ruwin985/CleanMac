@@ -117,6 +117,17 @@ xcodebuild -project CleanMac.xcodeproj -scheme CleanMac -configuration Debug -de
 bash scripts/export-universal-dmg.sh
 ```
 
+### 版本更新提示
+
+App 启动后会检查官网静态更新清单：
+
+- 清单地址：`https://ruwin985.github.io/CleanMac/updates/cleanmac.json`
+- 官网源文件：`site/static/updates/cleanmac.json`
+- 下载地址：`site/static/downloads/CleanMac.dmg`
+- 更新日志：`site/content/changelog.md`
+
+发布新版本时，替换官网 DMG 并把更新清单中的 `version` / `build` 提高到大于当前已安装版本；老版本用户下次启动 CleanMac 后会看到“立即下载 / 稍后提醒 / 查看更新说明”的提示。
+
 ## 支付、授权与反馈
 
 CleanMac 当前包含试用、授权激活、购买入口和用户反馈入口等能力。涉及价格调整、Paddle 配置、授权码生成、反馈渠道配置等内部运营步骤，统一维护在内部说明文档中，不放在公开 README 中。
