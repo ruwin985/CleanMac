@@ -102,7 +102,7 @@ struct LicenseGateOverlay: View {
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.64))
 
-                    TextField("CM1-…", text: $licenseCode)
+                    TextField("CM-XXXXXXX-XXXXXXX-XXXXXXX", text: $licenseCode)
                         .textFieldStyle(.plain)
                         .font(.system(size: 15, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.white)

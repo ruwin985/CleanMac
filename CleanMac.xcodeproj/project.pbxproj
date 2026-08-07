@@ -325,6 +325,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -413,12 +414,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_KEY_CleanMacLicensePublicKey = "";
+				INFOPLIST_FILE = "Resources/CleanMac-Info.plist";
+				INFOPLIST_KEY_CleanMacLicenseValidationKey = "XJ2OZ+i3UHCVar7NMCZ2RMoTnC9hTuf6Q0k+Lcrl7FA";
 				INFOPLIST_KEY_CleanMacPaddleCheckoutURL = "https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy";
 				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥0.01";
 				INFOPLIST_KEY_CleanMacTencentSurveyURL = "https://wj.qq.com/s2/27497302/29c4/";
-				INFOPLIST_FILE = "Resources/CleanMac-Info.plist";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -435,12 +436,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_KEY_CleanMacLicensePublicKey = "";
+				INFOPLIST_FILE = "Resources/CleanMac-Info.plist";
+				INFOPLIST_KEY_CleanMacLicenseValidationKey = "XJ2OZ+i3UHCVar7NMCZ2RMoTnC9hTuf6Q0k+Lcrl7FA";
 				INFOPLIST_KEY_CleanMacPaddleCheckoutURL = "https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy";
 				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥0.01";
 				INFOPLIST_KEY_CleanMacTencentSurveyURL = "https://wj.qq.com/s2/27497302/29c4/";
-				INFOPLIST_FILE = "Resources/CleanMac-Info.plist";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -457,6 +458,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (

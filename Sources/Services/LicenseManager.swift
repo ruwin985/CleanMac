@@ -33,8 +33,14 @@ final class LicenseManager: ObservableObject {
     private static let checkoutURLEnvironmentKey = "CLEANMAC_PADDLE_CHECKOUT_URL"
     private static let purchasePriceTextInfoKey = "CleanMacPurchasePriceText"
     private static let purchasePriceTextEnvironmentKey = "CLEANMAC_PURCHASE_PRICE_TEXT"
-    private static let publicKeyInfoKey = "CleanMacLicensePublicKey"
-    private static let publicKeyEnvironmentKey = "CLEANMAC_LICENSE_PUBLIC_KEY"
+    private static let validationKeyInfoKey = "CleanMacLicenseValidationKey"
+    private static let validationKeyEnvironmentKey = "CLEANMAC_LICENSE_VALIDATION_KEY"
+    private static let shortLicenseVersion: UInt8 = 3
+    private static let shortLicensePayloadByteCount = 13
+    private static let shortLicenseSignedByteCount = 8
+    private static let shortLicenseTagByteCount = 5
+    private static let shortLicenseSecondsPerDay: TimeInterval = 86_400
+    private static let shortLicenseHMACContext = "CleanMac.short-license.v3"
 
     init() {
         _ = ensureTrialStartedAt()
@@ -126,7 +132,7 @@ final class LicenseManager: ObservableObject {
     func activate(with rawCode: String) {
         do {
             let licenseInfo = try validateLicenseCode(rawCode)
-            store(rawCode.trimmingCharacters(in: .whitespacesAndNewlines), for: Self.licenseCodeAccount)
+            store(rawCode.filter { !$0.isWhitespace }, for: Self.licenseCodeAccount)
             activationErrorMessage = nil
             state = .licensed(licenseInfo)
         } catch {
@@ -146,47 +152,66 @@ final class LicenseManager: ObservableObject {
     }
 
     private func validateLicenseCode(_ rawCode: String) throws -> LicenseInfo {
-        let trimmed = rawCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        let code = trimmed.hasPrefix("CM1-") ? String(trimmed.dropFirst(4)) : trimmed
-        let parts = code.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
-        guard parts.count == 2 else {
+        let normalized = rawCode
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+            .filter { !$0.isWhitespace }
+        guard normalized.hasPrefix("CM-") else {
             throw LicenseValidationError.invalidFormat
         }
 
-        guard let payloadData = Data(base64URLEncoded: String(parts[0])),
-              let signatureData = Data(base64URLEncoded: String(parts[1])) else {
+        let encodedPayload = normalized.dropFirst(3).filter { $0 != "-" }
+        guard encodedPayload.count == 21,
+              let payloadData = Data(licenseBase32Encoded: String(encodedPayload)),
+              payloadData.count == Self.shortLicensePayloadByteCount,
+              payloadData.first == Self.shortLicenseVersion else {
             throw LicenseValidationError.invalidFormat
         }
 
-        guard let publicKeyString = configuredValue(
-            infoKey: Self.publicKeyInfoKey,
-            environmentKey: Self.publicKeyEnvironmentKey
-        ),
-              let publicKeyData = Data(base64URLEncoded: publicKeyString),
-              publicKeyData.count == 32 else {
-            throw LicenseValidationError.missingPublicKey
-        }
-
-        let publicKey = try Curve25519.Signing.PublicKey(rawRepresentation: publicKeyData)
-        guard publicKey.isValidSignature(signatureData, for: payloadData) else {
+        let signedPayload = payloadData.prefix(Self.shortLicenseSignedByteCount)
+        let signatureTag = payloadData.suffix(Self.shortLicenseTagByteCount)
+        let expectedTag = try shortLicenseTag(for: signedPayload)
+        guard Data(signatureTag).constantTimeEquals(expectedTag) else {
             throw LicenseValidationError.invalidSignature
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let licenseInfo = try decoder.decode(LicenseInfo.self, from: payloadData)
-        guard licenseInfo.version == 1,
-              licenseInfo.product == Self.productIdentifier,
-              !licenseInfo.transactionID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw LicenseValidationError.invalidPayload
+        let issuedAtDay = payloadData[1..<3].reduce(UInt16(0)) { result, byte in
+            (result << 8) | UInt16(byte)
         }
-
+        let issuedAt = Date(timeIntervalSince1970: TimeInterval(issuedAtDay) * Self.shortLicenseSecondsPerDay)
         let futureGracePeriod: TimeInterval = 24 * 60 * 60
-        guard licenseInfo.issuedAt <= Date().addingTimeInterval(futureGracePeriod) else {
+        guard issuedAt <= Date().addingTimeInterval(futureGracePeriod) else {
             throw LicenseValidationError.invalidPayload
         }
 
-        return licenseInfo
+        let licenseID = payloadData[3..<8]
+            .map { String(format: "%02x", $0) }
+            .joined()
+
+        return LicenseInfo(
+            version: Int(Self.shortLicenseVersion),
+            product: Self.productIdentifier,
+            transactionID: "cm-\(licenseID)",
+            email: nil,
+            issuedAt: issuedAt
+        )
+    }
+
+    private func shortLicenseTag(for payloadData: Data.SubSequence) throws -> Data {
+        guard let validationKeyString = configuredValue(
+            infoKey: Self.validationKeyInfoKey,
+            environmentKey: Self.validationKeyEnvironmentKey
+        ),
+              let validationKeyData = Data(base64URLEncoded: validationKeyString),
+              validationKeyData.count >= 16 else {
+            throw LicenseValidationError.missingValidationKey
+        }
+
+        let key = SymmetricKey(data: validationKeyData)
+        var signedData = Data(Self.shortLicenseHMACContext.utf8)
+        signedData.append(contentsOf: payloadData)
+        let authenticationCode = HMAC<SHA256>.authenticationCode(for: signedData, using: key)
+        return Data(Data(authenticationCode).prefix(Self.shortLicenseTagByteCount))
     }
 
     private func storedString(for account: String) -> String? {
@@ -219,16 +244,16 @@ private extension String {
 
 private enum LicenseValidationError: LocalizedError {
     case invalidFormat
-    case missingPublicKey
+    case missingValidationKey
     case invalidSignature
     case invalidPayload
 
     var errorDescription: String? {
         switch self {
         case .invalidFormat:
-            return "授权码格式不正确，请粘贴完整的 CM1 授权码。"
-        case .missingPublicKey:
-            return "授权公钥尚未配置，无法验证授权码。"
+            return "授权码格式不正确，请粘贴完整的 CM 授权码。"
+        case .missingValidationKey:
+            return "授权校验密钥尚未配置，无法验证授权码。"
         case .invalidSignature:
             return "授权码验证失败，请确认没有复制错字符。"
         case .invalidPayload:
@@ -285,5 +310,40 @@ private extension Data {
             base64 += String(repeating: "=", count: paddingLength)
         }
         self.init(base64Encoded: base64)
+    }
+
+    init?(licenseBase32Encoded string: String) {
+        let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
+        let lookup = Dictionary(uniqueKeysWithValues: alphabet.enumerated().map { ($0.element, UInt8($0.offset)) })
+        var bits = 0
+        var buffer = 0
+        var output = Data()
+
+        for character in string {
+            guard let value = lookup[character] else { return nil }
+            buffer = (buffer << 5) | Int(value)
+            bits += 5
+
+            while bits >= 8 {
+                bits -= 8
+                output.append(UInt8((buffer >> bits) & 0xFF))
+                buffer &= (1 << bits) - 1
+            }
+        }
+
+        if bits > 0 {
+            guard buffer == 0 else { return nil }
+        }
+
+        self = output
+    }
+
+    func constantTimeEquals(_ other: Data) -> Bool {
+        guard count == other.count else { return false }
+        var difference: UInt8 = 0
+        for index in indices {
+            difference |= self[index] ^ other[index]
+        }
+        return difference == 0
     }
 }

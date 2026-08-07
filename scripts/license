@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./scripts/license txn_123
+  ./scripts/license internal-free-20260807 10
+
+Output format:
+  CM-XXXXXXX-XXXXXXX-XXXXXXX
+
+Batch internal-free-YYYYMMDD commands also append to:
+  docs/internal-free-license-codes-YYYYMMDD.md
+EOF
+}
+
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+unquote() {
+  local value
+  value="$(trim "$1")"
+  if [[ ${#value} -ge 2 ]]; then
+    local first="${value:0:1}"
+    local last="${value: -1}"
+    if [[ "$first" == "$last" && ( "$first" == "'" || "$first" == '"' ) ]]; then
+      value="${value:1:${#value}-2}"
+    fi
+  fi
+  printf '%s' "$value"
+}
+
+license_key() {
+  if [[ -n "${CLEANMAC_LICENSE_SIGNING_KEY:-}" ]]; then
+    printf '%s\n' "$CLEANMAC_LICENSE_SIGNING_KEY"
+    return 0
+  fi
+  if [[ -n "${CLEANMAC_LICENSE_VALIDATION_KEY:-}" ]]; then
+    printf '%s\n' "$CLEANMAC_LICENSE_VALIDATION_KEY"
+    return 0
+  fi
+  if [[ ! -f .cleanmac-license.env ]]; then
+    return 1
+  fi
+
+  local line name value
+  while IFS= read -r line; do
+    line="$(trim "$line")"
+    [[ -z "$line" || "$line" == \#* || "$line" != *=* ]] && continue
+    name="$(trim "${line%%=*}")"
+    if [[ "$name" == "CLEANMAC_LICENSE_SIGNING_KEY" || "$name" == "CLEANMAC_LICENSE_VALIDATION_KEY" ]]; then
+      value="$(unquote "${line#*=}")"
+      [[ -n "$value" ]] && printf '%s\n' "$value" && return 0
+    fi
+  done < .cleanmac-license.env
+
+  return 1
+}
+
+ensure_internal_codes_file() {
+  local output_file="$1"
+  local generated_date="$2"
+  local key="$3"
+
+  [[ -f "$output_file" ]] && return 0
+
+  mkdir -p docs
+  {
+    echo "# CleanMac 内部免费短授权码"
+    echo
+    echo "创建日期：${generated_date}"
+    echo "用途：内部用户免费授权码"
+    echo '格式：`CM-XXXXXXX-XXXXXXX-XXXXXXX`'
+    echo
+    echo "> 注意：本文件包含可激活 App 的授权码和签发密钥，只保存在本机，不要提交到 git 或公开传播。"
+    echo
+    echo "## 授权校验密钥"
+    echo
+    echo "客户端配置使用同一个校验密钥："
+    echo
+    echo '```text'
+    echo "$key"
+    echo '```'
+    echo
+    echo "## 授权签发密钥"
+    echo
+    echo "后续生成授权码时使用："
+    echo
+    echo '```bash'
+    echo "export CLEANMAC_LICENSE_SIGNING_KEY='$key'"
+    echo '```'
+  } > "$output_file"
+  chmod 600 "$output_file"
+}
+
+append_internal_codes_file() {
+  local transaction="$1"
+  local count="$2"
+  local generated_codes="$3"
+
+  if [[ ! "$transaction" =~ ^internal-free-([0-9]{8})$ ]]; then
+    return 1
+  fi
+
+  local stamp="${BASH_REMATCH[1]}"
+  local generated_date="${stamp:0:4}-${stamp:4:2}-${stamp:6:2}"
+  local output_file="docs/internal-free-license-codes-${stamp}.md"
+  local key="$(license_key)"
+  local generated_at="$(date '+%Y-%m-%d %H:%M:%S')"
+
+  ensure_internal_codes_file "$output_file" "$generated_date" "$key"
+
+  {
+    echo
+    echo "## 授权码批次 ${generated_at}"
+    echo
+    echo "批次标识：\`${transaction}\`"
+    echo "数量：${count}"
+    echo
+    echo "| 序号 | Transaction ID | 授权码 |"
+    echo "| --- | --- | --- |"
+    while IFS=$'\t' read -r index transaction_id code; do
+      [[ -z "${index:-}" || -z "${transaction_id:-}" || -z "${code:-}" ]] && continue
+      printf '| %s | `%s` | `%s` |\n' "$index" "$transaction_id" "$code"
+    done <<< "$generated_codes"
+  } >> "$output_file"
+  chmod 600 "$output_file"
+
+  printf '%s\n' "$output_file"
+  return 0
+}
+
+if [[ $# -eq 0 || "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  usage
+  exit 0
+fi
+
+transaction="$1"
+shift
+
+if [[ $# -eq 0 ]]; then
+  exec ./scripts/generate-license-code.swift --transaction "$transaction"
+fi
+
+if [[ $# -eq 1 && "$1" =~ ^[0-9]+$ ]]; then
+  count="$1"
+  generated_codes="$(./scripts/generate-license-code.swift --transaction "$transaction" --count "$count")"
+  printf '%s\n' "$generated_codes"
+  if output_file="$(append_internal_codes_file "$transaction" "$count" "$generated_codes")"; then
+    printf '已追加：%s\n' "$output_file"
+  fi
+  exit 0
+fi
+
+exec ./scripts/generate-license-code.swift --transaction "$transaction" "$@"

@@ -20,8 +20,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>CleanMacLicensePublicKey</key>
-	<string>$(INFOPLIST_KEY_CleanMacLicensePublicKey)</string>
+	<key>CleanMacLicenseValidationKey</key>
+	<string>$(INFOPLIST_KEY_CleanMacLicenseValidationKey)</string>
 	<key>CleanMacPaddleCheckoutURL</key>
 	<string>$(INFOPLIST_KEY_CleanMacPaddleCheckoutURL)</string>
 	<key>CleanMacPurchasePriceText</key>

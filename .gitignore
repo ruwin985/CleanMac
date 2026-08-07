@@ -25,3 +25,12 @@ build/
 # Local Paddle API credentials
 .paddle.env
 .paddle.sandbox.env
+
+# Local license signing credentials
+.cleanmac-license.env
+
+# Local internal operations notes
+docs/internal-operations.md
+
+# Local generated license codes
+docs/internal-free-license-codes-*.md

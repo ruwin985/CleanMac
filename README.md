@@ -117,127 +117,10 @@ xcodebuild -project CleanMac.xcodeproj -scheme CleanMac -configuration Debug -de
 bash scripts/export-universal-dmg.sh
 ```
 
-## 支付与授权
+## 支付、授权与反馈
 
-当前工程已接入“1 天试用 + ¥0.01 一次性买断”的授权门禁：首次启动会自动开始 1 天试用；试用结束后再次启动或重新激活主窗口时，会显示全屏蒙层，要求用户输入授权码或前往 Paddle 购买。
+CleanMac 当前包含试用、授权激活、购买入口和用户反馈入口等能力。涉及价格调整、Paddle 配置、授权码生成、反馈渠道配置等内部运营步骤，统一维护在内部说明文档中，不放在公开 README 中。
 
-### Paddle 配置
-
-1. 在 Paddle 创建 `CleanMac` 产品，并配置一次性价格 `CNY 0.01`
-2. 为该价格创建或复制 Paddle Checkout 购买链接
-3. 将购买链接填入 `project.yml` 的 `INFOPLIST_KEY_CleanMacPaddleCheckoutURL`
-4. 生成授权密钥，并将公钥填入 `project.yml` 的 `INFOPLIST_KEY_CleanMacLicensePublicKey`
-5. 重新生成 Xcode 工程或同步 Info.plist 配置后打包发布
-
-当前 Paddle 目录项：
-
-- Product ID：`pro_01kz09hhw9m21dgfbj2tdvs1f3`
-- Price ID：`pri_01kz09hjt717rwqqr4nj82dy81`
-- 当前价格：`CNY 0.01`
-- App 购买入口：`https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy`
-
-站点使用 Paddle.js overlay Checkout。需要在 Paddle Dashboard → Developer Tools → Authentication → Client-side tokens 创建一个前端 token，并填入 `site/config.toml` 的 `paddleClientToken`。已有 `priceID` 会传入 Checkout：
-
-```toml
-paddleEnvironment = 'production'
-paddlePriceID = 'pri_01kz09hjt717rwqqr4nj82dy81'
-paddleClientToken = 'live_...'
-```
-
-生产环境 Checkout 不能在 `localhost` 上完整测试。上线前还需要在 Paddle Dashboard 中完成两项配置：
-
-1. Checkout → Checkout settings：将默认付款链接设置为 `https://ruwin985.github.io/CleanMac/`
-2. Checkout → Website approval：提交并通过 `ruwin985.github.io` 域名审批
-
-本地调试 Paddle Checkout 请切换到 sandbox 的 `priceID` 和 client-side token。
-
-### Paddle 沙盒支付测试
-
-本地不能用 production/live Checkout 完成支付测试。线下支付流程请使用 Paddle sandbox：
-
-1. 登录 Paddle Sandbox Dashboard：`https://sandbox-vendors.paddle.com/`
-2. 创建 sandbox API key，至少勾选 `product.write`、`price.write`、`client_token.write`
-3. 复制 `.paddle.sandbox.env.example` 为 `.paddle.sandbox.env`，填入 sandbox API key
-4. 运行脚本自动创建 sandbox 产品、一次性价格和 client-side token：
-
-```bash
-python3 scripts/setup-paddle-sandbox.py
-```
-
-脚本会生成本地覆盖配置 `site/config.local.toml`。然后用 sandbox 配置启动站点：
-
-```bash
-cd site
-hugo server --config config.toml,config.local.toml
-```
-
-打开本地购买页：
-
-```text
-http://localhost:1313/CleanMac/?checkout=cleanmac#buy
-```
-
-如果你已经在 Paddle sandbox 手动创建了 price 和 client-side token，也可以直接在 `.paddle.sandbox.env` 里填：
-
-```bash
-PADDLE_SANDBOX_PRICE_ID=pri_...
-PADDLE_SANDBOX_CLIENT_TOKEN=test_...
-PADDLE_SANDBOX_AMOUNT_MINOR_UNITS=1
-```
-
-再运行 `python3 scripts/setup-paddle-sandbox.py` 生成本地覆盖配置。
-
-SwiftPM/命令行调试时也可以通过环境变量覆盖：
-
-```bash
-export CLEANMAC_PADDLE_CHECKOUT_URL='https://your-paddle-checkout-url'
-export CLEANMAC_LICENSE_PUBLIC_KEY='base64-public-key'
-```
-
-## 用户反馈
-
-当前反馈窗口保留邮件反馈，同时新增了腾讯问卷入口，适合国内用户优先提交反馈。
-
-### 腾讯问卷配置
-
-1. 在腾讯问卷创建 CleanMac 反馈表单，并复制公开填写链接（通常形如 `https://wj.qq.com/s2/...`）
-2. 将链接填入 `project.yml` 的 `INFOPLIST_KEY_CleanMacTencentSurveyURL`
-3. 如果直接维护 Xcode 工程，也同步更新 `CleanMac.xcodeproj` 中的 `INFOPLIST_KEY_CleanMacTencentSurveyURL`
-4. 重新构建后，反馈窗口中的「打开问卷」会跳转到腾讯问卷
-
-打开问卷时，应用会通过 URL 参数自动带上当前填写内容和匿名诊断信息，便于在腾讯问卷里做字段预填或后台筛选：
-
-- `source`：固定为 `cleanmac_mac_app`
-- `channel`：固定为 `tencent_wenjuan`
-- `feedback_type`、`name`、`email`、`message`：当前反馈表单内容
-- `include_diagnostics`、`device_name`、`macos_version`、`app_version`、`build`、`arch`、`locale`：匿名环境信息
-- `request_id`：本次打开问卷生成的一次性请求标识
-- `attachment_name`：已选择附件的文件名；实际附件仍需用户在腾讯问卷页面重新上传
-
-SwiftPM/命令行调试时也可以通过环境变量覆盖腾讯问卷链接：
-
-```bash
-export CLEANMAC_TENCENT_SURVEY_URL='https://wj.qq.com/s2/your-form-id/'
-```
-
-### 授权码生成
-
-客户端不会内置 Paddle API 密钥；购买成功后需要由你通过 Paddle Webhook、后台服务或人工流程生成授权码并发给用户。
-
-首次生成密钥对：
-
-```bash
-swift scripts/generate-license-code.swift --new-key
-```
-
-妥善保存输出的 `CLEANMAC_LICENSE_PRIVATE_KEY`，只把 `CleanMacLicensePublicKey` 配置进客户端。为 Paddle 交易生成授权码：
-
-```bash
-export CLEANMAC_LICENSE_PRIVATE_KEY='base64-private-key'
-swift scripts/generate-license-code.swift --transaction txn_123 --email buyer@example.com
-```
-
-生成的 `CM1-...` 授权码可直接粘贴到过期蒙层中激活。
 
 ## 配置说明
 
@@ -255,8 +138,7 @@ swift scripts/generate-license-code.swift --transaction txn_123 --email buyer@ex
 
 - `project.yml`
 
-如果后续重新生成工程，请确保变更同时维护 `project.yml` 与 Xcode 工程配置的一致性。
-导出包执行cd ~/DiskSense && ./scripts/export-universal-dmg.sh后导出的dmg文件
+如果后续重新生成工程，请确保变更同时维护 `project.yml`、`Resources/CleanMac-Info.plist` 与 Xcode 工程配置的一致性。
 
 ## 已知事项
 
