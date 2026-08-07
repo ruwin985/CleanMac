@@ -20,6 +20,7 @@ build/
 *.app
 *.dSYM
 *.dmg
+!site/static/downloads/CleanMac.dmg
 *.xcarchive
 
 # Local Paddle API credentials
