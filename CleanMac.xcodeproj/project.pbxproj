@@ -417,7 +417,7 @@
 				INFOPLIST_FILE = "Resources/CleanMac-Info.plist";
 				INFOPLIST_KEY_CleanMacLicenseValidationKey = "XJ2OZ+i3UHCVar7NMCZ2RMoTnC9hTuf6Q0k+Lcrl7FA";
 				INFOPLIST_KEY_CleanMacPaddleCheckoutURL = "https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy";
-				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥0.01";
+				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥10.00";
 				INFOPLIST_KEY_CleanMacTencentSurveyURL = "https://wj.qq.com/s2/27497302/29c4/";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -439,7 +439,7 @@
 				INFOPLIST_FILE = "Resources/CleanMac-Info.plist";
 				INFOPLIST_KEY_CleanMacLicenseValidationKey = "XJ2OZ+i3UHCVar7NMCZ2RMoTnC9hTuf6Q0k+Lcrl7FA";
 				INFOPLIST_KEY_CleanMacPaddleCheckoutURL = "https://ruwin985.github.io/CleanMac/?checkout=cleanmac#buy";
-				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥0.01";
+				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥10.00";
 				INFOPLIST_KEY_CleanMacTencentSurveyURL = "https://wj.qq.com/s2/27497302/29c4/";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

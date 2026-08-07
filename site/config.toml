@@ -16,7 +16,7 @@ enableRobotsTXT = true
   videoURL = 'videos/output-mobile.mp4'
   dmgURL = 'downloads/CleanMac.dmg'
   purchaseURL = '/CleanMac/?checkout=cleanmac#buy'
-  purchasePriceText = '¥0.01'
+  purchasePriceText = '¥10.00'
   paddleEnvironment = 'production'
   paddlePriceID = 'pri_01kz09hjt717rwqqr4nj82dy81'
   paddleClientToken = 'live_df302fe6856cfafb9f25d461075'

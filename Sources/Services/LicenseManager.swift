@@ -102,7 +102,7 @@ final class LicenseManager: ObservableObject {
         configuredValue(
             infoKey: Self.purchasePriceTextInfoKey,
             environmentKey: Self.purchasePriceTextEnvironmentKey
-        )?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "¥0.01"
+        )?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "¥10.00"
     }
 
     func refresh() {
