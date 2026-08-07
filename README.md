@@ -117,6 +117,18 @@ xcodebuild -project CleanMac.xcodeproj -scheme CleanMac -configuration Debug -de
 bash scripts/export-universal-dmg.sh
 ```
 
+如果要发布给其他用户安装，必须使用 Apple Developer ID 签名并完成 notarization，否则 macOS Gatekeeper 会提示“Apple 无法验证 CleanMac 是否包含恶意软件”。首次配置公证凭据：
+
+```bash
+xcrun notarytool store-credentials cleanmac-notary --apple-id '你的 Apple ID' --team-id '你的 Team ID' --password 'App 专用密码'
+```
+
+发布可被正常打开的 DMG：
+
+```bash
+DEVELOPMENT_TEAM='你的 Team ID' NOTARY_PROFILE=cleanmac-notary VERSION=1.0.1 BUILD_NUMBER=2 bash scripts/export-universal-dmg.sh
+```
+
 ### 版本更新提示
 
 App 启动后会检查官网静态更新清单：

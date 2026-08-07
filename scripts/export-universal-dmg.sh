@@ -13,27 +13,50 @@ SITE_BASE_URL="${SITE_BASE_URL:-https://ruwin985.github.io/CleanMac}"
 RELEASE_NOTES_URL="${RELEASE_NOTES_URL:-$SITE_BASE_URL/changelog/}"
 RELEASE_SUMMARY="${RELEASE_SUMMARY:-CleanMac $VERSION 更新已发布，建议下载最新版本以获得最新修复和体验优化。}"
 UPDATE_CRITICAL="${UPDATE_CRITICAL:-false}"
+DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM:-}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 BUILD_DIR="${BUILD_DIR:-build/universal}"
 ARCHIVE_PATH="$BUILD_DIR/$APP_NAME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 DMG_DIR="$BUILD_DIR/dmg"
+EXPORT_OPTIONS_PATH="$BUILD_DIR/ExportOptions.plist"
 APP_PATH="$EXPORT_DIR/$APP_NAME.app"
 DMG_PATH="$BUILD_DIR/${APP_NAME}-${VERSION}.dmg"
 
 rm -rf "$ARCHIVE_PATH" "$EXPORT_DIR" "$DMG_DIR"
 mkdir -p "$BUILD_DIR" "$EXPORT_DIR" "$DMG_DIR"
 
-xcodebuild \
+if [[ -n "$DEVELOPMENT_TEAM" ]] && ! security find-identity -v -p codesigning | grep -q "Developer ID Application: .*(.*$DEVELOPMENT_TEAM)"; then
+  echo "Developer ID Application certificate not found for team: $DEVELOPMENT_TEAM" >&2
+  echo "Create it in Xcode Settings > Accounts > Manage Certificates, then retry." >&2
+  exit 1
+fi
+
+ARCHIVE_ARGS=(
+  xcodebuild
   -project "$PROJECT" \
   -scheme "$SCHEME" \
   -configuration "$CONFIGURATION" \
   -destination 'generic/platform=macOS' \
   -archivePath "$ARCHIVE_PATH" \
   ARCHS='arm64 x86_64' \
-  ONLY_ACTIVE_ARCH=NO \
-  SKIP_INSTALL=NO \
-  CODE_SIGN_STYLE=Automatic \
-  archive
+  ONLY_ACTIVE_ARCH=NO
+)
+
+if [[ -n "$DEVELOPMENT_TEAM" ]]; then
+  ARCHIVE_ARGS+=(
+    DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM"
+    CODE_SIGN_STYLE=Manual
+    CODE_SIGN_IDENTITY="Developer ID Application"
+    ENABLE_HARDENED_RUNTIME=YES
+    OTHER_CODE_SIGN_FLAGS="--timestamp"
+  )
+else
+  ARCHIVE_ARGS+=(CODE_SIGN_STYLE=Automatic)
+fi
+
+ARCHIVE_ARGS+=(archive)
+"${ARCHIVE_ARGS[@]}"
 
 APP_ARCHIVE_PATH="$ARCHIVE_PATH/Products/Applications/$APP_NAME.app"
 if [[ ! -d "$APP_ARCHIVE_PATH" ]]; then
@@ -41,7 +64,34 @@ if [[ ! -d "$APP_ARCHIVE_PATH" ]]; then
   exit 1
 fi
 
-cp -R "$APP_ARCHIVE_PATH" "$APP_PATH"
+if [[ -n "$DEVELOPMENT_TEAM" ]]; then
+  cat > "$EXPORT_OPTIONS_PATH" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>developer-id</string>
+  <key>signingStyle</key>
+  <string>manual</string>
+  <key>signingCertificate</key>
+  <string>Developer ID Application</string>
+  <key>teamID</key>
+  <string>$DEVELOPMENT_TEAM</string>
+  <key>stripSwiftSymbols</key>
+  <true/>
+</dict>
+</plist>
+EOF
+
+  xcodebuild \
+    -exportArchive \
+    -archivePath "$ARCHIVE_PATH" \
+    -exportPath "$EXPORT_DIR" \
+    -exportOptionsPlist "$EXPORT_OPTIONS_PATH"
+else
+  cp -R "$APP_ARCHIVE_PATH" "$APP_PATH"
+fi
 
 if [[ -d "$APP_PATH/Contents/MacOS" ]]; then
   BIN_PATH="$APP_PATH/Contents/MacOS/$APP_NAME"
@@ -60,6 +110,12 @@ hdiutil create \
   -ov \
   -format UDZO \
   "$DMG_PATH"
+
+if [[ -n "$NOTARY_PROFILE" ]]; then
+  xcrun notarytool submit "$DMG_PATH" --keychain-profile "$NOTARY_PROFILE" --wait
+  xcrun stapler staple "$DMG_PATH"
+  xcrun stapler validate "$DMG_PATH"
+fi
 
 SITE_DOWNLOADS_DIR="site/static/downloads"
 mkdir -p "$SITE_DOWNLOADS_DIR"
