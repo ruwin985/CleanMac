@@ -133,7 +133,7 @@ DEVELOPMENT_TEAM='你的 Team ID' NOTARY_PROFILE=cleanmac-notary VERSION=1.0.1 B
 
 App 启动后会检查官网静态更新清单：
 
-- 清单地址：`https://ruwin985.github.io/CleanMac/updates/cleanmac.json`
+- 清单地址：`https://ruwin.cn/updates/cleanmac.json`
 - 官网源文件：`site/static/updates/cleanmac.json`
 - 下载地址：`site/static/downloads/CleanMac.dmg`
 - 更新日志：`site/content/changelog.md`
@@ -143,6 +143,12 @@ App 启动后会检查官网静态更新清单：
 ## 支付、授权与反馈
 
 CleanMac 当前包含试用、授权激活、购买入口和用户反馈入口等能力。涉及价格调整、Paddle 配置、授权码生成、反馈渠道配置等内部运营步骤，统一维护在内部说明文档中，不放在公开 README 中。
+
+## 授权服务
+
+仓库新增 `server/`，用于部署 Supabase Edge Function 授权服务：接收 Paddle `transaction.completed` webhook、写入 Supabase、通过 Resend 发送授权码，并提供 App 端 `/licenses/activate` 联网校验接口。Cloudflare Worker 版本仍保留为可选方案。
+
+客户端激活时会先执行当前本地授权码校验；本地校验失败且配置了 `CleanMacLicenseServerURL` 时，再请求授权服务校验。部署步骤见 `server/README.md`。
 
 
 ## 配置说明

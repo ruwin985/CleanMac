@@ -22,6 +22,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>CleanMacLicenseValidationKey</key>
 	<string>$(INFOPLIST_KEY_CleanMacLicenseValidationKey)</string>
+	<key>CleanMacLicenseServerURL</key>
+	<string>$(INFOPLIST_KEY_CleanMacLicenseServerURL)</string>
 	<key>CleanMacPaddleCheckoutURL</key>
 	<string>$(INFOPLIST_KEY_CleanMacPaddleCheckoutURL)</string>
 	<key>CleanMacPurchasePriceText</key>

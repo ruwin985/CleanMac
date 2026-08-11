@@ -1,0 +1,4 @@
+project_id = "jzykexxkpmbdweyzzrwc"
+
+[functions.cleanmac-license]
+verify_jwt = false

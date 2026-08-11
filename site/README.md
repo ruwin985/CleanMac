@@ -23,7 +23,7 @@ site/
 hugo server
 ```
 
-默认访问地址：`http://localhost:1313/CleanMac/` 或 `http://localhost:1313/`。
+默认访问地址：`http://localhost:1313/`。
 
 ## 发布到 GitHub Pages
 
@@ -37,10 +37,10 @@ GitHub 只会自动识别仓库根目录下的 `.github/workflows/*.yml`。如�
 
 - `.github/workflows/hugo-pages.yml`
 
-然后在 `site/config.toml` 中把以下占位值替换成你的真实信息：
+当前站点已配置自定义域名：
 
-- `baseURL = 'https://USERNAME.github.io/CleanMac/'`
-- `githubRepo = 'https://github.com/USERNAME/CleanMac'`
+- `baseURL = 'https://ruwin.cn/'`
+- `site/static/CNAME = ruwin.cn`
 
 ### 方案 B：把 `site/` 单独作为网站仓库
 
@@ -57,7 +57,7 @@ GitHub 只会自动识别仓库根目录下的 `.github/workflows/*.yml`。如�
 已安装的 CleanMac 会在启动后请求：
 
 ```text
-https://ruwin985.github.io/CleanMac/updates/cleanmac.json
+https://ruwin.cn/updates/cleanmac.json
 ```
 
 对应源文件位于：

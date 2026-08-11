@@ -21,6 +21,7 @@ final class LicenseManager: ObservableObject {
 
     @Published private(set) var state: AccessState = .locked
     @Published var activationErrorMessage: String?
+    @Published var isActivating = false
 
     private let defaults = UserDefaults.standard
     private let trialDuration: TimeInterval = 24 * 60 * 60
@@ -28,9 +29,15 @@ final class LicenseManager: ObservableObject {
     private static let productIdentifier = "CleanMac"
     private static let trialStartedAtAccount = "trialStartedAt"
     private static let licenseCodeAccount = "licenseCode"
+    private static let serverLicenseCodeAccount = "serverLicenseCode"
+    private static let serverLicenseInfoAccount = "serverLicenseInfo"
+    private static let serverLicenseTokenAccount = "serverLicenseToken"
+    private static let deviceIDAccount = "deviceID"
     private static let defaultsPrefix = "cleanmac.license."
     private static let checkoutURLInfoKey = "CleanMacPaddleCheckoutURL"
     private static let checkoutURLEnvironmentKey = "CLEANMAC_PADDLE_CHECKOUT_URL"
+    private static let licenseServerURLInfoKey = "CleanMacLicenseServerURL"
+    private static let licenseServerURLEnvironmentKey = "CLEANMAC_LICENSE_SERVER_URL"
     private static let purchasePriceTextInfoKey = "CleanMacPurchasePriceText"
     private static let purchasePriceTextEnvironmentKey = "CLEANMAC_PURCHASE_PRICE_TEXT"
     private static let validationKeyInfoKey = "CleanMacLicenseValidationKey"
@@ -105,10 +112,19 @@ final class LicenseManager: ObservableObject {
         )?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "¥10.00"
     }
 
+    var hasLicenseServer: Bool {
+        licenseServerURL != nil
+    }
+
     func refresh() {
         if let storedCode = storedString(for: Self.licenseCodeAccount),
            let licenseInfo = try? validateLicenseCode(storedCode) {
             state = .licensed(licenseInfo)
+            return
+        }
+
+        if let serverLicenseInfo = storedServerLicenseInfo() {
+            state = .licensed(serverLicenseInfo)
             return
         }
 
@@ -130,14 +146,118 @@ final class LicenseManager: ObservableObject {
     }
 
     func activate(with rawCode: String) {
+        guard !isActivating else { return }
+        activationErrorMessage = nil
+
         do {
             let licenseInfo = try validateLicenseCode(rawCode)
             store(rawCode.filter { !$0.isWhitespace }, for: Self.licenseCodeAccount)
             activationErrorMessage = nil
             state = .licensed(licenseInfo)
         } catch {
+            guard licenseServerURL != nil else {
+                activationErrorMessage = error.localizedDescription
+                return
+            }
+
+            isActivating = true
+            Task {
+                await activateWithServer(rawCode: rawCode, fallbackError: error)
+            }
+        }
+    }
+
+    private func activateWithServer(rawCode: String, fallbackError: Error) async {
+        defer { isActivating = false }
+
+        do {
+            let response = try await requestServerActivation(rawCode: rawCode)
+            guard response.valid, let remoteLicense = response.license else {
+                throw LicenseServerError.rejected(response.message ?? fallbackError.localizedDescription)
+            }
+
+            let licenseInfo = remoteLicense.licenseInfo
+            store(rawCode.filter { !$0.isWhitespace }, for: Self.serverLicenseCodeAccount)
+            storeServerLicenseInfo(licenseInfo)
+            if let token = response.token {
+                store(token, for: Self.serverLicenseTokenAccount)
+            }
+            activationErrorMessage = nil
+            state = .licensed(licenseInfo)
+        } catch {
             activationErrorMessage = error.localizedDescription
         }
+    }
+
+    private func requestServerActivation(rawCode: String) async throws -> LicenseServerActivationResponse {
+        guard let licenseServerURL,
+              let activationURL = URL(string: licenseServerURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/licenses/activate") else {
+            throw LicenseServerError.notConfigured
+        }
+
+        let bundle = Bundle.main
+        let payload = LicenseServerActivationRequest(
+            licenseCode: rawCode,
+            deviceId: deviceID(),
+            appVersion: bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+            buildNumber: bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String,
+            platform: "macOS"
+        )
+
+        var request = URLRequest(url: activationURL, timeoutInterval: 12)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = try JSONEncoder().encode(payload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw LicenseServerError.invalidResponse
+        }
+
+        let activationResponse = try JSONDecoder().decode(LicenseServerActivationResponse.self, from: data)
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw LicenseServerError.rejected(activationResponse.message ?? "服务端授权校验失败，请确认授权码是否正确。")
+        }
+        return activationResponse
+    }
+
+    private var licenseServerURL: URL? {
+        guard let rawValue = configuredValue(
+            infoKey: Self.licenseServerURLInfoKey,
+            environmentKey: Self.licenseServerURLEnvironmentKey
+        ) else { return nil }
+
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              !trimmed.localizedCaseInsensitiveContains("replace"),
+              let url = URL(string: trimmed),
+              url.scheme?.hasPrefix("http") == true else {
+            return nil
+        }
+        return url
+    }
+
+    private func deviceID() -> String {
+        if let storedDeviceID = storedString(for: Self.deviceIDAccount), !storedDeviceID.isEmpty {
+            return storedDeviceID
+        }
+
+        let newDeviceID = UUID().uuidString
+        store(newDeviceID, for: Self.deviceIDAccount)
+        return newDeviceID
+    }
+
+    private func storedServerLicenseInfo() -> LicenseInfo? {
+        guard let storedValue = storedString(for: Self.serverLicenseInfoAccount),
+              let data = storedValue.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(LicenseInfo.self, from: data)
+    }
+
+    private func storeServerLicenseInfo(_ licenseInfo: LicenseInfo) {
+        guard let data = try? JSONEncoder().encode(licenseInfo),
+              let encoded = String(data: data, encoding: .utf8) else { return }
+        store(encoded, for: Self.serverLicenseInfoAccount)
     }
 
     private func ensureTrialStartedAt() -> Date {
@@ -239,6 +359,67 @@ final class LicenseManager: ObservableObject {
 private extension String {
     var nonEmpty: String? {
         isEmpty ? nil : self
+    }
+}
+
+private struct LicenseServerActivationRequest: Encodable {
+    let licenseCode: String
+    let deviceId: String
+    let appVersion: String?
+    let buildNumber: String?
+    let platform: String
+}
+
+private struct LicenseServerActivationResponse: Decodable {
+    struct RemoteLicense: Decodable {
+        let licenseId: String
+        let product: String
+        let transactionId: String
+        let email: String?
+        let issuedAt: String
+
+        var licenseInfo: LicenseManager.LicenseInfo {
+            LicenseManager.LicenseInfo(
+                version: 100,
+                product: product,
+                transactionID: transactionId,
+                email: email,
+                issuedAt: issuedAtDate
+            )
+        }
+
+        private var issuedAtDate: Date {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = formatter.date(from: issuedAt) {
+                return date
+            }
+
+            formatter.formatOptions = [.withInternetDateTime]
+            return formatter.date(from: issuedAt) ?? Date()
+        }
+    }
+
+    let valid: Bool
+    let token: String?
+    let license: RemoteLicense?
+    let message: String?
+}
+
+private enum LicenseServerError: LocalizedError {
+    case notConfigured
+    case invalidResponse
+    case rejected(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .notConfigured:
+            return "授权服务器尚未配置，无法联网校验授权码。"
+        case .invalidResponse:
+            return "授权服务器响应异常，请稍后重试。"
+        case let .rejected(message):
+            return message
+        }
     }
 }
 

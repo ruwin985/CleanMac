@@ -1,0 +1,12 @@
+name = "cleanmac-license"
+main = "src/index.ts"
+compatibility_date = "2026-08-07"
+
+[vars]
+APP_NAME = "CleanMac"
+PADDLE_API_BASE_URL = "https://api.paddle.com"
+EMAIL_DELIVERY_MODE = "resend"
+ALLOWED_PRICE_IDS = "pri_01kz09hjt717rwqqr4nj82dy81"
+ALLOWED_PRODUCT_IDS = ""
+LICENSE_MAX_DEVICES = "3"
+SUPPORT_EMAIL = ""

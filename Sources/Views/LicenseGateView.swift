@@ -108,6 +108,7 @@ struct LicenseGateOverlay: View {
                         .foregroundStyle(.white)
                         .focused($isLicenseFieldFocused)
                         .onSubmit(activate)
+                        .disabled(licenseManager.isActivating)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 14)
                         .background(.black.opacity(0.26), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -122,7 +123,7 @@ struct LicenseGateOverlay: View {
                             .foregroundStyle(.orange)
                             .fixedSize(horizontal: false, vertical: true)
                     } else {
-                        Label("订单完成后，请使用 Paddle 购买成功邮件中收到的授权码。", systemImage: "envelope.fill")
+                        Label(licenseManager.hasLicenseServer ? "会先本地校验授权码；如需联网校验，将自动连接授权服务器。" : "订单完成后，请使用 Paddle 购买成功邮件中收到的授权码。", systemImage: "envelope.fill")
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.52))
                     }
@@ -139,12 +140,12 @@ struct LicenseGateOverlay: View {
                     .opacity(licenseManager.purchaseURL == nil ? 0.58 : 1)
 
                     Button(action: activate) {
-                        Label("激活使用", systemImage: "key.fill")
+                        Label(licenseManager.isActivating ? "正在激活" : "激活使用", systemImage: licenseManager.isActivating ? "arrow.triangle.2.circlepath" : "key.fill")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(LicenseGateButtonStyle(kind: .secondary))
-                    .disabled(trimmedLicenseCode.isEmpty)
-                    .opacity(trimmedLicenseCode.isEmpty ? 0.58 : 1)
+                    .disabled(trimmedLicenseCode.isEmpty || licenseManager.isActivating)
+                    .opacity((trimmedLicenseCode.isEmpty || licenseManager.isActivating) ? 0.58 : 1)
                 }
                 .frame(maxWidth: 560)
 
