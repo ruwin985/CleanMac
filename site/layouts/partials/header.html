@@ -6,13 +6,10 @@
 
     <div class="nav-links">
       <a href="#overview">概览</a>
-      <a href="{{ site.Params.dmgURL | relURL }}">下载</a>
-      <a href="{{ site.Params.purchaseURL | default `#buy` }}">购买</a>
     </div>
 
-    <div class="nav-actions" aria-hidden="true">
-      <span class="nav-icon nav-icon-bag"></span>
-      <span class="nav-icon nav-icon-menu"></span>
+    <div class="nav-actions">
+      <a href="{{ site.Params.purchaseURL | default `#buy` }}">购买</a>
     </div>
   </nav>
 </header>

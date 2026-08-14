@@ -166,19 +166,21 @@ main {
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 28px;
   color: rgba(29, 29, 31, 0.82);
   white-space: nowrap;
 }
 
 .nav-links a,
+.nav-actions a,
 .nav-brand,
 .nav-icon {
   transition: color 160ms ease, opacity 160ms ease, transform 160ms ease;
 }
 
 .nav-links a:hover,
+.nav-actions a:hover,
 .nav-icon:hover {
   color: #000;
   opacity: 0.72;
@@ -190,6 +192,7 @@ main {
   justify-content: flex-end;
   gap: 26px;
   color: rgba(29, 29, 31, 0.86);
+  white-space: nowrap;
 }
 
 .nav-icon {
@@ -579,6 +582,8 @@ main {
   margin: 24px auto 0;
   overflow: hidden;
   border-radius: 28px;
+  aspect-ratio: 1080 / 782;
+  background: #6f669d;
 }
 
 .apple-hero-media::before {
@@ -592,15 +597,33 @@ main {
   pointer-events: none;
 }
 
-.apple-hero-video {
+.apple-hero-video,
+.apple-hero-video-fallback {
   position: relative;
   z-index: 1;
+  display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   border-radius: inherit;
   object-fit: contain;
   object-position: center top;
   filter: saturate(1.05) contrast(1.02);
+}
+
+.apple-hero-video-fallback {
+  position: absolute;
+  inset: 0;
+}
+
+.apple-hero-video {
+  z-index: 2;
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+
+.apple-hero-media.is-video-fallback .apple-hero-video {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .apple-hero-disclaimer {

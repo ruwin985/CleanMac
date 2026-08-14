@@ -3,8 +3,8 @@
   <div class="apple-hero-copy">
     <h1>清理 Mac，安排妥。</h1>
     <p class="apple-hero-subtitle">
-      <span class="copy-desktop">用 CleanMac 扫描磁盘、清理缓存，<br>还能整理开发残留与隐私痕迹。</span>
-      <span class="copy-mobile">扫描磁盘，清理缓存，<br>整理开发残留与隐私痕迹。</span>
+      <span class="copy-desktop">用 CleanMac 扫描磁盘、清理缓存，<br>清除残留与隐私痕迹。</span>
+      <span class="copy-mobile">扫描磁盘，清理缓存，<br>移除残留与隐私痕迹。</span>
     </p>
     <div class="apple-hero-highlights" aria-label="CleanMac 产品亮点">
       <span><span class="highlight-check" aria-hidden="true">✅</span>足够小<span class="highlight-note">仅 2M 大小</span></span>
@@ -17,17 +17,18 @@
         <span class="button-mobile">快速下载</span>
       </a>
       <a class="apple-hero-button apple-hero-button-secondary" href="{{ site.Params.purchaseURL | default `#buy` }}" target="_blank" rel="noopener" data-purchase-link>
-        {{ site.Params.purchaseButtonText | default "终身独享" }}
+        {{ site.Params.purchaseButtonText | default "终身授权" }}
       </a>
     </div>
 
     <p class="apple-hero-purchase-note" data-purchase-message>
-      免费试用 1 天。点击终身授权后会跳转淘宝店铺，下单后联系客服获取授权码，再回到 CleanMac 点击页面右上角倒计时，或者软件到期后在授权页面输入授权码粘贴激活。
+      免费试用 1 天。点击终身授权后会跳转淘宝店铺，下单后联系客服获取授权码，再回到 CleanMac 在授权页面输入授权码粘贴激活。
     </p>
   </div>
 
   <div class="apple-hero-media" aria-label="CleanMac 应用演示视频">
-    <video class="apple-hero-video" autoplay muted loop playsinline poster="{{ `images/cleanmac-icon.png` | relURL }}">
+    <img class="apple-hero-video-fallback" src="{{ `images/cleanmac-hero-fallback.jpg` | relURL }}" alt="" width="1600" height="1152" loading="eager" decoding="async" aria-hidden="true">
+    <video class="apple-hero-video" autoplay muted loop playsinline poster="{{ `images/cleanmac-hero-fallback.jpg` | relURL }}" data-hero-video>
       <source media="(max-width: 734px)" src="{{ `videos/output-mobile.mp4` | relURL }}" type="video/mp4">
       <source src="{{ `videos/output.mp4` | relURL }}" type="video/mp4">
       你的浏览器不支持 HTML5 视频播放。
@@ -45,6 +46,20 @@
     autoOpenParam: {{ printf "%q" (site.Params.paymentAutoOpenParam | default "checkout") | safeJS }},
     autoOpenValue: {{ printf "%q" (site.Params.paymentAutoOpenValue | default "cleanmac") | safeJS }}
   };
+
+  (() => {
+    const video = document.querySelector('[data-hero-video]');
+    const media = video?.closest('.apple-hero-media');
+    if (!video || !media) return;
+
+    const showFallback = () => {
+      media.classList.add('is-video-fallback');
+      video.pause();
+      video.removeAttribute('autoplay');
+    };
+
+    video.addEventListener('error', showFallback);
+  })();
 </script>
   {{ $purchaseJS := resources.Get "js/purchase-link.js" | minify | fingerprint }}
 <script src="{{ $purchaseJS.RelPermalink }}" defer></script>
