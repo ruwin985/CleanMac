@@ -21,7 +21,7 @@ struct AppSettingsView: View {
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                     Text("登录 macOS 后自动启动 `CleanMacMenuBar`。")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyleCompat(.secondary)
                 }
             }
             .toggleStyle(.switch)
@@ -34,7 +34,7 @@ struct AppSettingsView: View {
 
                 Text(licenseDescription)
                     .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyleCompat(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 HStack(spacing: 10) {
@@ -54,7 +54,7 @@ struct AppSettingsView: View {
         }
         .padding(24)
         .frame(width: 440, height: 350)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Color(NSColor.windowBackgroundColor))
         .onAppear {
             launchMenuBarAtLogin = LoginItemRegistrar.launchMenuBarAtLogin
             licenseManager.refresh()

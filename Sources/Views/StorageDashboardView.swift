@@ -28,13 +28,11 @@ struct StorageDashboardView: View {
                 resultsView
             }
         }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            Color.clear.frame(height: 58)
-        }
-        .overlay(alignment: .top) {
+        .reservedTopInsetCompat(height: 58)
+        .overlayCompat(alignment: .top) {
             customWindowTopBar
         }
-        .overlay(alignment: .topLeading) {
+        .overlayCompat(alignment: .topLeading) {
             if viewModel.dashboardStage != .welcome,
                viewModel.dashboardStage != .details,
                viewModel.canRescanToWelcome {
@@ -45,23 +43,23 @@ struct StorageDashboardView: View {
                         .fullTapTarget()
                 }
                 .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyleCompat(.white.opacity(0.9))
                 .padding(.horizontal, 18)
                 .padding(.vertical, 12)
-                .background(.white.opacity(0.08), in: Capsule())
-                .overlay { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
+                .backgroundCompat(.white.opacity(0.08), in: Capsule())
+                .overlayCompat { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
                 .buttonStyle(.plain)
                 .offset(x: 36, y: 17)
             }
         }
-        .overlay(alignment: .top) {
+        .overlayCompat(alignment: .top) {
             if let toastMessage = viewModel.toastMessage {
                 ToastView(message: toastMessage)
                     .padding(.top, 122)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .overlay(alignment: .topTrailing) {
+        .overlayCompat(alignment: .topTrailing) {
             if viewModel.dashboardStage == .welcome,
                !licenseManager.requiresLicenseOverlay {
                 LicenseStatusPill(licenseManager: licenseManager)
@@ -69,7 +67,7 @@ struct StorageDashboardView: View {
                     .padding(.trailing, 26)
             }
         }
-        .overlay {
+        .overlayCompat {
             if viewModel.showsFullDiskAccessPrompt {
                 FullDiskAccessPrompt(
                     openSettings: { viewModel.openFullDiskAccessSettings() },
@@ -78,7 +76,7 @@ struct StorageDashboardView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.96)))
             }
         }
-        .overlay {
+        .overlayCompat {
             if let errorMessage = viewModel.lastErrorMessage {
                 ErrorPrompt(
                     message: errorMessage,
@@ -87,7 +85,7 @@ struct StorageDashboardView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.96)))
             }
         }
-        .overlay {
+        .overlayCompat {
             if licenseManager.requiresLicenseOverlay {
                 LicenseGateOverlay(licenseManager: licenseManager)
                     .transition(.opacity.combined(with: .scale(scale: 0.985)))
@@ -113,7 +111,7 @@ struct StorageDashboardView: View {
         ZStack {
             Text("智能呵护")
                 .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.72))
+                .foregroundStyleCompat(.white.opacity(0.72))
         }
         .frame(height: 58)
         .frame(maxWidth: .infinity)
@@ -130,7 +128,7 @@ struct StorageDashboardView: View {
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
-        .overlay(.white.opacity(0.03))
+        .overlay(Color.white.opacity(0.03))
         .ignoresSafeArea()
     }
 
@@ -139,10 +137,10 @@ struct StorageDashboardView: View {
             VStack(spacing: 14) {
                 Text("好了，我发现的内容都在这里。")
                     .font(.system(size: 42, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyleCompat(.white)
                 Text(viewModel.dashboardStage == .scannedSummary ? "扫描已经完成，您可以先查看结果摘要，再决定是否进入详情处理。" : "保持您的 Mac 干净、安全、性能优化的所有任务正在等候。立即运行！")
                     .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyleCompat(.white.opacity(0.55))
                     .multilineTextAlignment(.center)
             }
 
@@ -202,7 +200,7 @@ struct StorageDashboardView: View {
                 )
             }
             .padding(.top, 32)
-            .overlay(alignment: .top) {
+            .overlayCompat(alignment: .top) {
                 if viewModel.dashboardStage != .details, let popover = viewModel.activePopover {
                     if popover.card == .cleaning {
                         CleaningInfoBubble(content: popover)
@@ -242,13 +240,13 @@ struct StorageDashboardView: View {
                                 .frame(width: 126, height: 126)
 
                             Circle()
-                                .stroke(Color.cyan.opacity(0.30), lineWidth: 4)
+                                .stroke(Color.cleanMacCyan.opacity(0.30), lineWidth: 4)
                                 .frame(width: 126, height: 126)
 
                             Circle()
                                 .trim(from: 0, to: viewModel.isScanning ? 0.72 : 1)
                                 .stroke(
-                                    Color.cyan.opacity(0.92),
+                                    Color.cleanMacCyan.opacity(0.92),
                                     style: StrokeStyle(lineWidth: 4, lineCap: .round)
                                 )
                                 .frame(width: 126, height: 126)
@@ -256,12 +254,12 @@ struct StorageDashboardView: View {
 
                             Image(systemName: viewModel.primaryActionSymbolName)
                                 .font(.system(size: 34, weight: .bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyleCompat(.white)
                         }
 
                         Text(viewModel.primaryActionTitle)
                             .font(.system(size: 22, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyleCompat(.white)
                     }
                 }
                 .buttonStyle(.plain)
@@ -310,10 +308,10 @@ struct StorageDashboardView: View {
             VStack(spacing: 20) {
                 Text("欢迎使用 CleanMac")
                     .font(.system(size: 48, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyleCompat(.white)
                 Text("开始全面、仔细扫描您的 Mac。")
                     .font(.system(size: 21, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.78))
+                    .foregroundStyleCompat(.white.opacity(0.78))
             }
             .padding(.top, 24)
 
@@ -326,11 +324,11 @@ struct StorageDashboardView: View {
                     Circle()
                         .fill(.white.opacity(0.14))
                         .frame(width: 140, height: 140)
-                        .overlay(Circle().stroke(Color.cyan.opacity(0.9), lineWidth: 4))
-                        .shadow(color: .cyan.opacity(0.22), radius: 28)
+                        .overlay(Circle().stroke(Color.cleanMacCyan.opacity(0.9), lineWidth: 4))
+                        .shadow(color: .cleanMacCyan.opacity(0.22), radius: 28)
                     Text("扫描")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyleCompat(.white)
                 }
             }
             .buttonStyle(.plain)
@@ -357,11 +355,11 @@ struct StorageDashboardView: View {
                     .fullTapTarget()
             }
             .font(.system(size: 18, weight: .bold, design: .rounded))
-            .foregroundStyle(.white.opacity(0.9))
+            .foregroundStyleCompat(.white.opacity(0.9))
             .padding(.horizontal, 18)
             .padding(.vertical, 12)
-            .background(.white.opacity(0.08), in: Capsule())
-            .overlay { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
+            .backgroundCompat(.white.opacity(0.08), in: Capsule())
+            .overlayCompat { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
             .buttonStyle(.plain)
 
             ScrollView(showsIndicators: false) {
@@ -392,10 +390,10 @@ struct StorageDashboardView: View {
                 }
                 .frame(minWidth: 108, minHeight: 48)
                 .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyleCompat(.white.opacity(0.7))
                 .padding(.horizontal, 18)
                 .padding(.vertical, 12)
-                .background(.black.opacity(0.16), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .backgroundCompat(.black.opacity(0.16), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .buttonStyle(.plain)
 
                 VStack(spacing: 8) {
@@ -426,10 +424,10 @@ struct StorageDashboardView: View {
         }
             .frame(minWidth: 108, minHeight: 48)
             .font(.system(size: 18, weight: .bold, design: .rounded))
-            .foregroundStyle(.white.opacity(0.7))
+            .foregroundStyleCompat(.white.opacity(0.7))
             .padding(.horizontal, 18)
             .padding(.vertical, 12)
-            .background(.black.opacity(0.16), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .backgroundCompat(.black.opacity(0.16), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .buttonStyle(.plain)
 
         VStack(spacing: 12) {
@@ -450,18 +448,18 @@ struct StorageDashboardView: View {
     } }
 
     private var cleanAuthorizationCard: some View { VStack(alignment: .leading, spacing: 20) {
-        Divider().overlay(.white.opacity(0.16))
+        Divider().overlay(Color.white.opacity(0.16))
         HStack(alignment: .top, spacing: 18) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 34, weight: .bold))
-                .foregroundStyle(.yellow)
+                .foregroundStyleCompat(.yellow)
             VStack(alignment: .leading, spacing: 10) {
                 Text("通过全部磁盘访问清理更多内容")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyleCompat(.white)
                 Text(viewModel.hasPromptedForFullDiskAccess ? "完全磁盘访问只需开启一次；开启后，后续扫描会直接复用，无需重复授权。" : "首次开启完全磁盘访问后，CleanMac 后续扫描会直接复用权限，无需每次重复授权。")
                     .font(.system(size: 17, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyleCompat(.white.opacity(0.55))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -469,10 +467,10 @@ struct StorageDashboardView: View {
             viewModel.openFullDiskAccessSettings()
         }
         .font(.system(size: 22, weight: .bold, design: .rounded))
-        .foregroundStyle(.black.opacity(0.84))
+        .foregroundStyleCompat(.black.opacity(0.84))
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(LinearGradient(colors: [Color(red: 1.0, green: 0.91, blue: 0.55), Color(red: 0.97, green: 0.82, blue: 0.36)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .backgroundCompat(LinearGradient(colors: [Color(red: 1.0, green: 0.91, blue: 0.55), Color(red: 0.97, green: 0.82, blue: 0.36)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .buttonStyle(.plain)
     }
     .padding(.top, 26) }
@@ -483,13 +481,13 @@ struct StorageDashboardView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(detailHeaderTitle)
                     .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.65))
+                    .foregroundStyleCompat(.white.opacity(0.65))
                 Text(detailMainTitle)
                     .font(.system(size: 50, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyleCompat(.white)
                 Text(detailSubtitle)
                     .font(.system(size: 22, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.90))
+                    .foregroundStyleCompat(.white.opacity(0.90))
             }
             Spacer()
             if viewModel.detailKind == .cleaning {
@@ -500,13 +498,12 @@ struct StorageDashboardView: View {
                         if viewModel.isBulkCleaning {
                             ProgressView()
                                 .controlSize(.small)
-                                .tint(.white)
+                                .tintCompat(.white)
                         }
                         Text(viewModel.isBulkCleaning ? "清理中…" : "一键清理")
                     }
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.white.opacity(0.18))
+                .borderedProminentButtonStyleCompat(tint: .white.opacity(0.18))
                 .disabled(viewModel.selectedCleanableSizeInBytes == 0 || viewModel.isCleaning || viewModel.isScanning)
             } else if viewModel.detailKind == .protection {
                 Button {
@@ -516,13 +513,12 @@ struct StorageDashboardView: View {
                         if viewModel.isBulkCleaning {
                             ProgressView()
                                 .controlSize(.small)
-                                .tint(.white)
+                                .tintCompat(.white)
                         }
                         Text(viewModel.isBulkCleaning ? "清理中…" : "一键清理")
                     }
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.white.opacity(0.18))
+                .borderedProminentButtonStyleCompat(tint: .white.opacity(0.18))
                 .disabled(viewModel.isCleaning || viewModel.isScanning || viewModel.selectedThreatKinds.isEmpty)
             }
         }
@@ -538,7 +534,7 @@ struct StorageDashboardView: View {
                     }
                 }
                 .pickerStyle(.menu)
-                .tint(.white.opacity(0.88))
+                .tintCompat(.white.opacity(0.88))
                 .font(.system(size: 18, weight: .bold, design: .rounded))
             }
         }
@@ -582,8 +578,8 @@ struct StorageDashboardView: View {
     }
     .padding(28)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    .background(.ultraThinMaterial.opacity(0.34), in: RoundedRectangle(cornerRadius: 34, style: .continuous))
-    .overlay {
+    .backgroundUltraThinMaterialCompat(opacity: 0.34, fallback: Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 34, style: .continuous))
+    .overlayCompat {
         RoundedRectangle(cornerRadius: 34, style: .continuous)
             .stroke(.white.opacity(0.10), lineWidth: 1)
     }
@@ -643,20 +639,20 @@ struct StorageDashboardView: View {
                             .frame(width: 68, height: 68)
                         Image(systemName: group.symbolName)
                             .font(.system(size: 30, weight: .bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyleCompat(.white)
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         Text(group.title)
                             .font(.system(size: 30, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyleCompat(.white)
                         Text(group.description)
                             .font(.system(size: 18, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.80))
+                            .foregroundStyleCompat(.white.opacity(0.80))
                     }
                     Spacer()
                     Text("\(group.threatCount) 个威胁")
                         .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyleCompat(.white)
                 }
 
                 VStack(spacing: 14) {
@@ -691,8 +687,8 @@ struct StorageDashboardView: View {
         Group {
             if let snapshot = viewModel.snapshot {
                 HStack(spacing: 18) {
-                    StatsCapsule(title: "已扫描", value: snapshot.usedSpace.byteString, tint: .cyan)
-                    StatsCapsule(title: "可清理", value: snapshot.cleanableSizeInBytes.byteString, tint: .mint)
+                    StatsCapsule(title: "已扫描", value: snapshot.usedSpace.byteString, tint: .cleanMacCyan)
+                    StatsCapsule(title: "可清理", value: snapshot.cleanableSizeInBytes.byteString, tint: .cleanMacMint)
                     StatsCapsule(title: viewModel.detailKind == .protection ? "风险项" : "可用空间", value: viewModel.detailKind == .protection ? "\(viewModel.protectionCount)" : snapshot.freeSpace.byteString, tint: viewModel.detailKind == .protection ? .orange : .pink)
                 }
             }
@@ -825,24 +821,24 @@ private struct ErrorPrompt: View {
             VStack(alignment: .leading, spacing: 22) {
                 Text("操作失败")
                     .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.96))
+                    .foregroundStyleCompat(.white.opacity(0.96))
 
                 Text(message)
                     .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.88))
+                    .foregroundStyleCompat(.white.opacity(0.88))
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Button(action: dismiss) {
                     Text("好")
                         .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.96))
+                        .foregroundStyleCompat(.white.opacity(0.96))
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
                         .contentShape(Capsule())
                 }
-                    .background(Color.white.opacity(0.10), in: Capsule())
-                    .overlay {
+                    .backgroundCompat(Color.white.opacity(0.10), in: Capsule())
+                    .overlayCompat {
                         Capsule()
                             .stroke(.white.opacity(0.10), lineWidth: 1)
                     }
@@ -851,8 +847,8 @@ private struct ErrorPrompt: View {
             .padding(.horizontal, 28)
             .padding(.vertical, 24)
             .frame(width: 350)
-            .background(.ultraThinMaterial.opacity(0.92), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-            .overlay {
+            .backgroundCompat(Color.black.opacity(0.82), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlayCompat {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
                     .stroke(.white.opacity(0.12), lineWidth: 1)
             }
@@ -865,13 +861,13 @@ private struct ToastView: View {
     let message: String
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-            Text(message).font(.system(size: 15, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+            Image(systemName: "checkmark.circle.fill").foregroundStyleCompat(.green)
+            Text(message).font(.system(size: 15, weight: .semibold, design: .rounded)).foregroundStyleCompat(.white)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(.black.opacity(0.48), in: Capsule())
-        .overlay { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
+        .backgroundCompat(.black.opacity(0.48), in: Capsule())
+        .overlayCompat { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
         .shadow(color: .black.opacity(0.18), radius: 14, y: 8)
     }
 }
@@ -892,7 +888,7 @@ private struct FullDiskAccessPrompt: View {
                     VStack(alignment: .center, spacing: 12) {
                         Text("授权 CleanMac 访问全部磁盘")
                             .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyleCompat(.white)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
                         (
@@ -915,9 +911,9 @@ private struct FullDiskAccessPrompt: View {
                     Button(action: dismiss) {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.75))
+                            .foregroundStyleCompat(.white.opacity(0.75))
                             .frame(width: 30, height: 30)
-                            .background(.white.opacity(0.08), in: Circle())
+                            .backgroundCompat(.white.opacity(0.08), in: Circle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -927,7 +923,7 @@ private struct FullDiskAccessPrompt: View {
                     .scaledToFit()
                     .frame(maxWidth: 340)
                     .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .overlay {
+                    .overlayCompat {
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .stroke(.white.opacity(0.08), lineWidth: 1)
                     }
@@ -937,8 +933,8 @@ private struct FullDiskAccessPrompt: View {
             }
             .padding(28)
             .frame(width: 540)
-            .background(.ultraThinMaterial.opacity(0.92), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-            .overlay {
+            .backgroundCompat(Color.black.opacity(0.82), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlayCompat {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
                     .stroke(.white.opacity(0.12), lineWidth: 1)
             }
@@ -953,20 +949,20 @@ private struct CleaningInfoBubble: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(content.title)
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyleCompat(.white.opacity(0.9))
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(content.rows) { row in
                     HStack(spacing: 12) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.cyan)
+                            .foregroundStyleCompat(.cleanMacCyan)
                         Text(row.title)
                             .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.9))
+                            .foregroundStyleCompat(.white.opacity(0.9))
                         Spacer(minLength: 12)
                         if let value = row.value {
                             Text(value)
                                 .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white.opacity(0.72))
+                                .foregroundStyleCompat(.white.opacity(0.72))
                         }
                     }
                 }
@@ -975,20 +971,20 @@ private struct CleaningInfoBubble: View {
         Button(action.title, action: action.handler)
             .frame(minWidth: 92, minHeight: 8)
                     .font(.system(size: 10, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyleCompat(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 1)
-                    .background(.white.opacity(0.28), in: Capsule())
+                    .backgroundCompat(.white.opacity(0.28), in: Capsule())
                     .buttonStyle(.plain)
             }
         }
         .padding(12)
         .frame(minWidth: 250, maxWidth: 300, alignment: .leading)
-        .background(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(alignment: .bottom) {
+        .backgroundCompat(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlayCompat(alignment: .bottom) {
             Triangle().fill(Color.black.opacity(0.85)).frame(width: 18, height: 12).offset(y: 11)
         }
-        .overlay { RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(.white.opacity(0.12), lineWidth: 1) }
+        .overlayCompat { RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(.white.opacity(0.12), lineWidth: 1) }
         .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
     }
 }
@@ -999,20 +995,20 @@ private struct ProtectionInfoBubble: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(content.title)
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyleCompat(.white.opacity(0.9))
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(content.rows) { row in
                     HStack(spacing: 12) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.cyan)
+                            .foregroundStyleCompat(.cleanMacCyan)
                         Text(row.title)
                             .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.9))
+                            .foregroundStyleCompat(.white.opacity(0.9))
                         Spacer(minLength: 12)
                         if let value = row.value {
                             Text(value)
                                 .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white.opacity(0.72))
+                                .foregroundStyleCompat(.white.opacity(0.72))
                         }
                     }
                 }
@@ -1021,20 +1017,20 @@ private struct ProtectionInfoBubble: View {
                 Button(action.title, action: action.handler)
                     .frame(minWidth: 92, minHeight: 8)
                     .font(.system(size: 10, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyleCompat(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 1)
-                    .background(.white.opacity(0.28), in: Capsule())
+                    .backgroundCompat(.white.opacity(0.28), in: Capsule())
                     .buttonStyle(.plain)
             }
         }
         .padding(12)
         .frame(minWidth: 250, maxWidth: 300, alignment: .leading)
-        .background(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(alignment: .bottom) {
+        .backgroundCompat(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlayCompat(alignment: .bottom) {
             Triangle().fill(Color.black.opacity(0.85)).frame(width: 18, height: 12).offset(y: 11)
         }
-        .overlay { RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(.white.opacity(0.12), lineWidth: 1) }
+        .overlayCompat { RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(.white.opacity(0.12), lineWidth: 1) }
         .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
     }
 }
@@ -1045,20 +1041,20 @@ private struct SpeedInfoBubble: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(content.title)
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyleCompat(.white.opacity(0.9))
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(content.rows) { row in
                     HStack(spacing: 12) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.cyan)
+                            .foregroundStyleCompat(.cleanMacCyan)
                         Text(row.title)
                             .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.9))
+                            .foregroundStyleCompat(.white.opacity(0.9))
                         Spacer(minLength: 12)
                         if let value = row.value {
                             Text(value)
                                 .font(.system(size: 10.5, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white.opacity(0.72))
+                                .foregroundStyleCompat(.white.opacity(0.72))
                         }
                     }
                 }
@@ -1066,11 +1062,11 @@ private struct SpeedInfoBubble: View {
         }
         .padding(12)
         .frame(minWidth: 250, maxWidth: 300, alignment: .leading)
-        .background(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(alignment: .bottom) {
+        .backgroundCompat(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlayCompat(alignment: .bottom) {
             Triangle().fill(Color.black.opacity(0.85)).frame(width: 18, height: 12).offset(y: 11)
         }
-        .overlay { RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(.white.opacity(0.12), lineWidth: 1) }
+        .overlayCompat { RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(.white.opacity(0.12), lineWidth: 1) }
         .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
     }
 }
@@ -1084,7 +1080,7 @@ private struct ScanProgressInfoLabel: View {
     var body: some View {
         Text(value)
             .font(.system(size: valueFontSize, weight: .bold, design: .rounded))
-            .foregroundStyle(.white.opacity(0.88))
+            .foregroundStyleCompat(.white.opacity(0.88))
             .lineLimit(1)
             .truncationMode(.middle)
             .multilineTextAlignment(textAlignment)
@@ -1119,7 +1115,7 @@ private struct HomeFeatureCard: View {
                         .shadow(color: tintA.opacity(isHovered ? 0.40 : 0.25), radius: isHovered ? 24 : 18)
                     Image(systemName: icon)
                         .font(.system(size: 58, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.95))
+                        .foregroundStyleCompat(.white.opacity(0.95))
                 }
                 .scaleEffect(isHovered ? 1.05 : 1)
                 .offset(y: isHovered ? -6 : 0)
@@ -1133,31 +1129,31 @@ private struct HomeFeatureCard: View {
                     .frame(height: 14)
                 HStack(spacing: 10) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.cyan)
+                        .foregroundStyleCompat(.cleanMacCyan)
                     Text(title)
                         .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyleCompat(.white)
                     if let badgeText {
                         Text(badgeText)
                             .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.92))
+                            .foregroundStyleCompat(.white.opacity(0.92))
                     }
                 }
                 Text(subtitle)
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.48))
+                    .foregroundStyleCompat(.white.opacity(0.48))
 
                 VStack(spacing: 12) {
                     Button(action: iconTap) {
                         VStack(spacing: 2) {
                             Text(value)
                                 .font(.system(size: 50, weight: .bold, design: .rounded))
-                                .foregroundStyle(.cyan)
+                                .foregroundStyleCompat(.cleanMacCyan)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.68)
                             Text(footnote)
                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                .foregroundStyle(.cyan)
+                                .foregroundStyleCompat(.cleanMacCyan)
                         }
                     }
                     .buttonStyle(.plain)
@@ -1166,11 +1162,11 @@ private struct HomeFeatureCard: View {
                         Button(buttonTitle, action: buttonTap)
                             .frame(minWidth: 128, minHeight: 24)
                             .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(isButtonDisabled ? .white.opacity(0.45) : .cyan)
+                            .foregroundStyleCompat(isButtonDisabled ? .white.opacity(0.45) : .cleanMacCyan)
                             .padding(.horizontal, 24)
                             .padding(.vertical, 6)
-                            .background(isButtonDisabled ? .white.opacity(0.10) : .black.opacity(0.18), in: Capsule())
-                            .overlay {
+                            .backgroundCompat(isButtonDisabled ? .white.opacity(0.10) : .black.opacity(0.18), in: Capsule())
+                            .overlayCompat {
                                 Capsule()
                                     .stroke(isButtonDisabled ? .white.opacity(0.12) : .clear, lineWidth: 1)
                             }
@@ -1191,12 +1187,12 @@ private struct StatsCapsule: View {
     let tint: Color
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(.white.opacity(0.62))
-            Text(value).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(tint)
+            Text(title).font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyleCompat(.white.opacity(0.62))
+            Text(value).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyleCompat(tint)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .backgroundCompat(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
 
@@ -1214,11 +1210,11 @@ private struct ProtectionThreatSidebarCard: View {
                         .frame(width: 28, height: 28)
                     ZStack {
                         Circle().fill(LinearGradient(colors: [.white.opacity(0.34), .white.opacity(0.16)], startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 72, height: 72)
-                        Image(systemName: group.symbolName).font(.system(size: 30, weight: .bold)).foregroundStyle(.white)
+                        Image(systemName: group.symbolName).font(.system(size: 30, weight: .bold)).foregroundStyleCompat(.white)
                     }
-                    Text(group.title).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                    Text(group.title).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyleCompat(.white)
                     Spacer()
-                    Text("\(group.threatCount) 个威胁").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                    Text("\(group.threatCount) 个威胁").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyleCompat(.white)
                 }
                 .contentShape(Rectangle())
             }
@@ -1228,7 +1224,7 @@ private struct ProtectionThreatSidebarCard: View {
                 Button(action: toggleSelectionAction) {
                     Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(selected ? .cyan : .white.opacity(0.58))
+                        .foregroundStyleCompat(selected ? .cleanMacCyan : .white.opacity(0.58))
                         .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
@@ -1238,8 +1234,8 @@ private struct ProtectionThreatSidebarCard: View {
             }
         }
         .padding(22)
-        .background((focused || selected) ? .white.opacity(0.12) : .white.opacity(0.06), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-        .overlay { RoundedRectangle(cornerRadius: 28, style: .continuous).stroke((focused || selected) ? .white.opacity(0.14) : .clear, lineWidth: 1) }
+        .backgroundCompat((focused || selected) ? .white.opacity(0.12) : .white.opacity(0.06), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlayCompat { RoundedRectangle(cornerRadius: 28, style: .continuous).stroke((focused || selected) ? .white.opacity(0.14) : .clear, lineWidth: 1) }
     }
 }
 
@@ -1255,35 +1251,35 @@ private struct ProtectionThreatItemRow: View {
             Button(action: toggleSelectionAction) {
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(selected ? .cyan : .white.opacity(0.55))
+                    .foregroundStyleCompat(selected ? .cleanMacCyan : .white.opacity(0.55))
             }
             .buttonStyle(.plain)
 
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous).fill(.white.opacity(0.12)).frame(width: 54, height: 54)
-                Image(systemName: item.symbolName).font(.system(size: 24, weight: .bold)).foregroundStyle(.white)
+                Image(systemName: item.symbolName).font(.system(size: 24, weight: .bold)).foregroundStyleCompat(.white)
             }
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 10) {
-                    Text(item.name).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                    Text(item.name).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyleCompat(.white)
                     Text(item.severity.title)
                         .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyleCompat(.white)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(severityColor.opacity(0.9), in: Capsule())
+                        .backgroundCompat(severityColor.opacity(0.9), in: Capsule())
                 }
-                Text(item.path).font(.system(size: 13, weight: .medium, design: .rounded)).foregroundStyle(.white.opacity(0.52)).lineLimit(1)
+                Text(item.path).font(.system(size: 13, weight: .medium, design: .rounded)).foregroundStyleCompat(.white.opacity(0.52)).lineLimit(1)
                 if let evidence = item.evidences.first {
                     Text("\(evidence.title)：\(evidence.detail)")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.72))
+                        .foregroundStyleCompat(.white.opacity(0.72))
                         .lineLimit(2)
                 }
                 if item.evidences.count > 1, let secondaryEvidence = item.evidences.dropFirst().first {
                     Text("\(secondaryEvidence.title)：\(secondaryEvidence.detail)")
                         .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.58))
+                        .foregroundStyleCompat(.white.opacity(0.58))
                         .lineLimit(2)
                 }
             }
@@ -1295,17 +1291,16 @@ private struct ProtectionThreatItemRow: View {
                     if isLoading {
                         ProgressView()
                             .controlSize(.small)
-                            .tint(.white)
+                            .tintCompat(.white)
                     }
                     Text(isLoading ? "清理中…" : (item.item != nil && item.item?.isCleanable == true ? "删除" : "查看"))
                 }
             }
-            .buttonStyle(.borderedProminent)
-            .tint(item.item != nil && item.item?.isCleanable == true ? .red.opacity(0.82) : .white.opacity(0.18))
+            .borderedProminentButtonStyleCompat(tint: item.item != nil && item.item?.isCleanable == true ? .red.opacity(0.82) : .white.opacity(0.18))
             .disabled(isLoading)
         }
         .padding(18)
-        .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .backgroundCompat(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 
     private var severityColor: Color {
@@ -1352,16 +1347,16 @@ private struct CleanableCategoryGroup: View {
                 Button(action: toggleSelectionAction) {
                     Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(selected ? .cyan : .white.opacity(0.55))
+                        .foregroundStyleCompat(selected ? .cleanMacCyan : .white.opacity(0.55))
                 }
                 .buttonStyle(.plain)
                 Button(action: focusAction) {
                     HStack(spacing: 14) {
                         ZStack {
-                            Circle().fill(category.section.tint.gradient).frame(width: 56, height: 56)
-                            Image(systemName: category.section.icon).font(.system(size: 24, weight: .bold)).foregroundStyle(.white)
+                            Circle().fill(category.section.tint).frame(width: 56, height: 56)
+                            Image(systemName: category.section.icon).font(.system(size: 24, weight: .bold)).foregroundStyleCompat(.white)
                         }
-                        Text(category.title).font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                        Text(category.title).font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyleCompat(.white)
                     }
                 }
                 .buttonStyle(.plain)
@@ -1373,9 +1368,9 @@ private struct CleanableCategoryGroup: View {
                     } label: {
                         Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                             .font(.system(size: 15, weight: .heavy))
-                            .foregroundStyle(.white.opacity(0.86))
+                            .foregroundStyleCompat(.white.opacity(0.86))
                             .frame(width: 28, height: 28)
-                            .background(.white.opacity(0.08), in: Circle())
+                            .backgroundCompat(.white.opacity(0.08), in: Circle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -1384,11 +1379,11 @@ private struct CleanableCategoryGroup: View {
                     if isBulkCleaning && selected {
                         ProgressView()
                             .controlSize(.small)
-                            .tint(.white)
+                            .tintCompat(.white)
                     }
                     Text(isBulkCleaning && selected ? "清理中…" : category.cleanableSizeInBytes.byteString)
                         .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyleCompat(.white)
                 }
             }
 
@@ -1400,18 +1395,18 @@ private struct CleanableCategoryGroup: View {
                         } label: {
                             Image(systemName: selectedItemIDs.contains(item.id) ? "checkmark.circle.fill" : "circle")
                                 .font(.system(size: 24, weight: .bold))
-                                .foregroundStyle(selectedItemIDs.contains(item.id) ? .cyan : .white.opacity(0.55))
+                                .foregroundStyleCompat(selectedItemIDs.contains(item.id) ? .cleanMacCyan : .white.opacity(0.55))
                         }
                         .buttonStyle(.plain)
 
                         StorageItemIconView(item: item)
                             .frame(width: 32, height: 32)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(item.name).font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                            Text(item.name).font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyleCompat(.white)
                             CopyablePathLabel(path: item.path)
                         }
                         Spacer()
-                        Text(item.sizeInBytes.byteString).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                        Text(item.sizeInBytes.byteString).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyleCompat(.white)
                         Button {
                             cleanAction(item)
                         } label: {
@@ -1419,24 +1414,23 @@ private struct CleanableCategoryGroup: View {
                                 if activeCleaningItemIDs.contains(item.id) {
                                     ProgressView()
                                         .controlSize(.small)
-                                        .tint(.white)
+                                        .tintCompat(.white)
                                 }
                                 Text(activeCleaningItemIDs.contains(item.id) ? "清理中…" : "清理")
                             }
                         }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.red.opacity(0.82))
+                            .borderedProminentButtonStyleCompat(tint: .red.opacity(0.82))
                             .disabled(activeCleaningItemIDs.contains(item.id))
                     }
                     .padding(16)
-                    .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .backgroundCompat(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
         }
         .padding(22)
-        .background((selected ? .white.opacity(0.12) : .white.opacity(0.06)), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-        .overlay {
+        .backgroundCompat((selected ? .white.opacity(0.12) : .white.opacity(0.06)), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlayCompat {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .stroke((focused || selected) ? .white.opacity(0.16) : .clear, lineWidth: 1)
         }
@@ -1455,7 +1449,7 @@ private struct StorageItemIconView: View {
         } else {
             Image(systemName: item.symbolName)
                 .font(.system(size: 19, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.86))
+                .foregroundStyleCompat(.white.opacity(0.86))
         }
     }
 }
@@ -1477,20 +1471,20 @@ private struct CleaningSidebarCategoryCard: View {
 
                     ZStack {
                         Circle()
-                            .fill(category.section.tint.gradient)
+                            .fillGradientCompat(category.section.tint)
                             .frame(width: 54, height: 54)
                         Image(systemName: category.section.icon)
                             .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyleCompat(.white)
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(category.title)
                             .font(.system(size: 24, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyleCompat(.white)
                         Text(viewModelText(for: category))
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.66))
+                            .foregroundStyleCompat(.white.opacity(0.66))
                             .lineLimit(2)
                     }
 
@@ -1500,12 +1494,12 @@ private struct CleaningSidebarCategoryCard: View {
                         if isBulkCleaning && selected {
                             ProgressView()
                                 .controlSize(.small)
-                                .tint(.white)
+                                .tintCompat(.white)
                         }
 
                         Text(isBulkCleaning && selected ? "清理中…" : category.cleanableSizeInBytes.byteString)
                             .font(.system(size: 18, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.95))
+                            .foregroundStyleCompat(.white.opacity(0.95))
                     }
                 }
                 .contentShape(Rectangle())
@@ -1516,7 +1510,7 @@ private struct CleaningSidebarCategoryCard: View {
                 Button(action: toggleSelectionAction) {
                     Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(selected ? .cyan : .white.opacity(0.55))
+                        .foregroundStyleCompat(selected ? .cleanMacCyan : .white.opacity(0.55))
                         .frame(width: 24, height: 24)
                         .contentShape(Rectangle())
                 }
@@ -1526,8 +1520,8 @@ private struct CleaningSidebarCategoryCard: View {
             }
         }
         .padding(20)
-        .background(.black.opacity(focused ? 0.18 : 0.12), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay {
+        .backgroundCompat(.black.opacity(focused ? 0.18 : 0.12), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlayCompat {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke((focused || selected) ? .white.opacity(0.16) : .clear, lineWidth: 1)
         }
@@ -1550,11 +1544,11 @@ private struct CopyablePathLabel: View {
             HStack(spacing: 6) {
                 Text(path)
                     .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.50))
+                    .foregroundStyleCompat(.white.opacity(0.50))
                     .lineLimit(1)
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyleCompat(.white.opacity(0.5))
             }
         }
         .buttonStyle(.plain)

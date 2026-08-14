@@ -44,16 +44,15 @@ final class FeedbackWindowController: NSWindowController, NSWindowDelegate {
 
 struct FeedbackWindowView: View {
     @StateObject private var model = FeedbackFormViewModel()
-    @FocusState private var focusedField: FeedbackField?
     @State private var isEmailFeedbackExpanded = false
 
     var body: some View {
         ZStack {
-            Color(nsColor: .windowBackgroundColor)
+            Color(NSColor.windowBackgroundColor)
                 .ignoresSafeArea()
 
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(.regularMaterial)
+                .fillThinMaterialCompat(fallback: Color.primary.opacity(0.04))
                 .overlay(
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
                         .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
@@ -71,10 +70,10 @@ struct FeedbackWindowView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("提供反馈")
                                 .font(.system(size: 29, weight: .bold, design: .rounded))
-                                .foregroundStyle(Color.primary.opacity(0.9))
+                                .foregroundStyleCompat(Color.primary.opacity(0.9))
                             Text("请提供关于您问题的详细描述、建议或漏洞报告。国内用户推荐优先通过腾讯问卷提交，便于我们集中整理和跟进。")
                                 .font(.system(size: 14, weight: .medium, design: .rounded))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyleCompat(.secondary)
                                 .lineSpacing(3)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -91,16 +90,13 @@ struct FeedbackWindowView: View {
             .padding(.trailing, 28)
         }
         .frame(minWidth: 760, minHeight: 632)
-        .onAppear {
-            focusedField = .name
-        }
     }
 
     private var tencentSurveyEntry: some View {
         HStack(spacing: 12) {
             Image(systemName: "doc.text.magnifyingglass")
                 .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyleCompat(Color.accentColor)
                 .frame(width: 36, height: 36)
                 .background(
                     Circle()
@@ -110,10 +106,10 @@ struct FeedbackWindowView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("腾讯问卷反馈")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary.opacity(0.9))
+                    .foregroundStyleCompat(.primary.opacity(0.9))
                 Text("打开浏览器提交问卷，并自动带上当前填写内容与匿名系统配置。")
                     .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyleCompat(.secondary)
                     .lineLimit(2)
             }
 
@@ -127,7 +123,7 @@ struct FeedbackWindowView: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.thinMaterial)
+                .fillThinMaterialCompat(fallback: Color.primary.opacity(0.04))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(Color.accentColor.opacity(0.20), lineWidth: 1)
@@ -140,15 +136,12 @@ struct FeedbackWindowView: View {
             Button {
                 withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
                     isEmailFeedbackExpanded.toggle()
-                    if !isEmailFeedbackExpanded {
-                        focusedField = nil
-                    }
                 }
             } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "envelope.badge")
                         .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyleCompat(Color.accentColor)
                         .frame(width: 36, height: 36)
                         .background(
                             Circle()
@@ -158,10 +151,10 @@ struct FeedbackWindowView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("邮件反馈")
                             .font(.system(size: 14, weight: .bold, design: .rounded))
-                            .foregroundStyle(.primary.opacity(0.9))
+                            .foregroundStyleCompat(.primary.opacity(0.9))
                         Text(isEmailFeedbackExpanded ? "填写详细内容后，将打开系统邮件应用发送。" : "没有腾讯问卷时可改用邮件提交，支持附件和匿名系统配置。")
                             .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyleCompat(.secondary)
                             .lineLimit(2)
                     }
 
@@ -169,7 +162,7 @@ struct FeedbackWindowView: View {
 
                     Text(isEmailFeedbackExpanded ? "收起" : "展开")
                         .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyleCompat(Color.accentColor)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .background(
@@ -179,7 +172,7 @@ struct FeedbackWindowView: View {
 
                     Image(systemName: "chevron.down")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyleCompat(.secondary)
                         .rotationEffect(.degrees(isEmailFeedbackExpanded ? 180 : 0))
                 }
                 .contentShape(Rectangle())
@@ -203,7 +196,7 @@ struct FeedbackWindowView: View {
                         if let status = model.statusMessage {
                             Label(status, systemImage: model.statusIsError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
                                 .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                .foregroundStyle(model.statusIsError ? .red : .green)
+                                .foregroundStyleCompat(model.statusIsError ? .red : .green)
                         }
 
                         Spacer()
@@ -223,7 +216,7 @@ struct FeedbackWindowView: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.thinMaterial)
+                .fillThinMaterialCompat(fallback: Color.primary.opacity(0.04))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(isEmailFeedbackExpanded ? Color.accentColor.opacity(0.20) : Color.primary.opacity(0.10), lineWidth: 1)
@@ -241,11 +234,11 @@ struct FeedbackWindowView: View {
             fieldContainer {
                 HStack {
                     Text(model.category.rawValue)
-                        .foregroundStyle(.primary.opacity(0.86))
+                        .foregroundStyleCompat(.primary.opacity(0.86))
                     Spacer()
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyleCompat(.secondary)
                 }
             }
         }
@@ -255,11 +248,14 @@ struct FeedbackWindowView: View {
 
     private func textField(_ placeholder: String, text: Binding<String>, field: FeedbackField) -> some View {
         fieldContainer {
-            TextField(placeholder, text: text)
-                .textFieldStyle(.plain)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(.primary.opacity(0.88))
-                .focused($focusedField, equals: field)
+            if #available(macOS 12.0, *) {
+                FocusedFeedbackTextField(placeholder: placeholder, text: text, autoFocus: field == .name)
+            } else {
+                TextField(placeholder, text: text)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyleCompat(.primary.opacity(0.88))
+            }
         }
         .frame(height: 42)
     }
@@ -270,18 +266,20 @@ struct FeedbackWindowView: View {
                 if model.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Text("填写您的反馈")
                         .font(.system(size: 15, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary.opacity(0.85))
+                        .foregroundStyleCompat(.secondary.opacity(0.85))
                         .padding(.top, 2)
                         .padding(.leading, 4)
                 }
 
-                TextEditor(text: $model.message)
-                    .scrollContentBackground(.hidden)
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundStyle(.primary.opacity(0.92))
-                    .focused($focusedField, equals: .message)
-                    .padding(.horizontal, -4)
-                    .padding(.vertical, -8)
+                if #available(macOS 12.0, *) {
+                    FocusedFeedbackTextEditor(text: $model.message)
+                } else {
+                    TextEditor(text: $model.message)
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .foregroundStyleCompat(.primary.opacity(0.92))
+                        .padding(.horizontal, -4)
+                        .padding(.vertical, -8)
+                }
             }
             .frame(height: 118)
         }
@@ -296,12 +294,12 @@ struct FeedbackWindowView: View {
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
             }
             .buttonStyle(.plain)
-            .foregroundStyle(Color.accentColor)
+            .foregroundStyleCompat(Color.accentColor)
 
             if let attachmentName = model.attachmentName {
                 Text(attachmentName)
                     .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyleCompat(.secondary)
                     .lineLimit(1)
             }
 
@@ -314,9 +312,9 @@ struct FeedbackWindowView: View {
             HStack(spacing: 6) {
                 Text("发送匿名系统配置文件")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.primary.opacity(0.82))
+                    .foregroundStyleCompat(.primary.opacity(0.82))
                 Image(systemName: "info.circle.fill")
-                    .foregroundStyle(.secondary.opacity(0.85))
+                    .foregroundStyleCompat(.secondary.opacity(0.85))
                     .help("包含 macOS 版本、应用版本与设备型号，不会读取私人文件内容。")
             }
         }
@@ -326,7 +324,7 @@ struct FeedbackWindowView: View {
     private var feedbackArtwork: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 34, style: .continuous)
-                .fill(.thinMaterial)
+                .fillThinMaterialCompat(fallback: Color.primary.opacity(0.04))
                 .overlay(
                     RoundedRectangle(cornerRadius: 34, style: .continuous)
                         .stroke(Color.primary.opacity(0.08), lineWidth: 1)
@@ -342,7 +340,7 @@ struct FeedbackWindowView: View {
             } else {
                 Image(systemName: "app.badge")
                     .font(.system(size: 56, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyleCompat(.secondary)
             }
         }
         .padding(10)
@@ -351,7 +349,7 @@ struct FeedbackWindowView: View {
     private func fieldContainer<Content: View>(alignment: Alignment = .center, @ViewBuilder content: () -> Content) -> some View {
         ZStack(alignment: alignment) {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.thinMaterial)
+                .fillThinMaterialCompat(fallback: Color.primary.opacity(0.04))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(Color.primary.opacity(0.10), lineWidth: 1)
@@ -367,6 +365,44 @@ private enum FeedbackField: Hashable {
     case name
     case email
     case message
+}
+
+@available(macOS 12.0, *)
+private struct FocusedFeedbackTextField: View {
+    let placeholder: String
+    @Binding var text: String
+    let autoFocus: Bool
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .textFieldStyle(.plain)
+            .font(.system(size: 15, weight: .semibold, design: .rounded))
+            .foregroundStyle(.primary.opacity(0.88))
+            .focused($isFocused)
+            .onAppear {
+                guard autoFocus else { return }
+                DispatchQueue.main.async {
+                    isFocused = true
+                }
+            }
+    }
+}
+
+@available(macOS 12.0, *)
+private struct FocusedFeedbackTextEditor: View {
+    @Binding var text: String
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        TextEditor(text: $text)
+            .scrollContentBackgroundHiddenCompat()
+            .font(.system(size: 15, weight: .medium, design: .rounded))
+            .foregroundStyle(.primary.opacity(0.92))
+            .focused($isFocused)
+            .padding(.horizontal, -4)
+            .padding(.vertical, -8)
+    }
 }
 
 enum FeedbackCategory: String, CaseIterable {
@@ -592,7 +628,7 @@ private struct FeedbackPrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 14, weight: .bold, design: .rounded))
-            .foregroundStyle(.white)
+            .foregroundStyleCompat(.white)
             .padding(.horizontal, 18)
             .padding(.vertical, 10)
             .background(
@@ -609,7 +645,7 @@ private struct FeedbackSecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 13, weight: .bold, design: .rounded))
-            .foregroundStyle(Color.accentColor)
+            .foregroundStyleCompat(Color.accentColor)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .background(

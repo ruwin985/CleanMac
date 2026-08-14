@@ -327,7 +327,7 @@ final class LicenseManager: ObservableObject {
     }
 
     private func hardwareBoundDeviceID() -> String? {
-        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
+        let service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
         guard service != 0 else { return nil }
         defer { IOObjectRelease(service) }
 

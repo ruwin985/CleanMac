@@ -1,5 +1,6 @@
 import AppKit
 
+@MainActor
 final class AppLifecycleController: NSObject, NSApplicationDelegate {
     static let shared = AppLifecycleController()
 

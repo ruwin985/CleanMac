@@ -19,7 +19,10 @@ enum LoginItemSettings {
     }
 
     static func applyLaunchPreference(enabled: Bool) {
-        guard #available(macOS 13.0, *) else { return }
+        guard #available(macOS 13.0, *) else {
+            applyLegacyLaunchPreference(enabled: enabled)
+            return
+        }
         let service = SMAppService.loginItem(identifier: "com.zyb.CleanMac.MenuBar")
 
         do {
@@ -39,6 +42,13 @@ enum LoginItemSettings {
             }
         } catch {
             NSLog("Failed to update login item state from menu bar app: %@", error.localizedDescription)
+        }
+    }
+
+    private static func applyLegacyLaunchPreference(enabled: Bool) {
+        let success = SMLoginItemSetEnabled("com.zyb.CleanMac.MenuBar" as CFString, enabled)
+        if !success {
+            NSLog("Failed to update legacy login item state from menu bar app.")
         }
     }
 }

@@ -6,7 +6,9 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
+	/* Begin PBXBuildFile section */
+		0B3E2D8A1F5C4B6A9D7E8F01 /* SwiftUICompatibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3E2D8A1F5C4B6A9D7E8F03 /* SwiftUICompatibility.swift */; };
+		0B3E2D8A1F5C4B6A9D7E8F02 /* SwiftUICompatibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3E2D8A1F5C4B6A9D7E8F04 /* SwiftUICompatibility.swift */; };
 		05A9A51CFBC1F19A7C8E70BE /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F9AEB78F905ECF634ACCCB5 /* LicenseManager.swift */; };
 		2B3411A2A2C313E9141F5A45 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 181DB067E9C456767AAC06C0 /* Assets.xcassets */; };
 		32A40DB724B9EB97687A07DA /* CleanMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C9C1E410E0BB4ECEDAD2CA6 /* CleanMacApp.swift */; };
@@ -43,7 +45,9 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXFileReference section */
+	/* Begin PBXFileReference section */
+		0B3E2D8A1F5C4B6A9D7E8F03 /* SwiftUICompatibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUICompatibility.swift; sourceTree = "<group>"; };
+		0B3E2D8A1F5C4B6A9D7E8F04 /* SwiftUICompatibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUICompatibility.swift; sourceTree = "<group>"; };
 		043BDB076899E1F1BC31CFA7 /* MenuBarAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarAppDelegate.swift; sourceTree = "<group>"; };
 		126873F1AA15A5804CDAE067 /* SpeedOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedOptimizer.swift; sourceTree = "<group>"; };
 		15CB264AE6622A24D0D387FD /* CleanMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CleanMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -118,6 +122,7 @@
 				043BDB076899E1F1BC31CFA7 /* MenuBarAppDelegate.swift */,
 				7C15680DC83C706828658FF8 /* MenuBarController.swift */,
 				AEC07DFF5D895960192DDD1F /* SettingsMenuButton.swift */,
+				0B3E2D8A1F5C4B6A9D7E8F04 /* SwiftUICompatibility.swift */,
 			);
 			path = MenuBarApp;
 			sourceTree = "<group>";
@@ -138,6 +143,7 @@
 				2E357EBDA8359C43C562CF71 /* FeedbackWindow.swift */,
 				79C4FC7AB72A70EDDCFCEE87 /* LoginItemRegistrar.swift */,
 				9DFCF3D6169139D469958F15 /* MenuBarLauncher.swift */,
+				0B3E2D8A1F5C4B6A9D7E8F03 /* SwiftUICompatibility.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -179,10 +185,11 @@
 		0C898882A1195C1A5FD6EAC5 /* CleanMac */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 308F08FB0795066CE9AC4ADA /* Build configuration list for PBXNativeTarget "CleanMac" */;
-			buildPhases = (
-				E497258AF2028F69E98E51FB /* Sources */,
-				72698F6596A6B866ABF95F34 /* Resources */,
-			);
+		buildPhases = (
+			E497258AF2028F69E98E51FB /* Sources */,
+			72698F6596A6B866ABF95F34 /* Resources */,
+			0B3E2D8A1F5C4B6A9D7E8F05 /* Embed MenuBar Login Item */,
+		);
 			buildRules = (
 			);
 			dependencies = (
@@ -268,7 +275,31 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-/* End PBXResourcesBuildPhase section */
+	/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0B3E2D8A1F5C4B6A9D7E8F05 /* Embed MenuBar Login Item */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/CleanMacMenuBar.app",
+			);
+			name = "Embed MenuBar Login Item";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Library/LoginItems/CleanMacMenuBar.app",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nLOGIN_ITEMS_DIR=\"$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Library/LoginItems\"\nmkdir -p \"$LOGIN_ITEMS_DIR\"\nditto \"$BUILT_PRODUCTS_DIR/CleanMacMenuBar.app\" \"$LOGIN_ITEMS_DIR/CleanMacMenuBar.app\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4E26638160EE81AB5CD07389 /* Sources */ = {
@@ -281,6 +312,7 @@
 				77836748138611EA57035064 /* MenuBarAppDelegate.swift in Sources */,
 				FE80F1BD6C77E2A5119C37E6 /* MenuBarController.swift in Sources */,
 				BBDCB7547A469AE8B343F8C7 /* SettingsMenuButton.swift in Sources */,
+				0B3E2D8A1F5C4B6A9D7E8F02 /* SwiftUICompatibility.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -301,6 +333,7 @@
 				FE814AD05C39E40E712D8BE3 /* StorageDashboardView.swift in Sources */,
 				AF55192921F4D4A6F5BCCC4C /* StorageDashboardViewModel.swift in Sources */,
 				AE1066FEB65C3633EECF4BC4 /* StorageModels.swift in Sources */,
+				0B3E2D8A1F5C4B6A9D7E8F01 /* SwiftUICompatibility.swift in Sources */,
 				384D0534F53D47FF51B2F0B0 /* StorageScanner.swift in Sources */,
 				3F5E583860EDA0A303475266 /* ThreatScanner.swift in Sources */,
 			);
@@ -391,7 +424,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+					MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -519,7 +552,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+					MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;

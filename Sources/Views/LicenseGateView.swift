@@ -12,11 +12,11 @@ struct LicenseStatusPill: View {
             Text(statusText)
         }
         .font(.system(size: 13, weight: .bold, design: .rounded))
-        .foregroundStyle(.white.opacity(0.92))
+        .foregroundStyleCompat(.white.opacity(0.92))
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
-        .background(.white.opacity(0.09), in: Capsule())
-        .overlay { Capsule().stroke(.white.opacity(0.12), lineWidth: 1) }
+        .backgroundCompat(.white.opacity(0.09), in: Capsule())
+        .overlayCompat { Capsule().stroke(.white.opacity(0.12), lineWidth: 1) }
         .shadow(color: .black.opacity(0.18), radius: 12, y: 8)
         .onReceive(countdownTimer) { date in
             currentDate = date
@@ -59,6 +59,19 @@ struct LicenseStatusPill: View {
 }
 
 struct LicenseGateOverlay: View {
+    @ObservedObject var licenseManager: LicenseManager
+
+    var body: some View {
+        if #available(macOS 12.0, *) {
+            ModernLicenseGateOverlay(licenseManager: licenseManager)
+        } else {
+            LegacyLicenseGateOverlay(licenseManager: licenseManager)
+        }
+    }
+}
+
+@available(macOS 12.0, *)
+private struct ModernLicenseGateOverlay: View {
     @ObservedObject var licenseManager: LicenseManager
     @State private var licenseCode = ""
     @FocusState private var isLicenseFieldFocused: Bool
@@ -190,6 +203,130 @@ struct LicenseGateOverlay: View {
     }
 }
 
+private struct LegacyLicenseGateOverlay: View {
+    @ObservedObject var licenseManager: LicenseManager
+    @State private var licenseCode = ""
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    .black.opacity(0.82),
+                    Color(red: 0.17, green: 0.16, blue: 0.30).opacity(0.94),
+                    Color(red: 0.08, green: 0.11, blue: 0.20).opacity(0.96)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .overlayUltraThinMaterialCompat(opacity: 0.24, fallback: Color.white.opacity(0.08))
+            .ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                VStack(spacing: 14) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 54, weight: .bold))
+                        .licenseIconGradientCompat()
+
+                    Text("CleanMac 试用已结束")
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .foregroundStyleCompat(.white)
+
+                    Text("CleanMac 提供 1 天免费试用，试用结束后可通过淘宝店铺购买一次性买断授权码。下单后联系客服获取授权码，再粘贴到这里继续使用。")
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundStyleCompat(.white.opacity(0.74))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .frame(maxWidth: 560)
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("授权码")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyleCompat(.white.opacity(0.64))
+
+                    TextField("CM-XXXXXXX-XXXXXXX-XXXXXXX", text: $licenseCode, onCommit: activate)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 15, weight: .semibold, design: .monospaced))
+                        .foregroundStyleCompat(.white)
+                        .disabled(licenseManager.isActivating)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .backgroundCompat(.black.opacity(0.26), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlayCompat {
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(.white.opacity(0.12), lineWidth: 1)
+                        }
+
+                    if let activationErrorMessage = licenseManager.activationErrorMessage {
+                        Label(activationErrorMessage, systemImage: "exclamationmark.triangle.fill")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyleCompat(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Label(licenseManager.hasLicenseServer ? "授权码会联网绑定当前设备；同一授权码达到设备上限后，其他 Mac 需重新购买并使用新授权码。" : "淘宝下单后，请联系客服获取授权码。", systemImage: "envelope.fill")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyleCompat(.white.opacity(0.52))
+                    }
+                }
+                .frame(maxWidth: 560)
+
+                HStack(spacing: 14) {
+                    Button(action: licenseManager.openPurchasePage) {
+                        Label("购买授权码", systemImage: "cart.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(LicenseGateButtonStyle(kind: .primary))
+                    .disabled(licenseManager.purchaseURL == nil)
+                    .opacity(licenseManager.purchaseURL == nil ? 0.58 : 1)
+
+                    Button(action: activate) {
+                        Label(licenseManager.isActivating ? "正在激活" : "激活使用", systemImage: licenseManager.isActivating ? "arrow.triangle.2.circlepath" : "key.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(LicenseGateButtonStyle(kind: .secondary))
+                    .disabled(trimmedLicenseCode.isEmpty || licenseManager.isActivating)
+                    .opacity((trimmedLicenseCode.isEmpty || licenseManager.isActivating) ? 0.58 : 1)
+                }
+                .frame(maxWidth: 560)
+
+                Button(action: licenseManager.openRefundPage) {
+                    Label("申请退款 / 查看退款政策", systemImage: "arrow.uturn.left.circle.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(LicenseGateButtonStyle(kind: .secondary))
+                .disabled(licenseManager.refundURL == nil)
+                .opacity(licenseManager.refundURL == nil ? 0.58 : 1)
+                .frame(maxWidth: 560)
+
+                if licenseManager.purchaseURL == nil {
+                    Text("购买入口尚未配置，请填入 CleanMacPurchaseURL。")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyleCompat(.white.opacity(0.48))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 520)
+                }
+            }
+            .padding(34)
+            .frame(width: 680)
+            .backgroundCompat(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 34, style: .continuous))
+            .overlayCompat {
+                RoundedRectangle(cornerRadius: 34, style: .continuous)
+                    .stroke(.white.opacity(0.12), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.42), radius: 50, y: 28)
+        }
+    }
+
+    private var trimmedLicenseCode: String {
+        licenseCode.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func activate() {
+        guard !trimmedLicenseCode.isEmpty else { return }
+        licenseManager.activate(with: trimmedLicenseCode)
+    }
+}
+
 private struct LicenseGateButtonStyle: ButtonStyle {
     enum Kind {
         case primary
@@ -201,16 +338,16 @@ private struct LicenseGateButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 15, weight: .bold, design: .rounded))
-            .foregroundStyle(.white)
+            .foregroundStyleCompat(.white)
             .padding(.horizontal, 18)
             .padding(.vertical, 14)
-            .background(background(isPressed: configuration.isPressed), in: Capsule())
-            .overlay { Capsule().stroke(.white.opacity(0.14), lineWidth: 1) }
+            .backgroundCompat(background(isPressed: configuration.isPressed), in: Capsule())
+            .overlayCompat { Capsule().stroke(.white.opacity(0.14), lineWidth: 1) }
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .animation(.spring(response: 0.24, dampingFraction: 0.82), value: configuration.isPressed)
     }
 
-    private func background(isPressed: Bool) -> some ShapeStyle {
+    private func background(isPressed: Bool) -> LinearGradient {
         switch kind {
         case .primary:
             return LinearGradient(

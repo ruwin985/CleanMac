@@ -403,17 +403,17 @@ struct MenuBarPanelView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("CleanMac")
                             .font(.system(size: 16, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyleCompat(.white)
                         Text("点击打开 CleanMac")
                             .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyleCompat(.white.opacity(0.7))
                     }
                     Spacer()
                     Image(systemName: "arrow.up.forward.app")
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundStyleCompat(.white.opacity(0.7))
                 }
                 .padding(14)
-                .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .backgroundCompat(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(.white.opacity(0.05), lineWidth: 1)
@@ -464,13 +464,13 @@ struct MenuBarPanelView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "display")
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.pink.opacity(0.95))
+                            .foregroundStyleCompat(.pink.opacity(0.95))
                             .frame(width: 22, height: 22)
-                            .background(.white.opacity(0.08), in: Circle())
+                            .backgroundCompat(.white.opacity(0.08), in: Circle())
 
                         Text("已累计清理 \(systemMonitor.totalCleanedText) 垃圾")
                             .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyleCompat(.white)
 
                         Spacer()
                     }
@@ -484,7 +484,7 @@ struct MenuBarPanelView: View {
             }
             .padding(.horizontal, 2)
             .padding(.top, 2)
-            .overlay(alignment: .top) {
+            .overlayCompat(alignment: .top) {
                 Rectangle()
                     .fill(.white.opacity(0.14))
                     .frame(height: 1)
@@ -520,16 +520,16 @@ struct MetricCard: View {
             HStack(alignment: .top) {
                 Image(systemName: icon)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.9))
+                    .foregroundStyleCompat(.white.opacity(0.9))
                     .frame(width: 22)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyleCompat(.white)
                     Text(value)
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .foregroundStyle(accent)
+                        .foregroundStyleCompat(accent)
                 }
 
                 Spacer(minLength: 8)
@@ -537,7 +537,7 @@ struct MetricCard: View {
                 if let detail {
                     Text(detail)
                         .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundStyle(accent)
+                        .foregroundStyleCompat(accent)
                 }
             }
 
@@ -548,7 +548,7 @@ struct MetricCard: View {
                 if let actionTitle, let action {
                     Button(actionTitle, action: action)
                         .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyleCompat(.white)
                         .buttonStyle(.plain)
                         .padding(.top, 2)
                 }
@@ -557,7 +557,7 @@ struct MetricCard: View {
         }
         .padding(14)
         .frame(width: 190, height: 92, alignment: .topLeading)
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .backgroundCompat(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(.white.opacity(0.05), lineWidth: 1)
@@ -589,11 +589,11 @@ struct LowDiskSpacePromptView: View {
                 VStack(alignment: .leading, spacing: 9) {
                     Text("磁盘空间快用完了！")
                         .font(.system(size: 15, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyleCompat(.white)
 
                     Text("启动 CleanMac 移除不需要的项目并恢复空间。")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color(red: 0.65, green: 0.80, blue: 0.96))
+                        .foregroundStyleCompat(Color(red: 0.65, green: 0.80, blue: 0.96))
                 }
 
                 HStack(spacing: 15) {
@@ -613,7 +613,7 @@ struct LowDiskSpacePromptView: View {
 
                         Image(systemName: "apple.logo")
                             .font(.system(size: 17, weight: .medium))
-                            .foregroundStyle(.black.opacity(0.24))
+                            .foregroundStyleCompat(.black.opacity(0.24))
 
                         RoundedRectangle(cornerRadius: 2, style: .continuous)
                             .fill(.black.opacity(0.28))
@@ -626,13 +626,13 @@ struct LowDiskSpacePromptView: View {
                         HStack(alignment: .firstTextBaseline) {
                             Text(diskName)
                                 .font(.system(size: 14, weight: .heavy, design: .rounded))
-                                .foregroundStyle(.white)
+                                .foregroundStyleCompat(.white)
 
                             Spacer()
 
                             Text("可用： \(availableText)")
                                 .font(.system(size: 14, weight: .heavy, design: .rounded))
-                                .foregroundStyle(.white)
+                                .foregroundStyleCompat(.white)
                         }
 
                         GeometryReader { proxy in
@@ -664,13 +664,13 @@ struct LowDiskSpacePromptView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
             Divider()
-                .overlay(.white.opacity(0.38))
+                .overlay(Color.white.opacity(0.38))
 
             HStack {
                 Button(action: dismiss) {
                     Text("忽略")
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.95))
+                        .foregroundStyleCompat(.white.opacity(0.95))
                         .frame(width: 68, height: 20)
                         .background(
                             RoundedRectangle(cornerRadius: 5, style: .continuous)
@@ -684,7 +684,7 @@ struct LowDiskSpacePromptView: View {
                 Button(action: openApp) {
                     Text("打开 CleanMac")
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyleCompat(.white)
                         .frame(width: 128, height: 20)
                         .background(
                             RoundedRectangle(cornerRadius: 5, style: .continuous)

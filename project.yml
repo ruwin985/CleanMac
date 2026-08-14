@@ -2,7 +2,7 @@ name: CleanMac
 options:
   minimumXcodeGenVersion: 2.38.0
   deploymentTarget:
-    macOS: '13.0'
+    macOS: '11.0'
 settings:
   base:
     PRODUCT_BUNDLE_IDENTIFIER: com.zyb.CleanMac
@@ -41,6 +41,13 @@ targets:
     dependencies:
       - target: CleanMacMenuBar
         embed: true
+    postBuildScripts:
+      - name: Embed MenuBar Login Item
+        script: |
+          set -e
+          LOGIN_ITEMS_DIR="$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Library/LoginItems"
+          mkdir -p "$LOGIN_ITEMS_DIR"
+          ditto "$BUILT_PRODUCTS_DIR/CleanMacMenuBar.app" "$LOGIN_ITEMS_DIR/CleanMacMenuBar.app"
     settings:
       base:
         PRODUCT_NAME: CleanMac

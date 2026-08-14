@@ -38,11 +38,10 @@ struct CleanMacApp: App {
                 .frame(minWidth: 1100, minHeight: 760)
                 .environmentObject(licenseManager)
                 .background(MainWindowConfigurator())
-                .task {
+                .taskCompat {
                     await AppUpdateController.shared.checkForUpdatesIfNeeded()
                 }
         }
-        .windowResizability(.contentSize)
         .windowStyle(.hiddenTitleBar)
 
         Settings {
@@ -114,6 +113,7 @@ private struct MainWindowConfigurator: NSViewRepresentable {
         window.toolbarStyle = .unifiedCompact
         window.isMovableByWindowBackground = true
         window.backgroundColor = .clear
+        window.minSize = NSSize(width: 1100, height: 760)
         window.styleMask.insert(.fullSizeContentView)
         window.standardWindowButton(.closeButton)?.isHidden = false
         window.standardWindowButton(.miniaturizeButton)?.isHidden = false

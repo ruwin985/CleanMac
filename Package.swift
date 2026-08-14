@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "CleanMac",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v11)
     ],
     products: [
         .executable(name: "CleanMac", targets: ["CleanMac"])

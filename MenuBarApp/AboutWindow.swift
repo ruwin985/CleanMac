@@ -46,7 +46,7 @@ struct AboutWindowView: View {
 
     var body: some View {
         ZStack {
-            Color(nsColor: .windowBackgroundColor)
+            Color(NSColor.windowBackgroundColor)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -64,20 +64,20 @@ struct AboutWindowView: View {
 
                 Text("CleanMac 菜单")
                     .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary)
+                    .foregroundStyleCompat(.primary)
 
                 Spacer().frame(height: 8)
 
                 Text(versionString)
                     .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyleCompat(.secondary)
 
                 Spacer().frame(height: 8)
 
                 Text("Copyright © 2026 ruwin. All\nrights reserved.")
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyleCompat(.secondary)
                     .lineSpacing(1.5)
 
                 Spacer(minLength: 26)

@@ -82,10 +82,6 @@ final class MemoryMonitor: ObservableObject {
         }
     }
 
-    deinit {
-        timer?.invalidate()
-    }
-
     var availableMemoryText: String {
         ByteCountFormatter.string(fromByteCount: Int64(availableMemoryBytes), countStyle: .memory)
     }
@@ -134,36 +130,36 @@ struct MenuBarPanelView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("CleanMac")
                             .font(.system(size: 16, weight: .bold, design: .rounded))
-                            .foregroundStyle(.primary)
+                            .foregroundStyleCompat(.primary)
                         Text("点击打开 CleanMac")
                             .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyleCompat(.secondary)
                     }
 
                     Spacer()
 
                     Image(systemName: "arrow.up.forward.app")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyleCompat(.secondary)
                 }
                 .padding(14)
-                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .backgroundThinMaterialCompat(fallback: Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("当前可用内存")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyleCompat(.secondary)
                 Text(memoryMonitor.availableMemoryText)
                     .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary)
+                    .foregroundStyleCompat(.primary)
 //                Text("每 2 秒自动刷新")
 //                    .font(.system(size: 12, weight: .medium, design: .rounded))
-//                    .foregroundStyle(.secondary)
+//                    .foregroundStyleCompat(.secondary)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .backgroundRegularMaterialCompat(fallback: Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
             Spacer(minLength: 0)
         }
@@ -173,11 +169,11 @@ struct MenuBarPanelView: View {
                     MenuBarController.shared.quitApp()
                 }
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
+                .foregroundStyleCompat(.secondary)
                 .buttonStyle(.plain)
             }
         .padding(16)
         .frame(width: 300, height: 220)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Color(NSColor.windowBackgroundColor))
     }
 }
