@@ -48,6 +48,8 @@ final class MenuBarController: NSObject {
         popover.contentSize = NSSize(width: 420, height: 300)
         popover.contentViewController = NSHostingController(rootView: MenuBarPanelView(systemMonitor: systemMonitor, openApp: {
             self.openMainApp()
+        }, releaseMemory: {
+            self.systemMonitor.releaseMemory()
         }, quitMenuBar: {
             self.quitMenuBar()
         }))
@@ -274,6 +276,8 @@ final class SystemStatusMonitor: ObservableObject {
     @Published private(set) var batteryStatusText: String = "不可用"
     @Published private(set) var cpuLoadText: String = "—"
     @Published private(set) var cpuTemperatureText: String = "--°C"
+    @Published private(set) var isReleasingMemory = false
+    @Published private(set) var memoryReleaseStatusText: String?
 
     private var timer: Timer?
 
@@ -297,6 +301,30 @@ final class SystemStatusMonitor: ObservableObject {
 
     var totalCleanedText: String {
         ByteCountFormatter.string(fromByteCount: totalCleanedBytes, countStyle: .file)
+    }
+
+    func releaseMemory() {
+        guard !isReleasingMemory else { return }
+        isReleasingMemory = true
+        memoryReleaseStatusText = nil
+
+        Task {
+            let failureReason = await Task.detached(priority: .userInitiated) {
+                Self.runMemoryReleaseCommand()
+            }.value
+
+            if let failureReason {
+                memoryReleaseStatusText = "释放失败"
+                NSLog("Failed to release memory from menu bar: %@", failureReason)
+                NSSound.beep()
+            } else {
+                refresh()
+                memoryReleaseStatusText = "已释放"
+            }
+
+            isReleasingMemory = false
+            clearMemoryReleaseStatusLater()
+        }
     }
 
     private func refresh() {
@@ -382,11 +410,47 @@ final class SystemStatusMonitor: ObservableObject {
     private static func readCPUTemperatureText() -> String? {
         return "65°C"
     }
+
+    nonisolated private static func runMemoryReleaseCommand() -> String? {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/memory_pressure")
+        process.arguments = ["-S", "-l", "warn"]
+
+        let errorPipe = Pipe()
+        process.standardError = errorPipe
+        process.standardOutput = Pipe()
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            return error.localizedDescription
+        }
+
+        guard process.terminationStatus == 0 else {
+            let data = errorPipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return output?.isEmpty == false ? output : "memory_pressure exited with status \(process.terminationStatus)"
+        }
+
+        return nil
+    }
+
+    private func clearMemoryReleaseStatusLater() {
+        let currentStatus = memoryReleaseStatusText
+        Task {
+            try? await Task.sleep(nanoseconds: 2_200_000_000)
+            if memoryReleaseStatusText == currentStatus {
+                memoryReleaseStatusText = nil
+            }
+        }
+    }
 }
 
 struct MenuBarPanelView: View {
     @ObservedObject var systemMonitor: SystemStatusMonitor
     let openApp: () -> Void
+    let releaseMemory: () -> Void
     let quitMenuBar: () -> Void
 
     var body: some View {
@@ -433,10 +497,12 @@ struct MenuBarPanelView: View {
                 MetricCard(
                     title: "内存",
                     value: "可用: \(systemMonitor.availableMemoryText)",
-                    actionTitle: "释放",
+                    detail: systemMonitor.memoryReleaseStatusText,
+                    actionTitle: systemMonitor.isReleasingMemory ? "释放中…" : "释放",
                     icon: "memorychip",
                     accent: .white,
-                    action: openApp
+                    action: releaseMemory,
+                    isActionDisabled: systemMonitor.isReleasingMemory
                 )
             }
 
@@ -514,6 +580,7 @@ struct MetricCard: View {
     let icon: String
     let accent: Color
     var action: (() -> Void)? = nil
+    var isActionDisabled = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -550,6 +617,8 @@ struct MetricCard: View {
                         .font(.system(size: 14, weight: .bold, design: .rounded))
                         .foregroundStyleCompat(.white)
                         .buttonStyle(.plain)
+                        .disabled(isActionDisabled)
+                        .opacity(isActionDisabled ? 0.62 : 1)
                         .padding(.top, 2)
                 }
             }
