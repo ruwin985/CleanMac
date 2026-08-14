@@ -23,9 +23,12 @@ build/
 !site/static/downloads/CleanMac.dmg
 *.xcarchive
 
-# Local Paddle API credentials
+# Local payment provider credentials
 .paddle.env
 .paddle.sandbox.env
+server/.dev.vars
+server/.env
+server/data/
 
 # Local license signing credentials
 .cleanmac-license.env

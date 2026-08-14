@@ -21,6 +21,7 @@ create table if not exists public.cleanmac_orders (
   status text not null default 'completed',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  metadata jsonb not null default '{}'::jsonb,
   raw_event_id text references public.cleanmac_webhook_events(event_id)
 );
 
@@ -56,3 +57,4 @@ create index if not exists cleanmac_activations_license_idx on public.cleanmac_a
 
 alter table public.cleanmac_licenses add column if not exists license_code_ciphertext text;
 alter table public.cleanmac_licenses add column if not exists license_code_iv text;
+alter table public.cleanmac_orders add column if not exists metadata jsonb not null default '{}'::jsonb;

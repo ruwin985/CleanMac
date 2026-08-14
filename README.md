@@ -142,13 +142,13 @@ App 启动后会检查官网静态更新清单：
 
 ## 支付、授权与反馈
 
-CleanMac 当前包含试用、授权激活、购买入口和用户反馈入口等能力。涉及价格调整、Paddle 配置、授权码生成、反馈渠道配置等内部运营步骤，统一维护在内部说明文档中，不放在公开 README 中。
+CleanMac 当前包含试用、授权激活、淘宝购买入口和用户反馈入口等能力。用户从 App 或官网跳转淘宝店铺下单，联系客服获取授权码后在 App 内激活。涉及价格调整、淘宝链接、授权码生成、反馈渠道配置等内部运营步骤，统一维护在内部说明文档中，不放在公开 README 中。
 
 ## 授权服务
 
-仓库新增 `server/`，用于部署 Supabase Edge Function 授权服务：接收 Paddle `transaction.completed` webhook、写入 Supabase、通过 Resend 发送授权码，并提供 App 端 `/licenses/activate` 联网校验接口。Cloudflare Worker 版本仍保留为可选方案。
+仓库新增 `server/`，默认用于运行 Node 授权服务：托管官网静态页、提供管理员手工生成授权码接口，并提供 App 端 `/licenses/activate`、`/licenses/verify` 联网校验接口。历史微信支付、Supabase/Cloudflare Worker 版本仍保留为可选回滚方案。
 
-客户端激活时会先执行当前本地授权码校验；本地校验失败且配置了 `CleanMacLicenseServerURL` 时，再请求授权服务校验。部署步骤见 `server/README.md`。
+客户端会先使用内置 `CleanMacLicenseValidationKey` 本地校验 `CM-...` 授权码；本地校验通过后立即授权，并在配置了 `CleanMacLicenseServerURL` 时异步请求授权服务绑定订单码。服务端签发的授权码启动后会继续使用 token 复核；本地批量生成且未入库的内部授权码不会因服务端未收录而失效。部署步骤见 `server/README.md`。
 
 
 ## 配置说明

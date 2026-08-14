@@ -28,6 +28,12 @@ struct StorageDashboardView: View {
                 resultsView
             }
         }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            Color.clear.frame(height: 58)
+        }
+        .overlay(alignment: .top) {
+            customWindowTopBar
+        }
         .overlay(alignment: .topLeading) {
             if viewModel.dashboardStage != .welcome,
                viewModel.dashboardStage != .details,
@@ -45,7 +51,7 @@ struct StorageDashboardView: View {
                 .background(.white.opacity(0.08), in: Capsule())
                 .overlay { Capsule().stroke(.white.opacity(0.08), lineWidth: 1) }
                 .buttonStyle(.plain)
-                .offset(x: 26, y: 55)
+                .offset(x: 36, y: 17)
             }
         }
         .overlay(alignment: .top) {
@@ -59,7 +65,7 @@ struct StorageDashboardView: View {
             if viewModel.dashboardStage == .welcome,
                !licenseManager.requiresLicenseOverlay {
                 LicenseStatusPill(licenseManager: licenseManager)
-                    .padding(.top, 26)
+                    .padding(.top, 8)
                     .padding(.trailing, 26)
             }
         }
@@ -101,6 +107,17 @@ struct StorageDashboardView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.showsFullDiskAccessPrompt)
         .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.lastErrorMessage)
         .animation(.spring(response: 0.35, dampingFraction: 0.9), value: licenseManager.requiresLicenseOverlay)
+    }
+
+    private var customWindowTopBar: some View {
+        ZStack {
+            Text("智能呵护")
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.72))
+        }
+        .frame(height: 58)
+        .frame(maxWidth: .infinity)
+        .ignoresSafeArea(edges: .top)
     }
 
     private var backgroundView: some View {
@@ -206,62 +223,81 @@ struct StorageDashboardView: View {
                 }
             }
 
-            HStack(spacing: 26) {
-                if viewModel.isScanning {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(viewModel.scanCurrentPath.isEmpty ? "正在等待…" : viewModel.scanCurrentPath)
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.52))
-                            .lineLimit(1)
-                            .frame(width: 420, alignment: .leading)
-                        Text(viewModel.scanDiscoveredCleanableBytes.byteString)
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.7))
-                    }
-                }
+            HStack(alignment: .center, spacing: 34) {
+                ScanProgressInfoLabel(
+                    value: scanPathDisplayText,
+                    valueFontSize: 17,
+                    alignment: .trailing,
+                    textAlignment: .trailing
+                )
+                .frame(width: 330, alignment: .trailing)
 
                 Button {
                     Task { await viewModel.performPrimaryAction() }
                 } label: {
-                ZStack {
-                    Circle()
-                        .fill(.white.opacity(0.16))
-                        .frame(width: 160, height: 160)
-                        .overlay(Circle().stroke(Color.cyan.opacity(0.85), lineWidth: 6))
-                        .shadow(color: .cyan.opacity(0.18), radius: 20)
-                    Circle()
-                        .trim(from: 0.08, to: viewModel.primaryActionPhase == .cleaning ? 0.72 : 0.32)
-                        .stroke(Color.white.opacity(viewModel.isPrimaryActionInProgress ? 0.95 : 0), style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                        .frame(width: 148, height: 148)
-                        .rotationEffect(.degrees(viewModel.scanRotation))
-                    VStack(spacing: 8) {
-                        Image(systemName: viewModel.primaryActionSymbolName)
-                            .font(.system(size: 36, weight: .bold))
-                            .foregroundStyle(.white)
+                    VStack(spacing: 10) {
+                        ZStack {
+                            Circle()
+                                .fill(.white.opacity(0.13))
+                                .frame(width: 126, height: 126)
+
+                            Circle()
+                                .stroke(Color.cyan.opacity(0.30), lineWidth: 4)
+                                .frame(width: 126, height: 126)
+
+                            Circle()
+                                .trim(from: 0, to: viewModel.isScanning ? 0.72 : 1)
+                                .stroke(
+                                    Color.cyan.opacity(0.92),
+                                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                                )
+                                .frame(width: 126, height: 126)
+                                .rotationEffect(.degrees(viewModel.isScanning ? viewModel.scanRotation : -90))
+
+                            Image(systemName: viewModel.primaryActionSymbolName)
+                                .font(.system(size: 34, weight: .bold))
+                                .foregroundStyle(.white)
+                        }
+
                         Text(viewModel.primaryActionTitle)
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
                     }
                 }
-                }
                 .buttonStyle(.plain)
+                .disabled(viewModel.isPrimaryActionInProgress && !viewModel.isScanning)
 
-                if viewModel.isPrimaryActionInProgress {
-                    Text(viewModel.scanDiscoveredCleanableBytes.byteString)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.72))
-                        .frame(width: 160, alignment: .leading)
-                }
+                ScanProgressInfoLabel(
+                    value: scanCleanableSizeDisplayText,
+                    valueFontSize: 34,
+                    alignment: .leading,
+                    textAlignment: .leading
+                )
+                .frame(width: 330, alignment: .leading)
             }
-
-            Spacer()
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 42)
         }
         .padding(.horizontal, 48)
-        .padding(.vertical, 46)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            viewModel.hidePopover()
+    }
+
+    private var scanPathDisplayText: String {
+        if viewModel.isScanning {
+            return viewModel.scanCurrentPath.isEmpty ? "正在准备扫描…" : viewModel.scanCurrentPath
         }
+        if viewModel.isScanPaused {
+            return ""
+        } else if viewModel.dashboardStage == .scannedSummary {
+            return "扫描完成"
+        }
+        return "等待开始扫描"
+    }
+
+    private var scanCleanableSizeDisplayText: String {
+        let scannedBytes = viewModel.isScanning
+            ? viewModel.scanDiscoveredCleanableBytes
+            : (viewModel.snapshot?.cleanableSizeInBytes ?? viewModel.scanDiscoveredCleanableBytes)
+        return scannedBytes.byteString
     }
 
     private var welcomeView: some View {
@@ -1039,6 +1075,23 @@ private struct SpeedInfoBubble: View {
     }
 }
 
+private struct ScanProgressInfoLabel: View {
+    let value: String
+    let valueFontSize: CGFloat
+    let alignment: Alignment
+    let textAlignment: TextAlignment
+
+    var body: some View {
+        Text(value)
+            .font(.system(size: valueFontSize, weight: .bold, design: .rounded))
+            .foregroundStyle(.white.opacity(0.88))
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .multilineTextAlignment(textAlignment)
+            .frame(maxWidth: .infinity, alignment: alignment)
+    }
+}
+
 private struct HomeFeatureCard: View {
     let kind: DashboardCardKind
     let icon: String
@@ -1062,10 +1115,10 @@ private struct HomeFeatureCard: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 34, style: .continuous)
                         .fill(LinearGradient(colors: [tintA, tintB], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 210, height: 170)
+                        .frame(width: 178, height: 142)
                         .shadow(color: tintA.opacity(isHovered ? 0.40 : 0.25), radius: isHovered ? 24 : 18)
                     Image(systemName: icon)
-                        .font(.system(size: 74, weight: .medium))
+                        .font(.system(size: 58, weight: .medium))
                         .foregroundStyle(.white.opacity(0.95))
                 }
                 .scaleEffect(isHovered ? 1.05 : 1)
@@ -1082,7 +1135,7 @@ private struct HomeFeatureCard: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.cyan)
                     Text(title)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                     if let badgeText {
                         Text(badgeText)
@@ -1091,19 +1144,19 @@ private struct HomeFeatureCard: View {
                     }
                 }
                 Text(subtitle)
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.48))
 
                 VStack(spacing: 12) {
                     Button(action: iconTap) {
                         VStack(spacing: 2) {
                             Text(value)
-                                .font(.system(size: 62, weight: .bold, design: .rounded))
+                                .font(.system(size: 50, weight: .bold, design: .rounded))
                                 .foregroundStyle(.cyan)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.68)
                             Text(footnote)
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .font(.system(size: 17, weight: .bold, design: .rounded))
                                 .foregroundStyle(.cyan)
                         }
                     }
@@ -1127,9 +1180,10 @@ private struct HomeFeatureCard: View {
                 }
             }
         }
-        .frame(width: 320, alignment: .top)
+        .frame(width: 236, alignment: .top)
     }
 }
+
 
 private struct StatsCapsule: View {
     let title: String

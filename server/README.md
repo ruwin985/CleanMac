@@ -1,167 +1,163 @@
 # CleanMac License Server
 
-授权服务负责接收 Paddle webhook、自动生成 `CM-...` 授权码、发送授权邮件，并提供 App 端联网激活接口。
+当前默认架构已改为“淘宝下单 + 客服发授权码 + 服务端校验授权码”：
 
-当前推荐部署到 Supabase Edge Functions，原因是 `workers.dev` 在国内网络可能打不开，而 Supabase 项目域名不需要你额外购买独立域名。
+- 官网和 App 的购买按钮直接跳转淘宝店铺/商品页。
+- 用户在淘宝下单后联系客服。
+- 你在服务器上调用管理接口生成 `CM-...` 授权码，发给用户。
+- 用户在 CleanMac 内输入授权码后，App 请求 `/licenses/activate` 绑定设备。
+- App 后续启动会请求 `/licenses/verify` 复核授权状态。
 
-## 端点
+历史微信支付 Native 扫码实现保留在 `src/wechatpay-local-server.ts`，但当前默认 `npm run dev/start` 不再使用微信支付流程。
 
-Supabase Function 基础地址：
+## 默认服务端点
 
-```text
-https://jzykexxkpmbdweyzzrwc.supabase.co/functions/v1/cleanmac-license
-```
+默认监听 `0.0.0.0:1314`：
 
 - `GET /health`：健康检查
-- `POST /webhooks/paddle`：Paddle webhook，处理 `transaction.completed`
-- `POST /licenses/activate`：App 输入授权码后的服务端校验
+- `POST /admin/licenses`：管理员生成手工授权码
+- `POST /licenses/activate`：App 输入授权码后绑定当前设备
+- `POST /licenses/verify`：App 启动后复核已激活设备是否仍有效
+- `GET /*`：托管 `site/public` 官网静态页面
 
-完整地址示例：
+## 环境变量
 
-```text
-https://jzykexxkpmbdweyzzrwc.supabase.co/functions/v1/cleanmac-license/health
-https://jzykexxkpmbdweyzzrwc.supabase.co/functions/v1/cleanmac-license/webhooks/paddle
-https://jzykexxkpmbdweyzzrwc.supabase.co/functions/v1/cleanmac-license/licenses/activate
-```
-
-## 数据库
-
-你已经在 Supabase SQL Editor 执行过：
-
-```text
-server/supabase/schema.sql
-```
-
-如果换 Supabase 项目，需要重新在 SQL Editor 执行该文件。
-
-## Supabase 部署
-
-先登录 Supabase CLI：
+复制示例文件：
 
 ```bash
 cd server
-npx supabase login
+cp .dev.vars.example .dev.vars
 ```
 
-设置 secrets：
+填写：
 
 ```bash
-cd server
-npx supabase secrets set --project-ref jzykexxkpmbdweyzzrwc \
-  LICENSE_SIGNING_KEY='填 CleanMacLicenseValidationKey 同一串 base64' \
-  LICENSE_ENCRYPTION_KEY='用 openssl rand -base64 32 生成' \
-  LICENSE_HASH_PEPPER='用 openssl rand -base64 32 生成' \
-  SERVER_TOKEN_SECRET='用 openssl rand -base64 32 生成' \
-  PADDLE_WEBHOOK_SECRET='填 Paddle Notification destination 的 secret' \
-  PADDLE_API_KEY='填 Paddle API key，可选但建议' \
-  RESEND_API_KEY='填 Resend API key' \
-  RESEND_FROM='CleanMac <license@example.com>' \
-  RESEND_REPLY_TO='ruwin_211@126.com' \
-  APP_NAME='CleanMac'
+PORT="1314"
+SITE_DIR="../site/public"
+DATA_DIR="./data"
+PURCHASE_URL="https://你的淘宝店铺或商品链接"
+
+LICENSE_SIGNING_KEY="SAME_BASE64_KEY_AS_CLEANMAC_LICENSE_VALIDATION_KEY"
+LICENSE_ENCRYPTION_KEY="RANDOM_32_BYTE_BASE64_SECRET_FOR_ENCRYPTING_LICENSE_CODES"
+LICENSE_HASH_PEPPER="RANDOM_LONG_SECRET_FOR_DB_HASHING"
+SERVER_TOKEN_SECRET="RANDOM_LONG_SECRET_FOR_ACTIVATION_TOKENS"
+ADMIN_TOKEN="RANDOM_LONG_SECRET_FOR_MANUAL_LICENSE_API"
+LICENSE_MAX_DEVICES="1"
+
+APP_NAME="CleanMac"
+SUPPORT_EMAIL="ruwin_211@126.com"
+```
+
+生成随机密钥：
+
+```bash
+openssl rand -base64 32
 ```
 
 说明：
 
-- Supabase Edge Functions 会自动注入 `SUPABASE_URL` 和 `SUPABASE_SERVICE_ROLE_KEY`，不要用 `npx supabase secrets set` 手动设置 `SUPABASE_` 前缀变量；CLI 会跳过并报 `Env name cannot start with SUPABASE_`。
-- 如果将来需要手动覆盖 Supabase 项目地址或 service role key，请改用备用变量名 `CLEANMAC_SUPABASE_URL` 和 `CLEANMAC_SUPABASE_SERVICE_ROLE_KEY`。
-- `LICENSE_SIGNING_KEY` 必须和 App 内 `CleanMacLicenseValidationKey` 一致，这样服务端生成的 `CM-...` 授权码旧版 App 也能本地校验通过。
-- `LICENSE_ENCRYPTION_KEY` 用于加密保存授权码明文，便于邮件发送失败后安全重试。
-- `LICENSE_HASH_PEPPER` 用于数据库中的授权码哈希。
-- `SERVER_TOKEN_SECRET` 用于签发服务端激活 token。
-- `RESEND_FROM` 需要使用 Resend 已验证的发件域名。
-- `RESEND_REPLY_TO` 是用户点击“回复”时收到邮件的地址，可以用你的常用邮箱。
-- `PADDLE_API_KEY` 用于 webhook 里缺少邮箱时，通过 Paddle Customer API 查询邮箱。
+- `LICENSE_SIGNING_KEY` 必须和 App 内 `CleanMacLicenseValidationKey` 一致，否则授权码无法通过 App 本地校验。
+- `ADMIN_TOKEN` 只给你自己调用 `/admin/licenses` 用，不要泄露。
+- `LICENSE_MAX_DEVICES='1'` 表示一个授权码只能绑定 1 台设备。
+- `.dev.vars` 和 `data/license-store.json` 都包含敏感信息，不要提交到 git。
 
-部署 Function：
+## 构建官网
+
+本地 Node 服务会直接托管 `site/public`：
+
+```bash
+cd site
+hugo --cleanDestinationDir --minify
+```
+
+## 启动服务
 
 ```bash
 cd server
-npx supabase functions deploy cleanmac-license --project-ref jzykexxkpmbdweyzzrwc --no-verify-jwt
+npm install
+npm run build
+npm run start
 ```
 
-验证：
+开发时可用：
 
 ```bash
-curl -fsS https://jzykexxkpmbdweyzzrwc.supabase.co/functions/v1/cleanmac-license/health
+npm run dev
 ```
 
-正常会返回类似：
-
-```json
-{"ok":true,"service":"cleanmac-license","runtime":"supabase-edge"}
-```
-
-## 发送测试授权邮件
-
-部署 Function 且设置 `EMAIL_DELIVERY_MODE=resend` 后，可以用本地脚本模拟一条 Paddle `transaction.completed` webhook。它会真实调用 Supabase Function、写入数据库，并通过 Resend 给 `TEST_EMAIL` 发送一封授权码邮件。
-
-先设置真实发信模式：
+健康检查：
 
 ```bash
-cd server
-npx supabase secrets set --project-ref jzykexxkpmbdweyzzrwc EMAIL_DELIVERY_MODE='resend'
+curl -fsS http://127.0.0.1:1314/health
 ```
 
-触发一封测试邮件：
+## 生成授权码
+
+在淘宝订单确认后，在服务器上执行：
 
 ```bash
-cd server
-PADDLE_WEBHOOK_SECRET='填 Paddle webhook secret' \
-TEST_EMAIL='填你的收件邮箱' \
-npm run test:email
+curl -X POST http://127.0.0.1:1314/admin/licenses \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "count": 1,
+    "taobaoOrderId": "淘宝订单号",
+    "customerName": "淘宝买家昵称",
+    "email": "customer@example.com",
+    "note": "客服手工发码"
+  }'
 ```
 
-成功时终端会返回 `Status: 200`，并显示类似：
-
-```json
-{"ok":true,"licenseId":"...","email":"xx***@example.com"}
-```
-
-然后检查：
-
-- 收件邮箱是否收到 `CleanMac 授权码`。
-- Resend Dashboard 是否有发送记录。
-- Supabase Table Editor 里 `cleanmac_orders` 和 `cleanmac_licenses` 是否新增测试数据。
-
-## Paddle Webhook
-
-在 Paddle Dashboard 创建 Notification destination：
+返回里的 `licenseCode` 就是发给用户的授权码，例如：
 
 ```text
-https://jzykexxkpmbdweyzzrwc.supabase.co/functions/v1/cleanmac-license/webhooks/paddle
+CM-XXXXXXX-XXXXXXX-XXXXXXX
 ```
 
-订阅事件：
+如果你不想把管理接口暴露到公网，建议只在服务器本机调用 `http://127.0.0.1:1314/admin/licenses`。Nginx 可额外禁止外网访问 `/admin/`。
+
+## 阿里云部署建议
+
+当前阿里云轻量应用服务器可用 Node.js 镜像，但镜像内 Node 14 太旧，建议升级到 Node 20 或 22。
+
+部署路径建议：
 
 ```text
-transaction.completed
+/www/wwwroot/CleanMac
 ```
 
-复制 Paddle 提供的 webhook secret，保存到 Supabase secret `PADDLE_WEBHOOK_SECRET`。
+Nginx 或宝塔反向代理：
 
-## Resend 发件
+```text
+https://ruwin.cn -> http://127.0.0.1:1314
+```
 
-1. 在 Resend 添加并验证发件域名。
-2. 创建 API key。
-3. 设置 `RESEND_API_KEY` 和 `RESEND_FROM`。
-
-购买完成后，Function 会生成兼容旧版 App 的 `CM-...` 授权码，并发送到 Paddle 订单邮箱。
+只开放公网 `80`、`443`，不要开放 `1314`。如果使用宝塔，请限制宝塔面板端口只允许你自己的 IP 访问。
 
 ## App 接入
 
-App 已配置：
+App 配置：
 
 ```text
-CleanMacLicenseServerURL=https://jzykexxkpmbdweyzzrwc.supabase.co/functions/v1/cleanmac-license
+CleanMacPurchaseURL=https://你的淘宝店铺或商品链接
+CleanMacLicenseServerURL=https://ruwin.cn
 ```
 
-当前客户端逻辑：
+客户端逻辑：
 
-1. 用户输入授权码。
-2. App 先用本地 HMAC 逻辑校验，兼容旧授权码。
-3. 本地校验失败且配置了 `CleanMacLicenseServerURL` 时，请求 `/licenses/activate`。
-4. 服务端校验通过后，App 保存服务端授权信息并放行。
+1. 用户点击购买，跳转淘宝店铺/商品页。
+2. 用户下单后联系客服获取授权码。
+3. 用户在 App 中输入授权码。
+4. App 先本地校验 `CM-...` 授权码格式与签名。
+5. App 请求 `/licenses/activate`，服务端校验授权码是否已入库并绑定设备。
+6. App 启动后对已绑定 token 请求 `/licenses/verify` 复核授权状态。
 
-## Cloudflare 可选方案
+## 历史微信支付方案
 
-`server/src/index.ts` 仍保留 Cloudflare Worker 实现。如果后续你有独立域名并能完成国内访问优化，可以继续用 Wrangler 部署 Worker；否则优先使用 Supabase Edge Function。
+`src/wechatpay-local-server.ts` 保留微信支付 Native 扫码实现。后续如果重新启用微信支付，需要恢复微信支付相关环境变量，并把启动命令改回：
+
+```bash
+npm run dev:wechatpay
+npm run build:wechatpay
+npm run start:wechatpay
+```

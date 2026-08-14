@@ -56,7 +56,6 @@
 		324DE060C8DAC7622A45A6DC /* StorageDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageDashboardView.swift; sourceTree = "<group>"; };
 		3C9C1E410E0BB4ECEDAD2CA6 /* CleanMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanMacApp.swift; sourceTree = "<group>"; };
 		3F9AEB78F905ECF634ACCCB5 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
-		46E7A6A73AC24F3AB1263561 /* CleanMac-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CleanMac-Info.plist"; sourceTree = "<group>"; };
 		60D396C34DE5C82563F0F489 /* StorageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageModels.swift; sourceTree = "<group>"; };
 		6F0EE7DA2642B1B4CAE28101 /* StorageScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageScanner.swift; sourceTree = "<group>"; };
 		6FDA6E0E38904FFC080B8EF8 /* AppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsView.swift; sourceTree = "<group>"; };
@@ -170,7 +169,6 @@
 			isa = PBXGroup;
 			children = (
 				181DB067E9C456767AAC06C0 /* Assets.xcassets */,
-				46E7A6A73AC24F3AB1263561 /* CleanMac-Info.plist */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -325,7 +323,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -415,12 +412,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "Resources/CleanMac-Info.plist";
-				INFOPLIST_KEY_CleanMacLicenseServerURL = "https://jzykexxkpmbdweyzzrwc.supabase.co/functions/v1/cleanmac-license";
+				INFOPLIST_KEY_CleanMacLicenseServerURL = "https://ruwin.cn";
 				INFOPLIST_KEY_CleanMacLicenseValidationKey = "XJ2OZ+i3UHCVar7NMCZ2RMoTnC9hTuf6Q0k+Lcrl7FA";
-				INFOPLIST_KEY_CleanMacPaddleCheckoutURL = "https://ruwin.cn/?checkout=cleanmac#buy";
-				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥10.00";
+				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥2.00";
+				INFOPLIST_KEY_CleanMacPurchaseURL = "https://item.taobao.com/item.htm?id=1073046083571&spm=a213gs.v2success.0.0.3ab04831aFHLNV";
+				INFOPLIST_KEY_CleanMacRefundURL = "https://ruwin.cn/legal/refund/";
 				INFOPLIST_KEY_CleanMacTencentSurveyURL = "https://wj.qq.com/s2/27497302/29c4/";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -438,12 +436,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "Resources/CleanMac-Info.plist";
-				INFOPLIST_KEY_CleanMacLicenseServerURL = "https://jzykexxkpmbdweyzzrwc.supabase.co/functions/v1/cleanmac-license";
+				INFOPLIST_KEY_CleanMacLicenseServerURL = "https://ruwin.cn";
 				INFOPLIST_KEY_CleanMacLicenseValidationKey = "XJ2OZ+i3UHCVar7NMCZ2RMoTnC9hTuf6Q0k+Lcrl7FA";
-				INFOPLIST_KEY_CleanMacPaddleCheckoutURL = "https://ruwin.cn/?checkout=cleanmac#buy";
-				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥10.00";
+				INFOPLIST_KEY_CleanMacPurchasePriceText = "¥2.00";
+				INFOPLIST_KEY_CleanMacPurchaseURL = "https://shop.taobao.com/";
+				INFOPLIST_KEY_CleanMacRefundURL = "https://ruwin.cn/legal/refund/";
 				INFOPLIST_KEY_CleanMacTencentSurveyURL = "https://wj.qq.com/s2/27497302/29c4/";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -460,7 +459,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (

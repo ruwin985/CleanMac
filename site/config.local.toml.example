@@ -1,9 +1,10 @@
-# Local-only Hugo override for Paddle sandbox checkout.
-# Copy this file to site/config.local.toml, then fill values from your Paddle sandbox account.
+# Local-only Hugo override for Taobao purchase testing.
+# Copy this file to site/config.local.toml, then point purchaseURL at your Taobao item or shop URL.
 # Run with: cd site && hugo server --config config.toml,config.local.toml
 
 [params]
-  paddleEnvironment = 'sandbox'
-  paddlePriceID = 'pri_sandbox_replace_me'
-  paddleClientToken = 'test_replace_me'
-  purchasePriceText = '¥10.00'
+  purchaseURL = 'https://shop.taobao.com/'
+  purchasePriceText = '¥2.00'
+  paymentProvider = 'taobao'
+  paymentAutoOpenParam = 'checkout'
+  paymentAutoOpenValue = 'cleanmac'

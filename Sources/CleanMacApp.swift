@@ -37,11 +37,13 @@ struct CleanMacApp: App {
             StorageDashboardView(viewModel: viewModel)
                 .frame(minWidth: 1100, minHeight: 760)
                 .environmentObject(licenseManager)
+                .background(MainWindowConfigurator())
                 .task {
                     await AppUpdateController.shared.checkForUpdatesIfNeeded()
                 }
         }
         .windowResizability(.contentSize)
+        .windowStyle(.hiddenTitleBar)
 
         Settings {
             AppSettingsView()
@@ -72,6 +74,10 @@ struct CleanMacApp: App {
                 Button("服务条款") {
                     NSWorkspace.shared.open(Self.termsOfServiceURL)
                 }
+
+                Button("退款政策 / 申请退款") {
+                    licenseManager.openRefundPage()
+                }
             }
 
             CommandGroup(after: .help) {
@@ -82,6 +88,36 @@ struct CleanMacApp: App {
                 .keyboardShortcut("f", modifiers: [.command, .option])
             }
         }
+    }
+}
+
+private struct MainWindowConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            configure(window: view.window)
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async {
+            configure(window: nsView.window)
+        }
+    }
+
+    private func configure(window: NSWindow?) {
+        guard let window else { return }
+        window.title = ""
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.toolbarStyle = .unifiedCompact
+        window.isMovableByWindowBackground = true
+        window.backgroundColor = .clear
+        window.styleMask.insert(.fullSizeContentView)
+        window.standardWindowButton(.closeButton)?.isHidden = false
+        window.standardWindowButton(.miniaturizeButton)?.isHidden = false
+        window.standardWindowButton(.zoomButton)?.isHidden = false
     }
 }
 

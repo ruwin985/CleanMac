@@ -89,7 +89,7 @@ struct LicenseGateOverlay: View {
                         .font(.system(size: 40, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
 
-                    Text("CleanMac 提供 1 天免费试用，之后 \(licenseManager.purchasePriceText) 一次性买断。购买成功后，将授权码粘贴到这里即可继续使用。")
+                    Text("CleanMac 提供 1 天免费试用，之后 \(licenseManager.purchasePriceText) 一次性买断。点击购买会跳转淘宝店铺，下单后联系客服获取授权码，再粘贴到这里继续使用。")
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.74))
                         .multilineTextAlignment(.center)
@@ -123,7 +123,7 @@ struct LicenseGateOverlay: View {
                             .foregroundStyle(.orange)
                             .fixedSize(horizontal: false, vertical: true)
                     } else {
-                        Label(licenseManager.hasLicenseServer ? "会先本地校验授权码；如需联网校验，将自动连接授权服务器。" : "订单完成后，请使用 Paddle 购买成功邮件中收到的授权码。", systemImage: "envelope.fill")
+                        Label(licenseManager.hasLicenseServer ? "授权码会联网绑定当前设备；同一授权码达到设备上限后，其他 Mac 需重新购买并使用新授权码。" : "淘宝下单后，请联系客服获取授权码。", systemImage: "envelope.fill")
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.52))
                     }
@@ -132,7 +132,7 @@ struct LicenseGateOverlay: View {
 
                 HStack(spacing: 14) {
                     Button(action: licenseManager.openPurchasePage) {
-                        Label("\(licenseManager.purchasePriceText) 购买授权码", systemImage: "cart.fill")
+                        Label("\(licenseManager.purchasePriceText) 去淘宝购买", systemImage: "cart.fill")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(LicenseGateButtonStyle(kind: .primary))
@@ -149,8 +149,17 @@ struct LicenseGateOverlay: View {
                 }
                 .frame(maxWidth: 560)
 
+                Button(action: licenseManager.openRefundPage) {
+                    Label("申请退款 / 查看退款政策", systemImage: "arrow.uturn.left.circle.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(LicenseGateButtonStyle(kind: .secondary))
+                .disabled(licenseManager.refundURL == nil)
+                .opacity(licenseManager.refundURL == nil ? 0.58 : 1)
+                .frame(maxWidth: 560)
+
                 if licenseManager.purchaseURL == nil {
-                    Text("购买入口尚未配置，请在 Paddle 创建 Checkout 后填入 CleanMacPaddleCheckoutURL。")
+                    Text("购买入口尚未配置，请填入 CleanMacPurchaseURL。")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.48))
                         .multilineTextAlignment(.center)

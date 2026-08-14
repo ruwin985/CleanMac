@@ -76,6 +76,7 @@ final class StorageDashboardViewModel: ObservableObject {
     @Published var pendingManualActionCount: Int = 0
 
     private var scanLifecycle: ScanLifecycle = .idle
+    private var scanSessionID = UUID()
 
     var orderedCategories: [StorageCategory] {
         guard let snapshot else { return [] }
@@ -114,7 +115,7 @@ final class StorageDashboardViewModel: ObservableObject {
     var selectedCleanableSizeInBytes: Int64 {
         selectedCategories.reduce(0) { result, category in
             result + visibleItems(for: category)
-                .filter { selectedCleaningItemIDs.contains($0.id) }
+                .filter { selectedCleaningItemIDs.contains($0.id) && $0.isCleanable }
                 .reduce(0) { $0 + $1.sizeInBytes }
         }
     }
@@ -169,6 +170,7 @@ final class StorageDashboardViewModel: ObservableObject {
     var primaryActionTitle: String {
         if dashboardStage == .ready || dashboardStage == .scannedSummary {
             if isScanning { return "暂停" }
+            if isScanPaused { return "暂停中" }
             if dashboardStage == .scannedSummary && primaryActionPhase == .cleaning { return "清理中" }
             return "运行"
         }
@@ -178,10 +180,15 @@ final class StorageDashboardViewModel: ObservableObject {
     var primaryActionSymbolName: String {
         if dashboardStage == .ready || dashboardStage == .scannedSummary {
             if isScanning { return "pause.fill" }
+            if isScanPaused { return "pause.fill" }
             if dashboardStage == .scannedSummary && primaryActionPhase == .cleaning { return PrimaryActionPhase.cleaning.symbolName }
             return "play.fill"
         }
         return primaryActionPhase.symbolName
+    }
+
+    var isScanPaused: Bool {
+        scanLifecycle == .paused
     }
 
     var showsWelcomeScreen: Bool {
@@ -210,14 +217,18 @@ final class StorageDashboardViewModel: ObservableObject {
     }
 
     func refresh() async {
+        let currentScanSessionID = UUID()
+        scanSessionID = currentScanSessionID
         scanLifecycle = .scanning
         isScanning = true
         primaryActionPhase = .scanning
         startScanAnimation()
         defer {
-            isScanning = false
-            primaryActionPhase = .idle
-            stopScanAnimation()
+            if scanSessionID == currentScanSessionID {
+                isScanning = false
+                primaryActionPhase = .idle
+                stopScanAnimation()
+            }
         }
 
         scanCurrentPath = ""
@@ -226,13 +237,17 @@ final class StorageDashboardViewModel: ObservableObject {
         let snapshot = await Task.detached(priority: .userInitiated) { [weak self] in
             StorageScanner(progress: { progress in
                 Task { @MainActor in
-                    self?.scanCurrentPath = progress.currentPath
-                    self?.scanDiscoveredCleanableBytes = progress.discoveredCleanableBytes
+                    guard let self,
+                          self.scanLifecycle == .scanning,
+                          self.scanSessionID == currentScanSessionID else { return }
+                    self.scanCurrentPath = progress.currentPath
+                    self.scanDiscoveredCleanableBytes = progress.discoveredCleanableBytes
                 }
             }).scan()
         }.value
 
-        guard scanLifecycle == .scanning else { return }
+        guard scanLifecycle == .scanning,
+              scanSessionID == currentScanSessionID else { return }
 
         self.snapshot = snapshot
         self.selectedCategory = orderedCategories.first(where: { !$0.items.filter(\.isCleanable).isEmpty }) ?? orderedCategories.first
@@ -309,6 +324,7 @@ final class StorageDashboardViewModel: ObservableObject {
 
     func pauseScan() {
         guard isScanning else { return }
+        scanSessionID = UUID()
         scanLifecycle = .paused
         isScanning = false
         primaryActionPhase = .idle
@@ -318,6 +334,7 @@ final class StorageDashboardViewModel: ObservableObject {
     }
 
     func resetToHome() {
+        scanSessionID = UUID()
         snapshot = nil
         scanCurrentPath = ""
         scanDiscoveredCleanableBytes = 0
@@ -432,6 +449,11 @@ final class StorageDashboardViewModel: ObservableObject {
     }
 
     func clean(_ item: StorageItem) async {
+        guard item.isCleanable else {
+            revealItem(item)
+            return
+        }
+
         isCleaning = true
         activeCleaningItemIDs.insert(item.id)
         defer {
@@ -447,6 +469,28 @@ final class StorageDashboardViewModel: ObservableObject {
         } catch {
             lastErrorMessage = error.localizedDescription
         }
+    }
+
+    func revealItem(_ item: StorageItem) {
+        revealPath(item.path)
+    }
+
+    private func revealPath(_ path: String) {
+        let rawPath = NSString(string: path).expandingTildeInPath
+        let fileURL = URL(fileURLWithPath: rawPath)
+
+        if FileManager.default.fileExists(atPath: rawPath) {
+            NSWorkspace.shared.activateFileViewerSelecting([fileURL])
+            return
+        }
+
+        let parentURL = fileURL.deletingLastPathComponent()
+        if FileManager.default.fileExists(atPath: parentURL.path) {
+            NSWorkspace.shared.open(parentURL)
+            return
+        }
+
+        lastErrorMessage = "无法打开路径：\(path)"
     }
 
     func cleanSelectedCategory() async {

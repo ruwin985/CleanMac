@@ -37,16 +37,23 @@ struct AppSettingsView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Button("\(licenseManager.purchasePriceText) 购买授权码") {
-                    licenseManager.openPurchasePage()
+                HStack(spacing: 10) {
+                    Button("\(licenseManager.purchasePriceText) 购买授权码") {
+                        licenseManager.openPurchasePage()
+                    }
+                    .disabled(licenseManager.purchaseURL == nil)
+
+                    Button("申请退款") {
+                        licenseManager.openRefundPage()
+                    }
+                    .disabled(licenseManager.refundURL == nil)
                 }
-                .disabled(licenseManager.purchaseURL == nil)
             }
 
             Spacer()
         }
         .padding(24)
-        .frame(width: 420, height: 330)
+        .frame(width: 440, height: 350)
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
             launchMenuBarAtLogin = LoginItemRegistrar.launchMenuBarAtLogin

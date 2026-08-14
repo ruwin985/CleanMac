@@ -20,14 +20,16 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>CleanMacLicenseValidationKey</key>
-	<string>$(INFOPLIST_KEY_CleanMacLicenseValidationKey)</string>
 	<key>CleanMacLicenseServerURL</key>
 	<string>$(INFOPLIST_KEY_CleanMacLicenseServerURL)</string>
-	<key>CleanMacPaddleCheckoutURL</key>
-	<string>$(INFOPLIST_KEY_CleanMacPaddleCheckoutURL)</string>
+	<key>CleanMacLicenseValidationKey</key>
+	<string>$(INFOPLIST_KEY_CleanMacLicenseValidationKey)</string>
 	<key>CleanMacPurchasePriceText</key>
 	<string>$(INFOPLIST_KEY_CleanMacPurchasePriceText)</string>
+	<key>CleanMacPurchaseURL</key>
+	<string>$(INFOPLIST_KEY_CleanMacPurchaseURL)</string>
+	<key>CleanMacRefundURL</key>
+	<string>$(INFOPLIST_KEY_CleanMacRefundURL)</string>
 	<key>CleanMacTencentSurveyURL</key>
 	<string>$(INFOPLIST_KEY_CleanMacTencentSurveyURL)</string>
 	<key>LSApplicationCategoryType</key>

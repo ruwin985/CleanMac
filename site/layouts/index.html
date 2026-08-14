@@ -6,18 +6,23 @@
       <span class="copy-desktop">用 CleanMac 扫描磁盘、清理缓存，<br>还能整理开发残留与隐私痕迹。</span>
       <span class="copy-mobile">扫描磁盘，清理缓存，<br>整理开发残留与隐私痕迹。</span>
     </p>
+    <div class="apple-hero-highlights" aria-label="CleanMac 产品亮点">
+      <span><span class="highlight-check" aria-hidden="true">✅</span>足够小<span class="highlight-note">仅 2M 大小</span></span>
+      <span><span class="highlight-check" aria-hidden="true">✅</span>足够纯净<span class="highlight-note">不需要登录，不获取用户信息</span></span>
+      <span><span class="highlight-check" aria-hidden="true">✅</span>足够便宜<span class="highlight-note">一次性买断，永久使用</span></span>
+    </div>
     <div class="apple-hero-actions" id="buy">
       <a class="apple-hero-button apple-hero-button-primary" href="{{ site.Params.dmgURL | relURL }}">
         <span class="button-desktop">{{ site.Params.downloadText | default "下载" }}</span>
         <span class="button-mobile">下载</span>
       </a>
-      <button class="apple-hero-button apple-hero-button-secondary" type="button" data-paddle-checkout>
-        {{ site.Params.purchasePriceText | default "¥10.00" }} 买断
-      </button>
+      <a class="apple-hero-button apple-hero-button-secondary" href="{{ site.Params.purchaseURL | default `#buy` }}" target="_blank" rel="noopener" data-purchase-link>
+        {{ site.Params.purchasePriceText | default "¥2.00" }} 买断
+      </a>
     </div>
 
-    <p class="apple-hero-purchase-note" data-paddle-message>
-      免费试用 1 天，试用结束后输入购买成功收到的授权码即可继续使用。
+    <p class="apple-hero-purchase-note" data-purchase-message>
+      免费试用 1 天。购买会跳转淘宝店铺，下单后联系客服获取授权码，再回到 CleanMac 粘贴激活。
     </p>
   </div>
 
@@ -34,15 +39,13 @@
   </p>
 </section>
 <script>
-  window.cleanMacPaddleConfig = {
-    environment: {{ printf "%q" (site.Params.paddleEnvironment | default "production") | safeJS }},
-    clientToken: {{ printf "%q" (site.Params.paddleClientToken | default "") | safeJS }},
-    priceID: {{ printf "%q" site.Params.paddlePriceID | safeJS }},
-    autoOpenParam: "checkout",
-    autoOpenValue: "cleanmac"
+  window.cleanMacPurchaseConfig = {
+    provider: {{ printf "%q" (site.Params.paymentProvider | default "taobao") | safeJS }},
+    purchaseURL: {{ printf "%q" (site.Params.purchaseURL | default "") | safeJS }},
+    autoOpenParam: {{ printf "%q" (site.Params.paymentAutoOpenParam | default "checkout") | safeJS }},
+    autoOpenValue: {{ printf "%q" (site.Params.paymentAutoOpenValue | default "cleanmac") | safeJS }}
   };
 </script>
-<script src="https://cdn.paddle.com/paddle/v2/paddle.js" defer></script>
-{{ $checkoutJS := resources.Get "js/paddle-checkout.js" | minify | fingerprint }}
-<script src="{{ $checkoutJS.RelPermalink }}" defer></script>
+  {{ $purchaseJS := resources.Get "js/purchase-link.js" | minify | fingerprint }}
+<script src="{{ $purchaseJS.RelPermalink }}" defer></script>
 {{ end }}

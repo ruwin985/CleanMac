@@ -18,12 +18,27 @@ targets:
     platform: macOS
     info:
       path: Resources/CleanMac-Info.plist
+      properties:
+        CFBundleIconName: AppIcon
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CleanMacLicenseValidationKey: "$(INFOPLIST_KEY_CleanMacLicenseValidationKey)"
+        CleanMacLicenseServerURL: "$(INFOPLIST_KEY_CleanMacLicenseServerURL)"
+        CleanMacPurchaseURL: "$(INFOPLIST_KEY_CleanMacPurchaseURL)"
+        CleanMacPurchasePriceText: "$(INFOPLIST_KEY_CleanMacPurchasePriceText)"
+        CleanMacRefundURL: "$(INFOPLIST_KEY_CleanMacRefundURL)"
+        CleanMacTencentSurveyURL: "$(INFOPLIST_KEY_CleanMacTencentSurveyURL)"
+        LSApplicationCategoryType: "$(INFOPLIST_KEY_LSApplicationCategoryType)"
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
+        NSHumanReadableCopyright: "$(INFOPLIST_KEY_NSHumanReadableCopyright)"
     sources:
       - path: Sources
         excludes:
           - Support/MenuBarController.swift
           - Support/AppLifecycleController.swift
       - path: Resources
+        excludes:
+          - CleanMac-Info.plist
     dependencies:
       - target: CleanMacMenuBar
         embed: true
@@ -32,10 +47,11 @@ targets:
         PRODUCT_NAME: CleanMac
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
-        INFOPLIST_KEY_CleanMacPaddleCheckoutURL: "https://ruwin.cn/?checkout=cleanmac#buy"
-        INFOPLIST_KEY_CleanMacPurchasePriceText: "¥10.00"
+        INFOPLIST_KEY_CleanMacPurchaseURL: "https://item.taobao.com/item.htm?id=1073046083571&spm=a213gs.v2success.0.0.3ab04831aFHLNV"
+        INFOPLIST_KEY_CleanMacPurchasePriceText: "¥2.00"
+        INFOPLIST_KEY_CleanMacRefundURL: "https://ruwin.cn/legal/refund/"
         INFOPLIST_KEY_CleanMacLicenseValidationKey: "XJ2OZ+i3UHCVar7NMCZ2RMoTnC9hTuf6Q0k+Lcrl7FA"
-        INFOPLIST_KEY_CleanMacLicenseServerURL: "https://jzykexxkpmbdweyzzrwc.supabase.co/functions/v1/cleanmac-license"
+        INFOPLIST_KEY_CleanMacLicenseServerURL: "https://ruwin.cn"
         INFOPLIST_KEY_CleanMacTencentSurveyURL: "https://wj.qq.com/s2/27497302/29c4/"
         CODE_SIGN_STYLE: Automatic
     scheme:
@@ -47,6 +63,8 @@ targets:
     sources:
       - path: MenuBarApp
       - path: Resources
+        excludes:
+          - CleanMac-Info.plist
     settings:
       base:
         PRODUCT_NAME: CleanMacMenuBar

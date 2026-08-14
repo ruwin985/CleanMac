@@ -1,6 +1,7 @@
 import AppKit
 import CryptoKit
 import Foundation
+import IOKit
 import Security
 
 @MainActor
@@ -34,8 +35,10 @@ final class LicenseManager: ObservableObject {
     private static let serverLicenseTokenAccount = "serverLicenseToken"
     private static let deviceIDAccount = "deviceID"
     private static let defaultsPrefix = "cleanmac.license."
-    private static let checkoutURLInfoKey = "CleanMacPaddleCheckoutURL"
-    private static let checkoutURLEnvironmentKey = "CLEANMAC_PADDLE_CHECKOUT_URL"
+    private static let purchaseURLInfoKey = "CleanMacPurchaseURL"
+    private static let purchaseURLEnvironmentKey = "CLEANMAC_PURCHASE_URL"
+    private static let refundURLInfoKey = "CleanMacRefundURL"
+    private static let refundURLEnvironmentKey = "CLEANMAC_REFUND_URL"
     private static let licenseServerURLInfoKey = "CleanMacLicenseServerURL"
     private static let licenseServerURLEnvironmentKey = "CLEANMAC_LICENSE_SERVER_URL"
     private static let purchasePriceTextInfoKey = "CleanMacPurchasePriceText"
@@ -91,25 +94,21 @@ final class LicenseManager: ObservableObject {
     }
 
     var purchaseURL: URL? {
-        guard let rawValue = configuredValue(
-            infoKey: Self.checkoutURLInfoKey,
-            environmentKey: Self.checkoutURLEnvironmentKey
-        ) else { return nil }
+        configuredURL(infoKey: Self.purchaseURLInfoKey, environmentKey: Self.purchaseURLEnvironmentKey)
+    }
 
-        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty,
-              !trimmed.localizedCaseInsensitiveContains("replace"),
-              let url = URL(string: trimmed) else {
-            return nil
-        }
-        return url
+    var refundURL: URL? {
+        configuredURL(
+            infoKey: Self.refundURLInfoKey,
+            environmentKey: Self.refundURLEnvironmentKey
+        ) ?? URL(string: "https://ruwin.cn/legal/refund/")
     }
 
     var purchasePriceText: String {
         configuredValue(
             infoKey: Self.purchasePriceTextInfoKey,
             environmentKey: Self.purchasePriceTextEnvironmentKey
-        )?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "¥10.00"
+        )?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "¥2.00"
     }
 
     var hasLicenseServer: Bool {
@@ -117,17 +116,30 @@ final class LicenseManager: ObservableObject {
     }
 
     func refresh() {
-        if let storedCode = storedString(for: Self.licenseCodeAccount),
-           let licenseInfo = try? validateLicenseCode(storedCode) {
-            state = .licensed(licenseInfo)
+        if licenseServerURL != nil {
+            if let serverLicenseInfo = storedServerLicenseInfo(),
+               storedString(for: Self.serverLicenseTokenAccount) != nil {
+                state = .licensed(serverLicenseInfo)
+                Task {
+                    await verifyStoredServerLicense()
+                }
+                return
+            }
+
+            clearStoredServerAuthorization()
+            applyTrialState()
             return
         }
 
-        if let serverLicenseInfo = storedServerLicenseInfo() {
-            state = .licensed(serverLicenseInfo)
+        if let localLicenseInfo = storedLocalLicenseInfo() {
+            state = .licensed(localLicenseInfo)
             return
         }
 
+        applyTrialState()
+    }
+
+    private func applyTrialState() {
         let trialStartedAt = ensureTrialStartedAt()
         let expiresAt = trialStartedAt.addingTimeInterval(trialDuration)
         if Date() < expiresAt {
@@ -139,45 +151,62 @@ final class LicenseManager: ObservableObject {
 
     func openPurchasePage() {
         guard let purchaseURL else {
-            activationErrorMessage = "购买入口尚未配置：请在 Paddle 创建 \(purchasePriceText) 一次性买断 Checkout，并填入 CleanMacPaddleCheckoutURL。"
+            activationErrorMessage = "购买入口尚未配置：请配置 \(purchasePriceText) 一次性买断购买链接。"
             return
         }
         NSWorkspace.shared.open(purchaseURL)
+    }
+
+    func openRefundPage() {
+        guard let refundURL else {
+            activationErrorMessage = "退款入口尚未配置，请填入 CleanMacRefundURL。"
+            return
+        }
+        NSWorkspace.shared.open(refundURL)
     }
 
     func activate(with rawCode: String) {
         guard !isActivating else { return }
         activationErrorMessage = nil
 
-        do {
-            let licenseInfo = try validateLicenseCode(rawCode)
-            store(rawCode.filter { !$0.isWhitespace }, for: Self.licenseCodeAccount)
-            activationErrorMessage = nil
-            state = .licensed(licenseInfo)
-        } catch {
-            guard licenseServerURL != nil else {
-                activationErrorMessage = error.localizedDescription
-                return
-            }
-
+        if licenseServerURL != nil {
             isActivating = true
             Task {
-                await activateWithServer(rawCode: rawCode, fallbackError: error)
+                await activateWithServer(rawCode: rawCode)
             }
+            return
+        }
+
+        do {
+            let licenseInfo = try validateLicenseCode(rawCode)
+            storeLocalLicense(rawCode, licenseInfo: licenseInfo)
+        } catch {
+            activationErrorMessage = error.localizedDescription
         }
     }
 
-    private func activateWithServer(rawCode: String, fallbackError: Error) async {
+    private func storeLocalLicense(_ rawCode: String, licenseInfo: LicenseInfo) {
+        store(canonicalLicenseCode(rawCode), for: Self.licenseCodeAccount)
+        clearStoredServerAuthorization()
+        activationErrorMessage = nil
+        state = .licensed(licenseInfo)
+    }
+
+    private func activateWithServer(rawCode: String) async {
         defer { isActivating = false }
 
         do {
             let response = try await requestServerActivation(rawCode: rawCode)
             guard response.valid, let remoteLicense = response.license else {
-                throw LicenseServerError.rejected(response.message ?? fallbackError.localizedDescription)
+                throw LicenseServerError.rejected(response.message ?? "服务端授权校验失败，请确认授权码是否正确。")
             }
 
             let licenseInfo = remoteLicense.licenseInfo
-            store(rawCode.filter { !$0.isWhitespace }, for: Self.serverLicenseCodeAccount)
+            let canonicalCode = canonicalLicenseCode(rawCode)
+            if (try? validateLicenseCode(rawCode)) != nil {
+                store(canonicalCode, for: Self.licenseCodeAccount)
+            }
+            store(canonicalCode, for: Self.serverLicenseCodeAccount)
             storeServerLicenseInfo(licenseInfo)
             if let token = response.token {
                 store(token, for: Self.serverLicenseTokenAccount)
@@ -189,12 +218,34 @@ final class LicenseManager: ObservableObject {
         }
     }
 
-    private func requestServerActivation(rawCode: String) async throws -> LicenseServerActivationResponse {
-        guard let licenseServerURL,
-              let activationURL = URL(string: licenseServerURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/licenses/activate") else {
-            throw LicenseServerError.notConfigured
-        }
+    private func verifyStoredServerLicense() async {
+        guard let token = storedString(for: Self.serverLicenseTokenAccount) else { return }
 
+        do {
+            let response = try await requestServerVerification(token: token)
+            guard response.valid else {
+                throw LicenseServerError.rejected(response.message ?? "授权已失效，请重新激活。")
+            }
+        } catch let error as LicenseServerError {
+            if case let .rejected(message) = error {
+                let shouldRemoveLocalLicense = storedServerLicenseMatchesLocalLicense()
+                clearStoredServerAuthorization()
+                if shouldRemoveLocalLicense {
+                    removeStoredValue(for: Self.licenseCodeAccount)
+                }
+                activationErrorMessage = message
+                if let localLicenseInfo = storedLocalLicenseInfo() {
+                    state = .licensed(localLicenseInfo)
+                } else {
+                    applyTrialState()
+                }
+            }
+        } catch {
+            return
+        }
+    }
+
+    private func requestServerActivation(rawCode: String) async throws -> LicenseServerActivationResponse {
         let bundle = Bundle.main
         let payload = LicenseServerActivationRequest(
             licenseCode: rawCode,
@@ -204,7 +255,7 @@ final class LicenseManager: ObservableObject {
             platform: "macOS"
         )
 
-        var request = URLRequest(url: activationURL, timeoutInterval: 12)
+        var request = URLRequest(url: try licenseServerEndpoint("/licenses/activate"), timeoutInterval: 12)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -220,6 +271,38 @@ final class LicenseManager: ObservableObject {
             throw LicenseServerError.rejected(activationResponse.message ?? "服务端授权校验失败，请确认授权码是否正确。")
         }
         return activationResponse
+    }
+
+    private func requestServerVerification(token: String) async throws -> LicenseServerVerificationResponse {
+        let payload = LicenseServerVerificationRequest(
+            token: token,
+            deviceId: deviceID()
+        )
+
+        var request = URLRequest(url: try licenseServerEndpoint("/licenses/verify"), timeoutInterval: 12)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = try JSONEncoder().encode(payload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw LicenseServerError.invalidResponse
+        }
+
+        let verificationResponse = try JSONDecoder().decode(LicenseServerVerificationResponse.self, from: data)
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw LicenseServerError.rejected(verificationResponse.message ?? "授权已失效，请重新激活。")
+        }
+        return verificationResponse
+    }
+
+    private func licenseServerEndpoint(_ path: String) throws -> URL {
+        guard let licenseServerURL,
+              let endpointURL = URL(string: licenseServerURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + path) else {
+            throw LicenseServerError.notConfigured
+        }
+        return endpointURL
     }
 
     private var licenseServerURL: URL? {
@@ -239,6 +322,10 @@ final class LicenseManager: ObservableObject {
     }
 
     private func deviceID() -> String {
+        if let hardwareDeviceID = hardwareBoundDeviceID() {
+            return hardwareDeviceID
+        }
+
         if let storedDeviceID = storedString(for: Self.deviceIDAccount), !storedDeviceID.isEmpty {
             return storedDeviceID
         }
@@ -248,16 +335,69 @@ final class LicenseManager: ObservableObject {
         return newDeviceID
     }
 
+    private func hardwareBoundDeviceID() -> String? {
+        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
+        guard service != 0 else { return nil }
+        defer { IOObjectRelease(service) }
+
+        guard let value = IORegistryEntryCreateCFProperty(service, kIOPlatformUUIDKey as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() as? String else {
+            return nil
+        }
+
+        let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedValue.isEmpty else { return nil }
+
+        let bundleIdentifier = Bundle.main.bundleIdentifier ?? Self.productIdentifier
+        let digest = SHA256.hash(data: Data("\(bundleIdentifier):\(trimmedValue)".utf8))
+        return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
     private func storedServerLicenseInfo() -> LicenseInfo? {
         guard let storedValue = storedString(for: Self.serverLicenseInfoAccount),
               let data = storedValue.data(using: .utf8) else { return nil }
         return try? JSONDecoder().decode(LicenseInfo.self, from: data)
     }
 
+    private func storedLocalLicenseInfo() -> LicenseInfo? {
+        guard let storedCode = storedString(for: Self.licenseCodeAccount) else { return nil }
+        return try? validateLicenseCode(storedCode)
+    }
+
+    private func verifyStoredServerLicenseIfNeeded() {
+        guard licenseServerURL != nil,
+              storedString(for: Self.serverLicenseTokenAccount) != nil,
+              storedServerLicenseMatchesLocalLicense() else { return }
+
+        Task {
+            await verifyStoredServerLicense()
+        }
+    }
+
+    private func storedServerLicenseMatchesLocalLicense() -> Bool {
+        guard let localCode = storedString(for: Self.licenseCodeAccount),
+              let serverCode = storedString(for: Self.serverLicenseCodeAccount) else { return false }
+        return canonicalLicenseCode(localCode) == canonicalLicenseCode(serverCode)
+    }
+
     private func storeServerLicenseInfo(_ licenseInfo: LicenseInfo) {
         guard let data = try? JSONEncoder().encode(licenseInfo),
               let encoded = String(data: data, encoding: .utf8) else { return }
         store(encoded, for: Self.serverLicenseInfoAccount)
+    }
+
+    private func clearStoredServerAuthorization() {
+        [
+            Self.serverLicenseCodeAccount,
+            Self.serverLicenseInfoAccount,
+            Self.serverLicenseTokenAccount
+        ].forEach { removeStoredValue(for: $0) }
+    }
+
+    private func canonicalLicenseCode(_ rawCode: String) -> String {
+        rawCode
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+            .filter { !$0.isWhitespace }
     }
 
     private func ensureTrialStartedAt() -> Date {
@@ -343,6 +483,23 @@ final class LicenseManager: ObservableObject {
         defaults.set(value, forKey: Self.defaultsPrefix + account)
     }
 
+    private func removeStoredValue(for account: String) {
+        LicenseKeychainStore.delete(for: account)
+        defaults.removeObject(forKey: Self.defaultsPrefix + account)
+    }
+
+    private func configuredURL(infoKey: String, environmentKey: String) -> URL? {
+        guard let rawValue = configuredValue(infoKey: infoKey, environmentKey: environmentKey) else { return nil }
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              !trimmed.localizedCaseInsensitiveContains("replace"),
+              let url = URL(string: trimmed),
+              url.scheme?.hasPrefix("http") == true else {
+            return nil
+        }
+        return url
+    }
+
     private func configuredValue(infoKey: String, environmentKey: String) -> String? {
         if let environmentValue = ProcessInfo.processInfo.environment[environmentKey],
            !environmentValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -368,6 +525,11 @@ private struct LicenseServerActivationRequest: Encodable {
     let appVersion: String?
     let buildNumber: String?
     let platform: String
+}
+
+private struct LicenseServerVerificationRequest: Encodable {
+    let token: String
+    let deviceId: String
 }
 
 private struct LicenseServerActivationResponse: Decodable {
@@ -402,7 +564,14 @@ private struct LicenseServerActivationResponse: Decodable {
 
     let valid: Bool
     let token: String?
+    let maxDevices: Int?
     let license: RemoteLicense?
+    let message: String?
+}
+
+private struct LicenseServerVerificationResponse: Decodable {
+    let valid: Bool
+    let maxDevices: Int?
     let message: String?
 }
 
@@ -469,6 +638,10 @@ private enum LicenseKeychainStore {
         attributes[kSecValueData as String] = data
         attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         SecItemAdd(attributes as CFDictionary, nil)
+    }
+
+    static func delete(for account: String) {
+        SecItemDelete(baseQuery(for: account) as CFDictionary)
     }
 
     private static func baseQuery(for account: String) -> [String: Any] {

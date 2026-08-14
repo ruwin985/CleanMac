@@ -300,12 +300,63 @@ main {
 .copy-mobile,
 .button-mobile { display: none; }
 
+.apple-hero-highlights {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: min(100%, 680px);
+  margin: 14px auto 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(29, 29, 31, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 10px 28px rgba(29, 29, 31, 0.06);
+  backdrop-filter: blur(18px);
+}
+
+.apple-hero-highlights > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.highlight-check {
+  display: inline-block;
+  margin-right: 1px;
+  font-size: 13px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(52, 199, 89, 0.22));
+}
+
+.apple-hero-highlights > span:not(:last-child)::after {
+  content: "";
+  width: 4px;
+  height: 4px;
+  margin-left: 3px;
+  border-radius: 999px;
+  background: rgba(29, 29, 31, 0.2);
+}
+
+.highlight-note {
+  color: rgba(29, 29, 31, 0.58);
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .apple-hero-actions {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin-top: 22px;
+  margin-top: 14px;
 }
 
 .apple-hero-button {
@@ -358,6 +409,167 @@ main {
 
 .apple-hero-purchase-note.is-error {
   color: #b54708;
+}
+
+.wechatpay-modal-open {
+  overflow: hidden;
+}
+
+.wechatpay-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(18px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.wechatpay-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.wechatpay-modal-card {
+  position: relative;
+  width: min(460px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 28px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
+  text-align: center;
+}
+
+.wechatpay-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  color: rgba(29, 29, 31, 0.62);
+  background: rgba(29, 29, 31, 0.08);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.wechatpay-modal-kicker {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.wechatpay-modal h2 {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: -0.04em;
+}
+
+.wechatpay-modal-copy,
+.wechatpay-modal-message,
+.wechatpay-order-text,
+.wechatpay-license-wrap p {
+  color: rgba(29, 29, 31, 0.58);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.wechatpay-modal-copy {
+  margin: 12px 0 18px;
+}
+
+.wechatpay-email-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.wechatpay-email-input {
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(29, 29, 31, 0.14);
+  border-radius: 14px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.85);
+  font: inherit;
+}
+
+.wechatpay-create-button,
+.wechatpay-copy-button {
+  height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  color: #fff;
+  background: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.wechatpay-create-button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.wechatpay-modal-message {
+  min-height: 20px;
+  margin: 12px 0 0;
+}
+
+.wechatpay-modal-message.is-error {
+  color: #b54708;
+}
+
+.wechatpay-qr-wrap,
+.wechatpay-license-wrap {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(29, 29, 31, 0.1);
+}
+
+.wechatpay-qr {
+  width: 220px;
+  height: 220px;
+  padding: 10px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(29, 29, 31, 0.08);
+}
+
+.wechatpay-order-text {
+  margin: 10px 0 6px;
+}
+
+.wechatpay-open-link {
+  color: var(--accent);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.wechatpay-license-wrap code {
+  display: block;
+  margin: 10px 0 12px;
+  padding: 14px 16px;
+  overflow-wrap: anywhere;
+  border-radius: 16px;
+  color: var(--text);
+  background: rgba(29, 29, 31, 0.06);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .apple-hero-media {
@@ -512,6 +724,26 @@ main {
     font-size: clamp(24px, 6.65vw, 29px);
     letter-spacing: -0.045em;
     line-height: 1.28;
+  }
+
+  .apple-hero-highlights {
+    width: min(100%, 360px);
+    gap: 6px;
+    margin-top: 16px;
+    padding: 10px 12px;
+    border-radius: 20px;
+  }
+
+  .apple-hero-highlights > span {
+    font-size: 13px;
+  }
+
+  .apple-hero-highlights > span:not(:last-child)::after {
+    display: none;
+  }
+
+  .highlight-note {
+    font-size: 11px;
   }
 
   .copy-desktop { display: none; }
