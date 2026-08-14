@@ -25,7 +25,6 @@ targets:
         CleanMacLicenseValidationKey: "$(INFOPLIST_KEY_CleanMacLicenseValidationKey)"
         CleanMacLicenseServerURL: "$(INFOPLIST_KEY_CleanMacLicenseServerURL)"
         CleanMacPurchaseURL: "$(INFOPLIST_KEY_CleanMacPurchaseURL)"
-        CleanMacPurchasePriceText: "$(INFOPLIST_KEY_CleanMacPurchasePriceText)"
         CleanMacRefundURL: "$(INFOPLIST_KEY_CleanMacRefundURL)"
         CleanMacTencentSurveyURL: "$(INFOPLIST_KEY_CleanMacTencentSurveyURL)"
         LSApplicationCategoryType: "$(INFOPLIST_KEY_LSApplicationCategoryType)"
@@ -48,7 +47,6 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
         INFOPLIST_KEY_CleanMacPurchaseURL: "https://item.taobao.com/item.htm?id=1073046083571&spm=a213gs.v2success.0.0.3ab04831aFHLNV"
-        INFOPLIST_KEY_CleanMacPurchasePriceText: "¥2.00"
         INFOPLIST_KEY_CleanMacRefundURL: "https://ruwin.cn/legal/refund/"
         INFOPLIST_KEY_CleanMacLicenseValidationKey: "XJ2OZ+i3UHCVar7NMCZ2RMoTnC9hTuf6Q0k+Lcrl7FA"
         INFOPLIST_KEY_CleanMacLicenseServerURL: "https://ruwin.cn"

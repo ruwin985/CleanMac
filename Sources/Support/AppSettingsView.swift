@@ -38,7 +38,7 @@ struct AppSettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 HStack(spacing: 10) {
-                    Button("\(licenseManager.purchasePriceText) 购买授权码") {
+                    Button("购买授权码") {
                         licenseManager.openPurchasePage()
                     }
                     .disabled(licenseManager.purchaseURL == nil)

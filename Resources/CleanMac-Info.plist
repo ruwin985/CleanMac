@@ -24,8 +24,6 @@
 	<string>$(INFOPLIST_KEY_CleanMacLicenseServerURL)</string>
 	<key>CleanMacLicenseValidationKey</key>
 	<string>$(INFOPLIST_KEY_CleanMacLicenseValidationKey)</string>
-	<key>CleanMacPurchasePriceText</key>
-	<string>$(INFOPLIST_KEY_CleanMacPurchasePriceText)</string>
 	<key>CleanMacPurchaseURL</key>
 	<string>$(INFOPLIST_KEY_CleanMacPurchaseURL)</string>
 	<key>CleanMacRefundURL</key>

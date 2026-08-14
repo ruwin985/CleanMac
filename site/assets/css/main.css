@@ -365,11 +365,11 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 74px;
+  min-width: 122px;
   height: 44px;
   padding: 0 22px;
   color: #fff;
-  background: var(--accent);
+  background: #30d158;
   border-radius: 999px;
   cursor: pointer;
   font-family: inherit;
@@ -380,17 +380,17 @@ main {
 }
 
 .apple-hero-button-primary:hover {
-  background: #0077ed;
+  background: #28c84f;
   transform: translateY(-1px);
 }
 
 .apple-hero-button-secondary {
-  color: var(--text);
-  background: rgba(29, 29, 31, 0.08);
+  color: #fff;
+  background: #8e5cf7;
 }
 
 .apple-hero-button-secondary:hover {
-  background: rgba(29, 29, 31, 0.12);
+  background: #7c4df0;
   transform: translateY(-1px);
 }
 
@@ -753,7 +753,7 @@ main {
 
   .apple-hero-button {
     height: 44px;
-    min-width: 78px;
+    min-width: 112px;
     padding: 0 22px;
     font-size: 17px;
   }

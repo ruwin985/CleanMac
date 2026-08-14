@@ -26,10 +26,14 @@ DMG_PATH="$BUILD_DIR/${APP_NAME}-${VERSION}.dmg"
 rm -rf "$ARCHIVE_PATH" "$EXPORT_DIR" "$DMG_DIR"
 mkdir -p "$BUILD_DIR" "$EXPORT_DIR" "$DMG_DIR"
 
-if [[ -n "$DEVELOPMENT_TEAM" ]] && ! security find-identity -v -p codesigning | grep -q "Developer ID Application: .*(.*$DEVELOPMENT_TEAM)"; then
-  echo "Developer ID Application certificate not found for team: $DEVELOPMENT_TEAM" >&2
-  echo "Create it in Xcode Settings > Accounts > Manage Certificates, then retry." >&2
-  exit 1
+DEVELOPER_ID_IDENTITY=""
+if [[ -n "$DEVELOPMENT_TEAM" ]]; then
+  DEVELOPER_ID_IDENTITY="$(security find-identity -v -p codesigning | awk -v team="$DEVELOPMENT_TEAM" '$0 ~ "Developer ID Application:" && $0 ~ "\\(" team "\\)" { print $2; exit }')"
+  if [[ -z "$DEVELOPER_ID_IDENTITY" ]]; then
+    echo "Developer ID Application certificate not found for team: $DEVELOPMENT_TEAM" >&2
+    echo "Create it in Xcode Settings > Accounts > Manage Certificates, then retry." >&2
+    exit 1
+  fi
 fi
 
 ARCHIVE_ARGS=(
@@ -41,6 +45,8 @@ ARCHIVE_ARGS=(
   -archivePath "$ARCHIVE_PATH" \
   ARCHS='arm64 x86_64' \
   ONLY_ACTIVE_ARCH=NO
+  MARKETING_VERSION="$VERSION" \
+  CURRENT_PROJECT_VERSION="$BUILD_NUMBER"
 )
 
 if [[ -n "$DEVELOPMENT_TEAM" ]]; then
@@ -110,6 +116,10 @@ hdiutil create \
   -ov \
   -format UDZO \
   "$DMG_PATH"
+
+if [[ -n "$DEVELOPER_ID_IDENTITY" ]]; then
+  codesign --force --sign "$DEVELOPER_ID_IDENTITY" --timestamp "$DMG_PATH"
+fi
 
 if [[ -n "$NOTARY_PROFILE" ]]; then
   xcrun notarytool submit "$DMG_PATH" --keychain-profile "$NOTARY_PROFILE" --wait

@@ -89,7 +89,7 @@ struct LicenseGateOverlay: View {
                         .font(.system(size: 40, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
 
-                    Text("CleanMac 提供 1 天免费试用，之后 \(licenseManager.purchasePriceText) 一次性买断。点击购买会跳转淘宝店铺，下单后联系客服获取授权码，再粘贴到这里继续使用。")
+                    Text("CleanMac 提供 1 天免费试用，试用结束后可通过淘宝店铺购买一次性买断授权码。下单后联系客服获取授权码，再粘贴到这里继续使用。")
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.74))
                         .multilineTextAlignment(.center)
@@ -132,7 +132,7 @@ struct LicenseGateOverlay: View {
 
                 HStack(spacing: 14) {
                     Button(action: licenseManager.openPurchasePage) {
-                        Label("\(licenseManager.purchasePriceText) 去淘宝购买", systemImage: "cart.fill")
+                        Label("购买授权码", systemImage: "cart.fill")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(LicenseGateButtonStyle(kind: .primary))

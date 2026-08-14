@@ -41,8 +41,6 @@ final class LicenseManager: ObservableObject {
     private static let refundURLEnvironmentKey = "CLEANMAC_REFUND_URL"
     private static let licenseServerURLInfoKey = "CleanMacLicenseServerURL"
     private static let licenseServerURLEnvironmentKey = "CLEANMAC_LICENSE_SERVER_URL"
-    private static let purchasePriceTextInfoKey = "CleanMacPurchasePriceText"
-    private static let purchasePriceTextEnvironmentKey = "CLEANMAC_PURCHASE_PRICE_TEXT"
     private static let validationKeyInfoKey = "CleanMacLicenseValidationKey"
     private static let validationKeyEnvironmentKey = "CLEANMAC_LICENSE_VALIDATION_KEY"
     private static let shortLicenseVersion: UInt8 = 3
@@ -104,13 +102,6 @@ final class LicenseManager: ObservableObject {
         ) ?? URL(string: "https://ruwin.cn/legal/refund/")
     }
 
-    var purchasePriceText: String {
-        configuredValue(
-            infoKey: Self.purchasePriceTextInfoKey,
-            environmentKey: Self.purchasePriceTextEnvironmentKey
-        )?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "¥2.00"
-    }
-
     var hasLicenseServer: Bool {
         licenseServerURL != nil
     }
@@ -151,7 +142,7 @@ final class LicenseManager: ObservableObject {
 
     func openPurchasePage() {
         guard let purchaseURL else {
-            activationErrorMessage = "购买入口尚未配置：请配置 \(purchasePriceText) 一次性买断购买链接。"
+            activationErrorMessage = "购买入口尚未配置：请配置淘宝购买链接。"
             return
         }
         NSWorkspace.shared.open(purchaseURL)
@@ -510,12 +501,6 @@ final class LicenseManager: ObservableObject {
             return bundleValue
         }
         return nil
-    }
-}
-
-private extension String {
-    var nonEmpty: String? {
-        isEmpty ? nil : self
     }
 }
 

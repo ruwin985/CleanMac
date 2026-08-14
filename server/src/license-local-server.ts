@@ -139,7 +139,7 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
   }
 
   if (method === "GET" || method === "HEAD") {
-    serveStatic(url.pathname, response, method === "HEAD");
+    serveStatic(url.pathname, request, response, method === "HEAD");
     return;
   }
 
@@ -396,8 +396,14 @@ function maxDevicesForLicense(): number {
   return positiveInteger(env.LICENSE_MAX_DEVICES, 1);
 }
 
-function serveStatic(pathname: string, response: ServerResponse, headOnly: boolean): void {
-  const decodedPath = decodeURIComponent(pathname);
+function serveStatic(pathname: string, request: IncomingMessage, response: ServerResponse, headOnly: boolean): void {
+  let decodedPath: string;
+  try {
+    decodedPath = decodeURIComponent(pathname);
+  } catch {
+    sendJSON(response, { ok: false, message: "Bad request" }, 400);
+    return;
+  }
   const normalizedPath = normalize(decodedPath).replace(/^(\.\.(\/|\\|$))+/, "");
   let filePath = resolve(siteDir, `.${normalizedPath}`);
   if (!filePath.startsWith(siteDir)) {
@@ -410,9 +416,56 @@ function serveStatic(pathname: string, response: ServerResponse, headOnly: boole
     sendJSON(response, { ok: false, message: "site/public 不存在，请先运行 Hugo 构建站点。" }, 404);
     return;
   }
-  response.writeHead(200, defaultHeaders({ "Content-Type": contentType(filePath) }));
+  const size = statSync(filePath).size;
+  const range = headerValue(request, "range");
+  const headers = defaultHeaders({
+    "Accept-Ranges": "bytes",
+    "Content-Type": contentType(filePath)
+  });
+
+  if (range) {
+    const parsedRange = parseByteRange(range, size);
+    if (!parsedRange) {
+      response.writeHead(416, defaultHeaders({
+        "Content-Range": `bytes */${size}`,
+        "Content-Type": "text/plain; charset=utf-8"
+      }));
+      response.end("Requested Range Not Satisfiable");
+      return;
+    }
+
+    response.writeHead(206, {
+      ...headers,
+      "Content-Length": String(parsedRange.end - parsedRange.start + 1),
+      "Content-Range": `bytes ${parsedRange.start}-${parsedRange.end}/${size}`
+    });
+    if (!headOnly) createReadStream(filePath, { start: parsedRange.start, end: parsedRange.end }).pipe(response);
+    else response.end();
+    return;
+  }
+
+  response.writeHead(200, { ...headers, "Content-Length": String(size) });
   if (!headOnly) createReadStream(filePath).pipe(response);
   else response.end();
+}
+
+function parseByteRange(range: string, size: number): { start: number; end: number } | null {
+  const match = range.match(/^bytes=(\d*)-(\d*)$/);
+  if (!match || size <= 0) return null;
+
+  const [, rawStart, rawEnd] = match;
+  if (!rawStart && !rawEnd) return null;
+
+  if (!rawStart) {
+    const suffixLength = Number(rawEnd);
+    if (!Number.isInteger(suffixLength) || suffixLength <= 0) return null;
+    return { start: Math.max(size - suffixLength, 0), end: size - 1 };
+  }
+
+  const start = Number(rawStart);
+  const end = rawEnd ? Number(rawEnd) : size - 1;
+  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start || start >= size) return null;
+  return { start, end: Math.min(end, size - 1) };
 }
 
 class LocalStore {

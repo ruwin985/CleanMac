@@ -14,10 +14,10 @@
     <div class="apple-hero-actions" id="buy">
       <a class="apple-hero-button apple-hero-button-primary" href="{{ site.Params.dmgURL | relURL }}">
         <span class="button-desktop">{{ site.Params.downloadText | default "下载" }}</span>
-        <span class="button-mobile">下载</span>
+        <span class="button-mobile">快速下载</span>
       </a>
       <a class="apple-hero-button apple-hero-button-secondary" href="{{ site.Params.purchaseURL | default `#buy` }}" target="_blank" rel="noopener" data-purchase-link>
-        {{ site.Params.purchasePriceText | default "¥2.00" }} 买断
+        {{ site.Params.purchaseButtonText | default "终身独享" }}
       </a>
     </div>
 
