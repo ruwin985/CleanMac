@@ -60,12 +60,14 @@ struct LicenseStatusPill: View {
 
 struct LicenseGateOverlay: View {
     @ObservedObject var licenseManager: LicenseManager
+    var allowsDismissal = false
+    var dismiss: (() -> Void)?
 
     var body: some View {
         if #available(macOS 12.0, *) {
-            ModernLicenseGateOverlay(licenseManager: licenseManager)
+            ModernLicenseGateOverlay(licenseManager: licenseManager, allowsDismissal: allowsDismissal, dismiss: dismiss)
         } else {
-            LegacyLicenseGateOverlay(licenseManager: licenseManager)
+            LegacyLicenseGateOverlay(licenseManager: licenseManager, allowsDismissal: allowsDismissal, dismiss: dismiss)
         }
     }
 }
@@ -73,6 +75,8 @@ struct LicenseGateOverlay: View {
 @available(macOS 12.0, *)
 private struct ModernLicenseGateOverlay: View {
     @ObservedObject var licenseManager: LicenseManager
+    let allowsDismissal: Bool
+    let dismiss: (() -> Void)?
     @State private var licenseCode = ""
     @FocusState private var isLicenseFieldFocused: Bool
 
@@ -92,17 +96,17 @@ private struct ModernLicenseGateOverlay: View {
 
             VStack(spacing: 24) {
                 VStack(spacing: 14) {
-                    Image(systemName: "lock.shield.fill")
+                    Image(systemName: iconName)
                         .font(.system(size: 54, weight: .bold))
                         .foregroundStyle(
                             LinearGradient(colors: [.mint, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
 
-                    Text("CleanMac 试用已结束")
+                    Text(titleText)
                         .font(.system(size: 40, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
 
-                    Text("CleanMac 提供 1 天免费试用，试用结束后可通过淘宝店铺购买一次性买断授权码。下单后联系客服获取授权码，再粘贴到这里继续使用。")
+                    Text(subtitleText)
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.74))
                         .multilineTextAlignment(.center)
@@ -186,10 +190,36 @@ private struct ModernLicenseGateOverlay: View {
                 RoundedRectangle(cornerRadius: 34, style: .continuous)
                     .stroke(.white.opacity(0.12), lineWidth: 1)
             }
+            .overlayCompat(alignment: .topTrailing) {
+                closeButton
+            }
             .shadow(color: .black.opacity(0.42), radius: 50, y: 28)
         }
         .onAppear {
             isLicenseFieldFocused = true
+        }
+    }
+
+    private var titleText: String {
+        licenseManager.requiresLicenseOverlay ? "CleanMac 试用已结束" : "输入授权码"
+    }
+
+    private var subtitleText: String {
+        if licenseManager.requiresLicenseOverlay {
+            return "CleanMac 提供 1 天免费试用，试用结束后可通过淘宝店铺购买一次性买断授权码。下单后联系客服获取授权码，再粘贴到这里继续使用。"
+        }
+        return "如果你已经购买 CleanMac 授权码，可以在这里提前输入并完成授权；试用剩余时间不会影响授权激活。"
+    }
+
+    private var iconName: String {
+        licenseManager.requiresLicenseOverlay ? "lock.shield.fill" : "key.fill"
+    }
+
+    @ViewBuilder
+    private var closeButton: some View {
+        if allowsDismissal, let dismiss {
+            LicenseGateCloseButton(dismiss: dismiss)
+                .padding(18)
         }
     }
 
@@ -205,6 +235,8 @@ private struct ModernLicenseGateOverlay: View {
 
 private struct LegacyLicenseGateOverlay: View {
     @ObservedObject var licenseManager: LicenseManager
+    let allowsDismissal: Bool
+    let dismiss: (() -> Void)?
     @State private var licenseCode = ""
 
     var body: some View {
@@ -223,15 +255,15 @@ private struct LegacyLicenseGateOverlay: View {
 
             VStack(spacing: 24) {
                 VStack(spacing: 14) {
-                    Image(systemName: "lock.shield.fill")
+                    Image(systemName: iconName)
                         .font(.system(size: 54, weight: .bold))
                         .licenseIconGradientCompat()
 
-                    Text("CleanMac 试用已结束")
+                    Text(titleText)
                         .font(.system(size: 40, weight: .bold, design: .rounded))
                         .foregroundStyleCompat(.white)
 
-                    Text("CleanMac 提供 1 天免费试用，试用结束后可通过淘宝店铺购买一次性买断授权码。下单后联系客服获取授权码，再粘贴到这里继续使用。")
+                    Text(subtitleText)
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundStyleCompat(.white.opacity(0.74))
                         .multilineTextAlignment(.center)
@@ -313,7 +345,33 @@ private struct LegacyLicenseGateOverlay: View {
                 RoundedRectangle(cornerRadius: 34, style: .continuous)
                     .stroke(.white.opacity(0.12), lineWidth: 1)
             }
+            .overlayCompat(alignment: .topTrailing) {
+                closeButton
+            }
             .shadow(color: .black.opacity(0.42), radius: 50, y: 28)
+        }
+    }
+
+    private var titleText: String {
+        licenseManager.requiresLicenseOverlay ? "CleanMac 试用已结束" : "输入授权码"
+    }
+
+    private var subtitleText: String {
+        if licenseManager.requiresLicenseOverlay {
+            return "CleanMac 提供 1 天免费试用，试用结束后可通过淘宝店铺购买一次性买断授权码。下单后联系客服获取授权码，再粘贴到这里继续使用。"
+        }
+        return "如果你已经购买 CleanMac 授权码，可以在这里提前输入并完成授权；试用剩余时间不会影响授权激活。"
+    }
+
+    private var iconName: String {
+        licenseManager.requiresLicenseOverlay ? "lock.shield.fill" : "key.fill"
+    }
+
+    @ViewBuilder
+    private var closeButton: some View {
+        if allowsDismissal, let dismiss {
+            LicenseGateCloseButton(dismiss: dismiss)
+                .padding(18)
         }
     }
 
@@ -324,6 +382,26 @@ private struct LegacyLicenseGateOverlay: View {
     private func activate() {
         guard !trimmedLicenseCode.isEmpty else { return }
         licenseManager.activate(with: trimmedLicenseCode)
+    }
+}
+
+private struct LicenseGateCloseButton: View {
+    let dismiss: () -> Void
+
+    var body: some View {
+        Button(action: dismiss) {
+            Image(systemName: "xmark")
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundStyleCompat(.white.opacity(0.82))
+                .frame(width: 34, height: 34)
+                .backgroundCompat(.white.opacity(0.12), in: Circle())
+                .overlayCompat {
+                    Circle().stroke(.white.opacity(0.14), lineWidth: 1)
+                }
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .help("关闭")
     }
 }
 

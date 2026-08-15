@@ -12,6 +12,7 @@ struct StorageDashboardView: View {
     private let licenseRefreshTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
     @State private var detailScrollTargetID: StorageCategory.ID?
     @State private var protectionScrollTargetID: ProtectionThreatKind?
+    @State private var showsLicenseActivationOverlay = false
     @EnvironmentObject private var licenseManager: LicenseManager
 
     @ObservedObject var viewModel: StorageDashboardViewModel
@@ -62,9 +63,21 @@ struct StorageDashboardView: View {
         .overlayCompat(alignment: .topTrailing) {
             if viewModel.dashboardStage == .welcome,
                !licenseManager.requiresLicenseOverlay {
-                LicenseStatusPill(licenseManager: licenseManager)
+                if canOpenLicenseActivationOverlay {
+                    Button {
+                        showsLicenseActivationOverlay = true
+                    } label: {
+                        LicenseStatusPill(licenseManager: licenseManager)
+                    }
+                    .buttonStyle(.plain)
+                    .help("输入授权码")
                     .padding(.top, 8)
                     .padding(.trailing, 26)
+                } else {
+                    LicenseStatusPill(licenseManager: licenseManager)
+                        .padding(.top, 8)
+                        .padding(.trailing, 26)
+                }
             }
         }
         .overlayCompat {
@@ -91,6 +104,17 @@ struct StorageDashboardView: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.985)))
             }
         }
+        .overlayCompat {
+            if showsLicenseActivationOverlay,
+               !licenseManager.requiresLicenseOverlay {
+                LicenseGateOverlay(
+                    licenseManager: licenseManager,
+                    allowsDismissal: true,
+                    dismiss: { showsLicenseActivationOverlay = false }
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.985)))
+            }
+        }
         .onAppear {
             licenseManager.refresh()
         }
@@ -100,11 +124,22 @@ struct StorageDashboardView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             licenseManager.refresh()
         }
+        .onReceive(licenseManager.$state) { state in
+            if case .licensed = state {
+                showsLicenseActivationOverlay = false
+            }
+        }
         .animation(.spring(response: 0.35, dampingFraction: 0.86), value: viewModel.toastMessage)
         .animation(.spring(response: 0.35, dampingFraction: 0.86), value: viewModel.activePopover?.card.id)
         .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.showsFullDiskAccessPrompt)
         .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.lastErrorMessage)
         .animation(.spring(response: 0.35, dampingFraction: 0.9), value: licenseManager.requiresLicenseOverlay)
+        .animation(.spring(response: 0.35, dampingFraction: 0.9), value: showsLicenseActivationOverlay)
+    }
+
+    private var canOpenLicenseActivationOverlay: Bool {
+        if case .licensed = licenseManager.state { return false }
+        return true
     }
 
     private var customWindowTopBar: some View {

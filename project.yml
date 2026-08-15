@@ -2,7 +2,7 @@ name: CleanMac
 options:
   minimumXcodeGenVersion: 2.38.0
   deploymentTarget:
-    macOS: '11.0'
+    macOS: '13.0'
 settings:
   base:
     PRODUCT_BUNDLE_IDENTIFIER: com.zyb.CleanMac
@@ -12,6 +12,9 @@ settings:
     GENERATE_INFOPLIST_FILE: YES
     ENABLE_APP_SANDBOX: NO
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  configs:
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: -Osize
 targets:
   CleanMac:
     type: application
@@ -40,9 +43,13 @@ targets:
           - CleanMac-Info.plist
     dependencies:
       - target: CleanMacMenuBar
-        embed: true
+        embed: false
     postBuildScripts:
       - name: Embed MenuBar Login Item
+        inputFiles:
+          - "$(BUILT_PRODUCTS_DIR)/CleanMacMenuBar.app"
+        outputFiles:
+          - "$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Library/LoginItems/CleanMacMenuBar.app"
         script: |
           set -e
           LOGIN_ITEMS_DIR="$TARGET_BUILD_DIR/$WRAPPER_NAME/Contents/Library/LoginItems"

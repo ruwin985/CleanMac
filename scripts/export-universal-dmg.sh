@@ -22,6 +22,7 @@ DMG_DIR="$BUILD_DIR/dmg"
 EXPORT_OPTIONS_PATH="$BUILD_DIR/ExportOptions.plist"
 APP_PATH="$EXPORT_DIR/$APP_NAME.app"
 DMG_PATH="$BUILD_DIR/${APP_NAME}-${VERSION}.dmg"
+DMG_FORMAT="${DMG_FORMAT:-ULFO}"
 
 rm -rf "$ARCHIVE_PATH" "$EXPORT_DIR" "$DMG_DIR"
 mkdir -p "$BUILD_DIR" "$EXPORT_DIR" "$DMG_DIR"
@@ -114,7 +115,7 @@ hdiutil create \
   -volname "$APP_NAME" \
   -srcfolder "$DMG_DIR" \
   -ov \
-  -format UDZO \
+  -format "$DMG_FORMAT" \
   "$DMG_PATH"
 
 if [[ -n "$DEVELOPER_ID_IDENTITY" ]]; then

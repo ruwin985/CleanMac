@@ -42,10 +42,12 @@ LICENSE_ENCRYPTION_KEY="RANDOM_32_BYTE_BASE64_SECRET_FOR_ENCRYPTING_LICENSE_CODE
 LICENSE_HASH_PEPPER="RANDOM_LONG_SECRET_FOR_DB_HASHING"
 SERVER_TOKEN_SECRET="RANDOM_LONG_SECRET_FOR_ACTIVATION_TOKENS"
 ADMIN_TOKEN="RANDOM_LONG_SECRET_FOR_MANUAL_LICENSE_API"
+MOBILE_ISSUE_TOKEN="RANDOM_LONG_SECRET_FOR_PHONE_ISSUE_PAGE"
 LICENSE_MAX_DEVICES="1"
 
 APP_NAME="CleanMac"
 SUPPORT_EMAIL="ruwin_211@126.com"
+CLEANMAC_DOWNLOAD_URL="https://ruwin.cn/downloads/CleanMac.dmg"
 ```
 
 生成随机密钥：
@@ -91,9 +93,44 @@ npm run dev
 curl -fsS http://127.0.0.1:1314/health
 ```
 
-## 生成授权码
+## 淘宝客服发码助手
+
+### 手机千牛发码
+
+在手机浏览器打开发码助手链接：
+
+```text
+http://服务器IP/admin/taobao-reply?token=MOBILE_ISSUE_TOKEN
+```
+
+从手机千牛复制淘宝订单号，粘贴到页面里，点击「生成回复模板」，再点击「复制回复内容」回到千牛粘贴发送。
+
+也可以直接把订单号带进链接：
+
+```text
+http://服务器IP/admin/taobao-reply?token=MOBILE_ISSUE_TOKEN&order=淘宝订单号
+```
+
+`MOBILE_ISSUE_TOKEN` 可以生成授权码，不要发给客户。生产环境建议配置 HTTPS 后再长期使用。
+
+### 服务器命令发码
 
 在淘宝订单确认后，在服务器上执行：
+
+```bash
+cd /www/wwwroot/CleanMac/server
+npm run issue:taobao -- --order 淘宝订单号
+```
+
+命令会输出授权码和可直接复制到千牛/淘宝客服窗口的回复模板。同一个淘宝订单号重复执行时，会返回原授权码，不会重复新建。
+
+本地开发时可先启动授权服务：
+
+```bash
+npm run dev:license
+```
+
+也可以直接调用管理接口：
 
 ```bash
 curl -X POST http://127.0.0.1:1314/admin/licenses \
@@ -101,10 +138,7 @@ curl -X POST http://127.0.0.1:1314/admin/licenses \
   -H "Content-Type: application/json" \
   -d '{
     "count": 1,
-    "taobaoOrderId": "淘宝订单号",
-    "customerName": "淘宝买家昵称",
-    "email": "customer@example.com",
-    "note": "客服手工发码"
+    "taobaoOrderId": "淘宝订单号"
   }'
 ```
 

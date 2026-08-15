@@ -7,6 +7,7 @@
     "dev": "tsx src/license-local-server.ts",
     "build": "tsc --project tsconfig.node.json",
     "start": "node dist/license-local-server.js",
+    "issue:taobao": "node scripts/issue-taobao-license.mjs",
     "dev:worker": "wrangler dev",
     "deploy:worker": "wrangler deploy",
     "test:email": "node scripts/send-test-license-email.mjs",
