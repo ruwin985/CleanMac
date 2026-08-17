@@ -30,11 +30,26 @@
 	<string>$(INFOPLIST_KEY_CleanMacRefundURL)</string>
 	<key>CleanMacTencentSurveyURL</key>
 	<string>$(INFOPLIST_KEY_CleanMacTencentSurveyURL)</string>
+	<key>CleanMacUpdateFeedURL</key>
+	<string>$(INFOPLIST_KEY_CleanMacUpdateFeedURL)</string>
 	<key>LSApplicationCategoryType</key>
 	<string>$(INFOPLIST_KEY_LSApplicationCategoryType)</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>$(INFOPLIST_KEY_NSHumanReadableCopyright)</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>47.94.208.183</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>

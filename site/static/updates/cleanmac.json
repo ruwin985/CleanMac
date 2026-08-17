@@ -1,11 +1,11 @@
 {
   "version": "1.0.1",
-  "build": 3,
+  "build": 6,
   "minimumSystemVersion": "11.0",
-  "downloadURL": "https://ruwin985.github.io/CleanMac/downloads/CleanMac.dmg",
-  "releaseNotesURL": "https://ruwin985.github.io/CleanMac/changelog/",
+  "downloadURL": "http://47.94.208.183/downloads/CleanMac.dmg",
+  "releaseNotesURL": "http://47.94.208.183/changelog/",
   "title": "CleanMac 1.0.1 已发布",
-  "summary": "CleanMac 1.0.1 更新已发布，建议下载最新版本以获得最新修复和体验优化。",
-  "isCritical": false,
-  "publishedAt": "2026-08-15T08:31:07Z"
+  "summary": "修复部分授权码输入时因授权服务地址异常导致的激活报错，增强本地有效授权码兜底。",
+  "isCritical": true,
+  "publishedAt": "2026-08-16T14:01:18Z"
 }

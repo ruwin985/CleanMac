@@ -125,12 +125,37 @@ private struct MainWindowConfigurator: NSViewRepresentable {
 private final class AppUpdateController {
     static let shared = AppUpdateController()
 
-    private let manifestURL = URL(string: "https://ruwin985.github.io/CleanMac/updates/cleanmac.json")!
+    private let manifestURL = AppUpdateController.configuredManifestURL
     private let promptedVersionKey = "CleanMacLastPromptedUpdateVersion"
     private let promptedDateKey = "CleanMacLastPromptedUpdateDate"
     private let promptInterval: TimeInterval = 24 * 60 * 60
     private var hasCheckedAutomatically = false
     private var isChecking = false
+
+    private static var configuredManifestURL: URL {
+        let environmentKey = "CLEANMAC_UPDATE_FEED_URL"
+        let infoKey = "CleanMacUpdateFeedURL"
+        if let environmentValue = ProcessInfo.processInfo.environment[environmentKey],
+           let url = configuredURL(from: environmentValue) {
+            return url
+        }
+        if let bundleValue = Bundle.main.object(forInfoDictionaryKey: infoKey) as? String,
+           let url = configuredURL(from: bundleValue) {
+            return url
+        }
+        return URL(string: "https://ruwin985.github.io/CleanMac/updates/cleanmac.json")!
+    }
+
+    private static func configuredURL(from rawValue: String) -> URL? {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              !trimmed.localizedCaseInsensitiveContains("replace"),
+              let url = URL(string: trimmed),
+              url.scheme?.hasPrefix("http") == true else {
+            return nil
+        }
+        return url
+    }
 
     func checkForUpdatesIfNeeded() async {
         guard !hasCheckedAutomatically else { return }

@@ -118,6 +118,16 @@ final class LicenseManager: ObservableObject {
             }
 
             clearStoredServerAuthorization()
+            if let localLicenseInfo = storedLocalLicenseInfo() {
+                state = .licensed(localLicenseInfo)
+                if let localLicenseCode = storedString(for: Self.licenseCodeAccount) {
+                    Task {
+                        await activateWithServer(rawCode: localLicenseCode, keepsLocalLicenseOnFailure: true)
+                    }
+                }
+                return
+            }
+
             applyTrialState()
             return
         }
@@ -160,17 +170,15 @@ final class LicenseManager: ObservableObject {
         guard !isActivating else { return }
         activationErrorMessage = nil
 
-        if licenseServerURL != nil {
-            isActivating = true
-            Task {
-                await activateWithServer(rawCode: rawCode)
-            }
-            return
-        }
-
         do {
             let licenseInfo = try validateLicenseCode(rawCode)
             storeLocalLicense(rawCode, licenseInfo: licenseInfo)
+            if licenseServerURL != nil {
+                isActivating = true
+                Task {
+                    await activateWithServer(rawCode: rawCode, keepsLocalLicenseOnFailure: true)
+                }
+            }
         } catch {
             activationErrorMessage = error.localizedDescription
         }
@@ -183,7 +191,7 @@ final class LicenseManager: ObservableObject {
         state = .licensed(licenseInfo)
     }
 
-    private func activateWithServer(rawCode: String) async {
+    private func activateWithServer(rawCode: String, keepsLocalLicenseOnFailure: Bool = false) async {
         defer { isActivating = false }
 
         do {
@@ -205,7 +213,11 @@ final class LicenseManager: ObservableObject {
             activationErrorMessage = nil
             state = .licensed(licenseInfo)
         } catch {
-            activationErrorMessage = error.localizedDescription
+            if keepsLocalLicenseOnFailure {
+                activationErrorMessage = nil
+            } else {
+                activationErrorMessage = error.localizedDescription
+            }
         }
     }
 
@@ -257,7 +269,9 @@ final class LicenseManager: ObservableObject {
             throw LicenseServerError.invalidResponse
         }
 
-        let activationResponse = try JSONDecoder().decode(LicenseServerActivationResponse.self, from: data)
+        guard let activationResponse = try? JSONDecoder().decode(LicenseServerActivationResponse.self, from: data) else {
+            throw LicenseServerError.invalidResponse
+        }
         guard (200..<300).contains(httpResponse.statusCode) else {
             throw LicenseServerError.rejected(activationResponse.message ?? "服务端授权校验失败，请确认授权码是否正确。")
         }
@@ -281,7 +295,9 @@ final class LicenseManager: ObservableObject {
             throw LicenseServerError.invalidResponse
         }
 
-        let verificationResponse = try JSONDecoder().decode(LicenseServerVerificationResponse.self, from: data)
+        guard let verificationResponse = try? JSONDecoder().decode(LicenseServerVerificationResponse.self, from: data) else {
+            throw LicenseServerError.invalidResponse
+        }
         guard (200..<300).contains(httpResponse.statusCode) else {
             throw LicenseServerError.rejected(verificationResponse.message ?? "授权已失效，请重新激活。")
         }
