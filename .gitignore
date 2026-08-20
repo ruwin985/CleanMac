@@ -22,6 +22,7 @@ build/
 *.dmg
 !site/static/downloads/CleanMac.dmg
 *.xcarchive
+/designs
 
 # Local payment provider credentials
 .paddle.env
