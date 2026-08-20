@@ -1,4 +1,4 @@
-baseURL = 'https://ruwin.cn/'
+baseURL = 'http://49.232.149.4/CleanMac/'
 languageCode = 'zh-cn'
 title = 'CleanMac'
 defaultContentLanguage = 'zh-cn'

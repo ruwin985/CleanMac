@@ -1,44 +1,102 @@
 {{ define "main" }}
-<section class="apple-hero" id="overview" aria-label="CleanMac 首页首屏">
-  <div class="apple-hero-copy">
-    <h1>清理 Mac，安排妥。</h1>
-    <p class="apple-hero-subtitle">
-      <span class="copy-desktop">用 CleanMac 扫描磁盘、清理缓存，<br>清除残留与隐私痕迹。</span>
-      <span class="copy-mobile">扫描磁盘，清理缓存，<br>移除残留与隐私痕迹。</span>
-    </p>
-    <div class="apple-hero-highlights" aria-label="CleanMac 产品亮点">
-      <span><span class="highlight-check" aria-hidden="true">✅</span>足够小<span class="highlight-note">仅 2M 大小</span></span>
-      <span><span class="highlight-check" aria-hidden="true">✅</span>足够纯净<span class="highlight-note">不需要登录，不获取用户信息</span></span>
-      <span><span class="highlight-check" aria-hidden="true">✅</span>足够便宜<span class="highlight-note">一次性买断，永久使用</span></span>
-    </div>
-    <div class="apple-hero-actions" id="buy">
-      <a class="apple-hero-button apple-hero-button-primary" href="{{ site.Params.dmgURL | relURL }}">
-        <span class="button-desktop">{{ site.Params.downloadText | default "下载" }}</span>
-        <span class="button-mobile">快速下载</span>
+<section class="hero section-grid" id="overview" aria-labelledby="hero-title">
+  <div class="hero-copy">
+    <p class="eyebrow">Mac 空间整理工作台</p>
+    <h1 id="hero-title">把磁盘扫描、缓存清理和隐私残留整理得更轻松。</h1>
+    <p class="lead">CleanMac 以原生 SwiftUI 构建，帮助你识别大文件、开发缓存、日志和可清理残留。保持足够小、足够纯净，也让日常维护更有把握。</p>
+    <div class="hero-actions" id="buy">
+      <a class="button primary" href="{{ site.Params.dmgURL | relURL }}">
+        <span class="button-desktop">{{ site.Params.downloadText | default "快速下载" }}</span>
+        <span class="button-mobile">下载</span>
       </a>
-      <a class="apple-hero-button apple-hero-button-secondary" href="{{ site.Params.purchaseURL | default `#buy` }}" target="_blank" rel="noopener" data-purchase-link>
+      <a class="button ghost" href="{{ site.Params.purchaseURL | default `#buy` }}" target="_blank" rel="noopener" data-purchase-link>
         {{ site.Params.purchaseButtonText | default "终身授权" }}
       </a>
     </div>
-
-    <p class="apple-hero-purchase-note" data-purchase-message>
-      免费试用 1 天。点击终身授权后会跳转淘宝店铺，下单后联系客服获取授权码，再回到 CleanMac 在授权页面输入授权码粘贴激活。
-    </p>
+    <p class="purchase-note" data-purchase-message>免费试用 1 天。下单后联系客服获取授权码，再回到 CleanMac 授权页面粘贴激活。</p>
+    <dl class="hero-stats" aria-label="CleanMac 产品概览">
+      <div><dt>2M</dt><dd>轻量安装包</dd></div>
+      <div><dt>本地</dt><dd>不上传文件内容</dd></div>
+      <div><dt>买断</dt><dd>一次授权长期使用</dd></div>
+    </dl>
   </div>
 
-  <div class="apple-hero-media" aria-label="CleanMac 应用演示视频">
-    <img class="apple-hero-video-fallback" src="{{ `images/cleanmac-hero-fallback.jpg` | relURL }}" alt="" width="1600" height="1152" loading="eager" decoding="async" aria-hidden="true">
-    <video class="apple-hero-video" autoplay muted loop playsinline poster="{{ `images/cleanmac-hero-fallback.jpg` | relURL }}" data-hero-video>
-      <source media="(max-width: 734px)" src="{{ `videos/output-mobile.mp4` | relURL }}" type="video/mp4">
-      <source src="{{ `videos/output.mp4` | relURL }}" type="video/mp4">
-      你的浏览器不支持 HTML5 视频播放。
-    </video>
+  <div class="hero-visual" aria-label="CleanMac 应用演示">
+    <div class="mac-card">
+      <div class="mac-card-topbar"><span></span><span></span><span></span></div>
+      <div class="scan-stage">
+        <img class="scan-fallback" src="{{ `images/cleanmac-hero-fallback.jpg` | relURL }}" alt="" width="1600" height="1152" loading="eager" decoding="async" aria-hidden="true">
+        <video class="scan-video" autoplay muted loop playsinline poster="{{ `images/cleanmac-hero-fallback.jpg` | relURL }}" data-hero-video>
+          <source media="(max-width: 734px)" src="{{ `videos/output-mobile.mp4` | relURL }}" type="video/mp4">
+          <source src="{{ `videos/output.mp4` | relURL }}" type="video/mp4">
+          你的浏览器不支持 HTML5 视频播放。
+        </video>
+      </div>
+    </div>
   </div>
-
-  <p class="apple-hero-disclaimer">
-    免责声明：CleanMac 仅提供本地磁盘分析与清理建议，删除文件前请确认不再需要并提前备份重要数据。实际可清理空间、风险提示和性能提升会因设备、系统版本与使用情况而异。
-  </p>
 </section>
+
+<section class="section feature-showcase" id="features" aria-labelledby="features-title">
+  <div class="section-heading">
+    <p class="eyebrow">Core Features</p>
+    <h2 id="features-title">清理之前先看清楚。</h2>
+    <p>CleanMac 不追求一键神奇优化，而是把占用、来源和风险提示展示清楚，让你按需整理。</p>
+  </div>
+  <div class="feature-grid">
+    <article class="feature-card">
+      <span class="feature-icon">⌁</span>
+      <h3>磁盘空间巡检</h3>
+      <p>快速发现大文件、缓存目录和长期堆积的空间占用，整理前先建立全局视图。</p>
+    </article>
+    <article class="feature-card">
+      <span class="feature-icon">⌘</span>
+      <h3>开发环境清理</h3>
+      <p>面向 Xcode、模拟器、构建缓存和日志等常见开发残留，适合长期写代码的 Mac。</p>
+    </article>
+    <article class="feature-card">
+      <span class="feature-icon">◌</span>
+      <h3>隐私残留提示</h3>
+      <p>识别可清理的历史痕迹与临时文件，删除前保留明确提示，降低误删风险。</p>
+    </article>
+  </div>
+</section>
+
+<section class="section split-section" id="workflow" aria-labelledby="workflow-title">
+  <div class="section-heading compact">
+    <p class="eyebrow">Workflow</p>
+    <h2 id="workflow-title">三步完成一次轻量维护。</h2>
+  </div>
+  <div class="split-grid">
+    <article class="split-panel">
+      <span class="step-number">01</span>
+      <h3>扫描磁盘</h3>
+      <p>定位大文件、缓存和日志目录，先看见空间都去了哪里。</p>
+    </article>
+    <article class="split-panel">
+      <span class="step-number">02</span>
+      <h3>确认风险</h3>
+      <p>按类别查看建议项，重要文件保留人工确认，不做隐式删除。</p>
+    </article>
+    <article class="split-panel">
+      <span class="step-number">03</span>
+      <h3>释放空间</h3>
+      <p>清理确认后的项目，让 Mac 恢复更轻、更有秩序的状态。</p>
+    </article>
+  </div>
+</section>
+
+<section class="section download-section" id="download" aria-labelledby="download-title">
+  <div class="download-card">
+    <p class="eyebrow">Download</p>
+    <h2 id="download-title">现在下载 CleanMac。</h2>
+    <p>适用于 macOS 11 及以上系统。安装包保持轻量，授权服务已迁移到腾讯云临时 IP。</p>
+    <div class="download-actions">
+      <a class="button primary" href="{{ site.Params.dmgURL | relURL }}">下载 DMG</a>
+      <a class="button ghost" href="{{ `changelog/` | relURL }}">查看更新日志</a>
+    </div>
+  </div>
+</section>
+
 <script>
   window.cleanMacPurchaseConfig = {
     provider: {{ printf "%q" (site.Params.paymentProvider | default "taobao") | safeJS }},
@@ -49,7 +107,7 @@
 
   (() => {
     const video = document.querySelector('[data-hero-video]');
-    const media = video?.closest('.apple-hero-media');
+    const media = video?.closest('.scan-stage');
     if (!video || !media) return;
 
     const showFallback = () => {
@@ -61,6 +119,6 @@
     video.addEventListener('error', showFallback);
   })();
 </script>
-  {{ $purchaseJS := resources.Get "js/purchase-link.js" | minify | fingerprint }}
+{{ $purchaseJS := resources.Get "js/purchase-link.js" | minify | fingerprint }}
 <script src="{{ $purchaseJS.RelPermalink }}" defer></script>
 {{ end }}

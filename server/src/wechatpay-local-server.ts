@@ -7,6 +7,8 @@ import QRCode from "qrcode";
 
 interface Env {
   PORT?: string;
+  HOST?: string;
+  SITE_MOUNT_PATH?: string;
   PUBLIC_BASE_URL?: string;
   SITE_DIR?: string;
   DATA_DIR?: string;
@@ -114,6 +116,8 @@ const jsonContentType = "application/json; charset=utf-8";
 
 const env = loadEnv();
 const port = positiveInteger(env.PORT, 1314);
+const host = env.HOST ?? "127.0.0.1";
+const siteMountPath = normalizedMountPath(env.SITE_MOUNT_PATH ?? "/CleanMac");
 const siteDir = resolve(env.SITE_DIR ?? join(projectRoot, "site", "public"));
 let store: LocalStore;
 
@@ -124,8 +128,8 @@ const server = createServer((request, response) => {
   });
 });
 
-server.listen(port, "0.0.0.0", () => {
-  console.log(`CleanMac local payment server listening on http://0.0.0.0:${port}`);
+server.listen(port, host, () => {
+  console.log(`CleanMac local payment server listening on http://${host}:${port}`);
   console.log(`Serving site from ${siteDir}`);
   if (!env.PUBLIC_BASE_URL && !env.WECHATPAY_NOTIFY_URL) {
     console.warn("Set PUBLIC_BASE_URL after cloudflared tunnel is ready, otherwise WeChat Pay notifications cannot reach this server.");
@@ -177,6 +181,10 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
   }
 
   if (method === "GET" || method === "HEAD") {
+    if (url.pathname === "/" && siteMountPath) {
+      sendRedirect(response, `${siteMountPath}/`);
+      return;
+    }
     serveStatic(url.pathname, response, method === "HEAD");
     return;
   }
@@ -812,7 +820,12 @@ function devicePriceMinor(): number {
 }
 
 function serveStatic(pathname: string, response: ServerResponse, headOnly: boolean): void {
-  const decodedPath = decodeURIComponent(pathname);
+  if (siteMountPath && pathname === siteMountPath) {
+    sendRedirect(response, `${siteMountPath}/`);
+    return;
+  }
+
+  const decodedPath = decodeURIComponent(staticFilePathname(pathname));
   const normalizedPath = normalize(decodedPath).replace(/^(\.\.(\/|\\|$))+/, "");
   let filePath = resolve(siteDir, `.${normalizedPath}`);
   if (!filePath.startsWith(siteDir)) {
@@ -829,6 +842,17 @@ function serveStatic(pathname: string, response: ServerResponse, headOnly: boole
   response.writeHead(200, headers);
   if (!headOnly) createReadStream(filePath).pipe(response);
   else response.end();
+}
+
+function staticFilePathname(pathname: string): string {
+  if (siteMountPath && pathname.startsWith(`${siteMountPath}/`)) return pathname.slice(siteMountPath.length) || "/";
+  return pathname;
+}
+
+function normalizedMountPath(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === "/") return "";
+  return `/${trimmed.replace(/^\/+|\/+$/g, "")}`;
 }
 
 class LocalStore {
@@ -941,6 +965,11 @@ function sendJSON(response: ServerResponse, data: JsonValue, status = 200): void
 
 function sendNoContent(response: ServerResponse, status = 204): void {
   response.writeHead(status, defaultHeaders());
+  response.end();
+}
+
+function sendRedirect(response: ServerResponse, location: string, status = 308): void {
+  response.writeHead(status, defaultHeaders({ "Location": location }));
   response.end();
 }
 

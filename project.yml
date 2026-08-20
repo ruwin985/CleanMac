@@ -64,9 +64,9 @@ targets:
         INFOPLIST_KEY_CleanMacPurchaseURL: "https://item.taobao.com/item.htm?id=1073046083571&spm=a213gs.v2success.0.0.3ab04831aFHLNV"
         INFOPLIST_KEY_CleanMacRefundURL: "https://ruwin.cn/legal/refund/"
         INFOPLIST_KEY_CleanMacLicenseValidationKey: "XJ2OZ+i3UHCVar7NMCZ2RMoTnC9hTuf6Q0k+Lcrl7FA"
-        INFOPLIST_KEY_CleanMacLicenseServerURL: "http://47.94.208.183"
+        INFOPLIST_KEY_CleanMacLicenseServerURL: "http://49.232.149.4"
         INFOPLIST_KEY_CleanMacTencentSurveyURL: "https://wj.qq.com/s2/27497302/29c4/"
-        INFOPLIST_KEY_CleanMacUpdateFeedURL: "http://47.94.208.183/updates/cleanmac.json"
+        INFOPLIST_KEY_CleanMacUpdateFeedURL: "http://49.232.149.4/updates/cleanmac.json"
         CODE_SIGN_STYLE: Automatic
     scheme:
       testTargets: []

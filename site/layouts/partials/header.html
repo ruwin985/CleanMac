@@ -1,15 +1,15 @@
-<header class="site-header">
-  <nav class="global-nav" aria-label="主导航">
-    <span class="nav-brand" aria-label="CleanMac">
-      <img src="{{ `images/cleanmac-icon.png` | relURL }}" alt="">
+<header class="site-header" aria-label="网站导航">
+  <a class="brand" href="{{ `/` | relURL }}" aria-label="CleanMac 首页">
+    <img src="{{ `images/cleanmac-icon.png` | relURL }}" alt="CleanMac 图标" width="44" height="44">
+    <span>
+      <strong>CleanMac</strong>
+      <small>Mac 清理工作台</small>
     </span>
-
-    <div class="nav-links">
-      <a href="#overview">概览</a>
-    </div>
-
-    <div class="nav-actions">
-      <a href="{{ site.Params.purchaseURL | default `#buy` }}">购买</a>
-    </div>
+  </a>
+  <nav class="nav-links" aria-label="主要导航">
+    <a href="{{ `/` | relURL }}#overview">概览</a>
+    <a href="{{ `/` | relURL }}#features">功能</a>
+    <a href="{{ `/` | relURL }}#workflow">流程</a>
+    <a href="{{ `/` | relURL }}#download">下载</a>
   </nav>
 </header>
